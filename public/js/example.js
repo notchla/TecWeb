@@ -10,7 +10,7 @@ var CounterClass = function(max){
 $(document).ready(function(){
     var name = window.location.href.split("/")
     name = name[name.length - 1];
-    $.get(`http://localhost:3000/json/${name}`).then(function(data){
+    $.get(`http://localhost:3000/stories/json/${name}`).then(function(data){
         var counter = CounterClass(data.pages);
         updateContent(data.content[counter.get()])
         $(".modal-content").click(function(){
@@ -18,17 +18,7 @@ $(document).ready(function(){
             console.log(i)
         })
     }, function(){alert("error in loading data")})
-    // $.ajax({
-    //     url: "file://./example.json",
-    //     type: "get",
-    //     beforeSend: function(xhr)}{xhr.setRequestHeader('')}
-    //     success: function(data){
-    //             console.log(data)
-    //         },
-    //     error: function(){
-    //         alert("error in loading data please retry")
-    //     }
-    // })
+
 })
 
 function updateContent(data){
