@@ -35,6 +35,8 @@ app.get("/stories/:storyname", handlers.loadStory);
 
 app.get("/stories/json/:storyname", handlers.loadJson);
 
+app.get("/stories/template/:templatename", handlers.loadTemplate);
+
 app.use(handlers.notFound) // need to be after all others routing handlers
 
 app.use(handlers.serverError) //called when a function throws a new Error() and nothing intercept it
