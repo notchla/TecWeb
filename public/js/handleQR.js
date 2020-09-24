@@ -8,28 +8,36 @@ function getQr() {
   });
 }
 
-//per usare lo scanner bisogna creare un div con id "scanner"
-$(document).ready(function(){
+
+function startQRReader() {
   Html5Qrcode.getCameras().then(devices => {
     if (devices && devices.length) {
       var cameraId = devices[0].id;
-      const html5QrCode = new Html5Qrcode("scanner");
+      const html5QrCode = new Html5Qrcode("scennerLocation");
       html5QrCode.start(
       cameraId,
       {
         fps: 10,
-        qrbox: 250
+        qrbox: 450
       },
       qrCodeMessage => {
+        console.log(qrCodeMessage);
         $.ajax({
           type: "get",
-          url: "http://localhost:3000/recvqr",
-          data: "code=" + qrCodeMessage,
+          url: "http://localhost:3000/checkqr/" + qrCodeMessage,
           crossDomain: true,
           success: function(data) {
+            console.log("data");
             console.log(data);
+            if(data.exists == "true") {
+              html5QrCode.stop();
+              //window.location = "http://localhost:3000/stories/" + qrCodeMessage;
+            } else {
+              alert("story does not exist. Try again.");
+            }
           },
           error: function(data) {
+            console.log("error");
             console.log(data);
             html5QrCode.stop();
           }
@@ -45,4 +53,4 @@ $(document).ready(function(){
     }
   }).catch(err => {
   });
-})
+}

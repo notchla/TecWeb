@@ -37,18 +37,11 @@ app.get("/stories/json/:storyname", handlers.loadJson);
 
 app.get("/stories/template/:templatename", handlers.loadTemplate);
 
-//funzioni di test
-app.get('/qrtest', handlers.showQRpage)
+app.get("/checkqr/:code", handlers.checkStoryExists);
 
-app.get('/recvqr', function(req,res) {
-  res.header("Access-Control-Allow-Origin", "*");
-  let code = req.query.code;
-  console.log("the server returns:" + code);
-})
+app.use(handlers.notFound); // need to be after all others routing handlers
 
-app.use(handlers.notFound) // need to be after all others routing handlers
-
-app.use(handlers.serverError) //called when a function throws a new Error() and nothing intercept it
+app.use(handlers.serverError); //called when a function throws a new Error() and nothing intercept it
 
 app.listen(port, () => {
     console.log(`Express started on http://localhost:${port}`)

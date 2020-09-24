@@ -1,0 +1,41 @@
+.menuContainer {
+
+}
+
+.menuChoice {
+  background-color: #0ABBA0;
+  border: 1px solid black;
+  margin: 5px 0px 0px 0px;
+  width: 100%;
+}
+
+#homePage {
+  height: 10vh;
+  margin: auto;
+  text-align: center;
+  font-size: 25px;
+}
+
+#scennerLocation{
+  height: 70vw;
+  width: 90vw;
+}
+
+#storiesList{
+  height: 40vh;
+  overflow: scroll;
+}
+
+.storiesListEntry{
+  margin: 5px;
+  padding: 2px;
+  box-sizing: border-box;
+  border: 1 solid white;
+  background: white;
+  font-size: 16px;
+  text-align: center;
+}
+
+.storiesListEntry:hover{
+  background: #EEEEEE;
+}
