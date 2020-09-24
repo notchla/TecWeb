@@ -1,0 +1,14 @@
+{{#section "scripts"}}
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script type='text/javascript' src="js/includes/html5-qrcode.min.js"> //reader </script>
+  <script type='text/javascript' src="js/includes/qrcode.min.js"> //writer </script>
+  <script type='text/javascript' src="js/handleQR.js"> </script>
+{{/section }}
+
+<div>
+  <h1> QR reader </h1>
+  <div style="width: 500px" id="scanner"></div>
+  <input type="text" id="textcode" value="">
+  <button onclick="getQr()"> get QR </button>
+  <div id="newqr"></div>
+</div>
