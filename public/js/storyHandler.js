@@ -11,7 +11,7 @@ var counter;
 var story_data;
 
 function updateContent(data){
-    $.get(`http://localhost:3000/stories/template/${data.type}`).then(function(handlebar){
+    $.get(`/stories/template/${data.type}`).then(function(handlebar){
         var template = Handlebars.compile(handlebar)
         var context = data.data;
         var html = template(context)
@@ -23,7 +23,7 @@ function updateContent(data){
 $(document).ready(function(){
     var name = window.location.href.split("/")
     name = name[name.length - 1];
-    $.get(`http://localhost:3000/stories/json/${name}`).then(function(data){
+    $.get(`/stories/json/${name}`).then(function(data){
         counter = CounterClass(data.pages);
         story_data = data;
         updateContent(data.content[counter.get()]);

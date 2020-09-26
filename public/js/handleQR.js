@@ -24,7 +24,7 @@ function startQRReader() {
         console.log(qrCodeMessage);
         $.ajax({
           type: "get",
-          url: "http://localhost:3000/checkqr/" + qrCodeMessage,
+          url: "/checkqr/" + qrCodeMessage,
           crossDomain: true,
           success: function(data) {
             console.log("data");

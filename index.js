@@ -11,6 +11,18 @@ const handlers = require("./lib/handlers")
 
 var expressHandlebars = require("express-handlebars")
 
+const credentials = require("./credentials")
+
+const cookieParser = require("cookie-parser")
+
+const expressSession = require("express-session");
+
+const flashMiddleware = require("./lib/middleware/flash");
+
+const bodyParser = require("body-parser");
+
+const usernameSession = require("./lib/middleware/username")
+
 app.engine("handlebars", expressHandlebars({
     defaultLayout : "main",
     helpers: {
@@ -24,7 +36,22 @@ app.engine("handlebars", expressHandlebars({
 
 app.set("view engine", "handlebars")
 
+app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({extended: true}))
+
+app.use(cookieParser(credentials.cookieSecret))
+//cookie middleware MUST be before session 
+app.use(expressSession({
+    resave: false,
+    saveUninitialized: false,
+    secret: credentials.cookieSecret,
+}))
+
 app.use(express.static(__dirname + "/public")); //static middleware
+
+app.use(flashMiddleware)
+
+app.use(usernameSession); //check for username in session
 
 const port = process.env.PORT || 3000 //if the enviroment variable isn't setted, port is 3000
 
@@ -38,6 +65,8 @@ app.get("/stories/json/:storyname", handlers.loadJson);
 app.get("/stories/template/:templatename", handlers.loadTemplate);
 
 app.get("/checkqr/:code", handlers.checkStoryExists);
+
+app.post("/register-user", handlers.registerUser);
 
 app.use(handlers.notFound); // need to be after all others routing handlers
 
