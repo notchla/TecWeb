@@ -1,8 +1,35 @@
 {{#section "scripts"}}
-    <link rel="stylesheet" href="/css/example.css"></link>
+    <link rel="stylesheet" href="/css/storyview.css"></link>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="/js/storyHandler.js"></script>
+
+    <script type='text/javascript' src="/js/includes/html5-qrcode.min.js"> //reader </script>
+    <script type='text/javascript' src="/js/includes/qrcode.min.js"> //writer </script>
+    <script type='text/javascript' src="/js/writeQR.js"> </script>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.7.6/handlebars.min.js" integrity="sha512-zT3zHcFYbQwjHdKjCu6OMmETx8fJA9S7E6W7kBeFxultf75OPTYUJigEKX58qgyQMi1m1EgenfjMXlRZG8BXaw==" crossorigin="anonymous"></script>
 {{/section }}
 
-<div id="entry-template"></div>
+<nav class="navbar navbar-light bg-light">
+  <a class="btn btn-primary float-left" type="button" href="/">
+    <
+  </a>
+  <span class="navbar-brand mb-0 h1">{{this.name}}</span>
+  <div class="float-right">
+    <button class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#collapseQR">
+      <img src="/images/qr_logo.png" alt="Press to show QR code for this story" class="img-fluid" width="35" height="35">
+    </button>
+  </div>
+</nav>
+
+<div class="collapse" id="collapseQR">
+  <div class="card card-body">
+    <div class="text-center mx-auto d-block" id="newqr"></div>
+  </div>
+</div>
+
+
+{{!-- embedding starts here --}}
+<div id="entry-template"> </div>

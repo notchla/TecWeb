@@ -1,14 +1,3 @@
-function getQr() {
-  var textcode = $("#textcode").val();
-  document.getElementById("newqr").innerHTML = "";
-  var qrcode = new QRCode(document.getElementById("newqr"), {
-    text: textcode,
-    width: 400,
-    height: 400
-  });
-}
-
-
 function startQRReader() {
   Html5Qrcode.getCameras().then(devices => {
     if (devices && devices.length) {
@@ -18,7 +7,7 @@ function startQRReader() {
       cameraId,
       {
         fps: 10,
-        qrbox: 450
+        qrbox: 250
       },
       qrCodeMessage => {
         console.log(qrCodeMessage);
@@ -31,7 +20,7 @@ function startQRReader() {
             console.log(data);
             if(data.exists == "true") {
               html5QrCode.stop();
-              //window.location = "http://localhost:3000/stories/" + qrCodeMessage;
+              window.location = "http://localhost:3000/stories/" + qrCodeMessage;
             } else {
               alert("story does not exist. Try again.");
             }
