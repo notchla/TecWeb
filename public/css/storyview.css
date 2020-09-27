@@ -1,7 +1,7 @@
-.modal {
+#myModal.modal {
       position: fixed; /* Stay in place */
-      z-index: 1; /* Sit on top */
       left: 0;
+      z-index: -1;
       top: 0;
       width: 100%; /* Full width */
       height: 100%; /* Full height */
@@ -11,7 +11,7 @@
       justify-content: center;
     }
 
-    .modal-content {
+#myModal.modal > .modal-content {
       background-color: #fefefe;
       border: 1px solid #888;
       width: 80%;
@@ -20,4 +20,4 @@
       display: flex;
       align-items: center;
       justify-content: center;
-    }
+}
