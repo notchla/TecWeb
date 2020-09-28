@@ -86,6 +86,17 @@ app.use(handlers.notFound); // need to be after all others routing handlers
 
 app.use(handlers.serverError); //called when a function throws a new Error() and nothing intercept it
 
-app.listen(port, () => {
-    console.log(`Express started in ${app.get('env')} mode at http://localhost:${port}`)
-})
+
+function startServer(port){
+    app.listen(port, () => {
+        console.log(`Express started in ${app.get('env')} mode at http://localhost:${port}`)
+    })
+}
+
+if(require.main === module){
+    startServer(process.env.PORT || 3000)
+}
+else{
+    module.exports = startServer
+}
+
