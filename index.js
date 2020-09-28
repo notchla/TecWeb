@@ -23,6 +23,20 @@ const bodyParser = require("body-parser");
 
 const usernameSession = require("./lib/middleware/username")
 
+const fs = require("fs")
+
+const morgan = require("morgan")
+
+switch(app.get("env")){
+    case "development":
+        app.use(morgan("dev"))
+        break
+    case "production":
+        const stream = fs.createWriteStream(__dirname + "/access.log", {flags: "a"})
+        app.use(morgan("combined", {stream}))
+        break
+}
+
 app.engine("handlebars", expressHandlebars({
     defaultLayout : "main",
     helpers: {
@@ -73,5 +87,5 @@ app.use(handlers.notFound); // need to be after all others routing handlers
 app.use(handlers.serverError); //called when a function throws a new Error() and nothing intercept it
 
 app.listen(port, () => {
-    console.log(`Express started on http://localhost:${port}`)
+    console.log(`Express started in ${app.get('env')} mode at http://localhost:${port}`)
 })
