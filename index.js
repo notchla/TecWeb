@@ -11,7 +11,7 @@ const handlers = require("./lib/handlers")
 
 var expressHandlebars = require("express-handlebars")
 
-const credentials = require("./credentials")
+const credentials = require("./config")
 
 const cookieParser = require("cookie-parser")
 
@@ -66,9 +66,6 @@ app.use(express.static(__dirname + "/public")); //static middleware
 app.use(flashMiddleware)
 
 app.use(usernameSession); //check for username in session
-
-const port = process.env.PORT || 3000 //if the enviroment variable isn't setted, port is 3000
-
 
 app.get("/", handlers.home);
 
