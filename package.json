@@ -6,7 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "production-start": "NODE_ENV=production forever start index.js",
-    "production-stop": "forever stop index.js"
+    "production-stop": "forever stop index.js",
+    "production-cluster-start": "NODE_ENV=production forever start index-cluster.js",
+    "production-cluster-stop": "forever stop index-cluster.js"
   },
   "author": "",
   "license": "ISC",

@@ -94,7 +94,7 @@ function startServer(port){
 }
 
 if(require.main === module){
-    startServer(process.env.PORT || 3000)
+    startServer(process.env.PORT || 8000)
 }
 else{
     module.exports = startServer
