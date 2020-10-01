@@ -27,6 +27,8 @@ redisClient.on("error", console.log)
 
 const flashMiddleware = require("./lib/middleware/flash");
 
+const sessionIDMiddleware = require("./lib/middleware/sessionID")
+
 const bodyParser = require("body-parser");
 
 const usernameSession = require("./lib/middleware/username")
@@ -77,6 +79,8 @@ app.use(express.static(__dirname + "/public")); //static middleware
 app.use(flashMiddleware)
 
 app.use(usernameSession); //check for username in session
+
+app.use(sessionIDMiddleware)
 
 app.get("/", handlers.home);
 
