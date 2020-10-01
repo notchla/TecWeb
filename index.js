@@ -17,6 +17,14 @@ const cookieParser = require("cookie-parser")
 
 const expressSession = require("express-session");
 
+const redis = require("redis")
+
+let RedisStore = require("connect-redis") (expressSession)
+let redisClient = redis.createClient({
+    url: credentials.redis.url,
+})
+redisClient.on("error", console.log)
+
 const flashMiddleware = require("./lib/middleware/flash");
 
 const bodyParser = require("body-parser");
@@ -26,6 +34,8 @@ const usernameSession = require("./lib/middleware/username")
 const fs = require("fs")
 
 const morgan = require("morgan")
+
+require("./db")
 
 switch(app.get("env")){
     case "development":
@@ -59,6 +69,7 @@ app.use(expressSession({
     resave: false,
     saveUninitialized: false,
     secret: credentials.cookieSecret,
+    store: new RedisStore({client: redisClient})
 }))
 
 app.use(express.static(__dirname + "/public")); //static middleware
