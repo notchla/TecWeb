@@ -33,7 +33,7 @@ module.exports = {
     saveUser: async (username, id) => {
          await User.updateOne(
              { id },
-             { username : username},
+             { username },
              {upsert: true}
             )
     },

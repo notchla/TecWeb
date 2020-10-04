@@ -94,6 +94,8 @@ app.get("/checkqr/:code", handlers.checkStoryExists);
 
 app.post("/register-user", handlers.registerUser);
 
+app.get("/pixi", (req, res) => res.render("test-pixi"))
+
 app.use(handlers.notFound); // need to be after all others routing handlers
 
 app.use(handlers.serverError); //called when a function throws a new Error() and nothing intercept it
