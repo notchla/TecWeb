@@ -1,3 +1,58 @@
+var Counter = function(){
+    this.i = 0;
+    return {
+        get : function(){i = i + 1; return i}
+    }
+}();
+
+class TreeNode {
+    //parent node
+    //child tree
+    //siblings
+    constructor() {
+      this.parent = null; //root
+      this.child = null;
+      this.sibling = null;
+      this.nodeID = Counter.get()
+    }
+  
+    insertChild(child) {
+      child.parent = this;
+      child.sibling = this.child;
+        this.child = child;
+    }
+
+    insertSibling(sibling) {
+        if(this.parent != null) { //not root
+            sibling.parent = this.parent;
+            sibling.sibling = this.sibling;
+            this.sibling = sibling;
+        }
+    }
+
+    deleteChild() {
+        if(this.child != null) {
+            this.child = this.child.sibling;
+        }
+    }
+
+    deleteSibling() {
+        if(this.child != null) {
+            this.sibling = this.sibling.sibling;
+        }
+    }
+
+    getnextSibling() {
+        return this.sibling;
+    }   
+
+    getfirstChild() {
+        return this.child;
+    }
+}
+
+var ActivityList = [] //list that contains all the spawned activities
+  
 $(document).ready(function(){
     let app = new PIXI.Application({
         antialias: false,
@@ -36,11 +91,12 @@ $(document).ready(function(){
     var BLOCK_WIDTH = 200
     var BLOCK_HEIGHT = 150
 
-    class Activity{
+    class Activity extends TreeNode{
         constructor(type){
+            super()
             this.type = type
 
-            this.input = null
+            this.input = [] //test
             this.out = []
             this.input_lines = []
             this.output_lines = []
@@ -60,7 +116,7 @@ $(document).ready(function(){
 
                 function traslateInputLines(lines, pos){
                     lines.forEach(element => {
-                        if(element instanceof PIXI.graphics){
+                        if(element instanceof PIXI.Graphics){
                             element.updatePoints(pos)
                         }
                     })
@@ -103,7 +159,7 @@ $(document).ready(function(){
                         this.position.y += (newPosition.y - this.oldPosition.y)
                         this.oldPosition = newPosition
                         if(event.currentTarget.input_lines.length){
-                            var position = getInputPosition(event.currentTarget.input)
+                            var position = getInputPosition(event.currentTarget.input[0])
                             traslateInputLines(event.currentTarget.input_lines, position)
                         }
                         if(event.currentTarget.output_lines.length){
@@ -190,10 +246,37 @@ $(document).ready(function(){
             }
         
             function onDragEnd(event){
+
+                function checkCollision(mouse, input){
+                    if(input){
+                        var box = input.getBounds()
+
+                        return mouse.x >= box.x &&
+                               mouse.x <= box.x + box.width &&
+                               mouse.y >= box.y &&
+                               mouse.y <= box.y + box.height 
+                    }
+                    return false
+                }
+
                 event.stopPropagation()
                 this.alpha = 1
                 this.dragging = false
-                this.data = null
+                var collision = false;
+                for (let index = 0; index < ActivityList.length; index++) {
+                    var activity = ActivityList[index]
+                    if(activity.nodeID != event.currentTarget.nodeID){
+                        if(checkCollision(event.data.global, activity.input[0])){
+                            collision = true
+                            activity.input_lines.push(event.currentTarget.output_lines[event.currentTarget.line_index])
+                            break;
+                        }
+                            
+                    }
+                    
+                }
+                    
+                console.log(collision)
             }
         
             function onDragMove(event){
@@ -217,12 +300,13 @@ $(document).ready(function(){
                 .on('touchmove', onDragMove)
                 .line_index = this.out.length - 1
             obj.output_lines = this.output_lines
+            obj.nodeID = this.nodeID
 
 
         }
 
         draw_input(color){
-            if(!this.input){
+            if(true){
                 var obj = new PIXI.Graphics();
                 obj.lineStyle(2, 0x000000, 1);
                 obj.beginFill(color);
@@ -231,7 +315,7 @@ $(document).ready(function(){
                 var x = this.rect.position.x + this.rect.width/2;
                 var y = this.rect.position.y
                 obj.position.set(x, y)
-                this.input = obj
+                this.input.push(obj)
                 this.rect.addChild(obj)
             }
         }
@@ -270,5 +354,11 @@ $(document).ready(function(){
     activity.draw_output(BUTTON_COLOR)
     activity.draw_output(BUTTON_COLOR)
     activity.draw_input(BUTTON_COLOR)
+
+    var act = new Activity("pluto")
+    act.draw_output(BUTTON_COLOR)
+
+    ActivityList.push(activity)
+    ActivityList.push(act)
 
 })
