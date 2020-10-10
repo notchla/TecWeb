@@ -42,15 +42,35 @@ $(document).ready(function(){
 
             this.input = null
             this.out = []
-            this.input = null
-
+            this.input_lines = []
+            this.output_lines = []
             this.rect_height = 0
             //draw activity graphics block
-            this.rect = (function(){
+            this.rect = (function(data){
+
+                function traslateOutputLines(lines, positions){
+                    
+                    lines.forEach((element, index) => {
+                        if(element instanceof PIXI.Graphics){
+                            var pos = positions[index]
+                            element.updatePoints(pos)
+                        }
+                    });
+                }
+
+                function traslateInputLines(lines, pos){
+                    lines.forEach(element => {
+                        if(element instanceof PIXI.graphics){
+                            element.updatePoints(pos)
+                        }
+                    })
+                }
+
                 function onDragStart(event){
                     this.data = event.data
                     this.alpha = 0.5
                     this.dragging = true;
+                    this.oldPosition = this.data.getLocalPosition(this.parent)
                 }
             
                 function onDragEnd(){
@@ -59,11 +79,38 @@ $(document).ready(function(){
                     this.data = null
                 }
             
-                function onDragMove(){
+                function onDragMove(event){
+
+                    function getOutPositions(out){
+                        var positions = []
+                        out.forEach(element => {
+                            var globalPosition = element.getGlobalPosition()
+                            positions.push([globalPosition.x, globalPosition.y, null, null])
+                        })
+                        return positions;
+                    }
+
+                    function getInputPosition(input){
+                        var position = []
+                        var globalPosition = input.getGlobalPosition()
+                        position = [null, null, globalPosition.x, globalPosition.y]
+                        return position
+                    }
+
                     if(this.dragging){
                         var newPosition = this.data.getLocalPosition(this.parent);
-                        this.position.x = newPosition.x
-                        this.position.y = newPosition.y
+                        this.position.x += (newPosition.x - this.oldPosition.x)
+                        this.position.y += (newPosition.y - this.oldPosition.y)
+                        this.oldPosition = newPosition
+                        if(event.currentTarget.input_lines.length){
+                            var position = getInputPosition(event.currentTarget.input)
+                            traslateInputLines(event.currentTarget.input_lines, position)
+                        }
+                        if(event.currentTarget.output_lines.length){
+                            var positions = getOutPositions(event.currentTarget.out)
+                            traslateOutputLines(event.currentTarget.output_lines, positions)
+                        }
+
                     }
                 }
     
@@ -94,12 +141,16 @@ $(document).ready(function(){
                 .on('touchend', onDragEnd)
                 .on('touchendoutside', onDragEnd)
                 .on('mousemove', onDragMove)
-                .on('touchmove', onDragMove);
+                .on('touchmove', onDragMove)
+                .output_lines = data.output_lines
+
+                graphics.input_lines = data.input_lines
+                graphics.out = data.out
+                graphics.input = data.input
 
                 Activity.rect_height = graphics.height
-    
                 return graphics
-            })();
+            })(this);
         }
 
         draw_output(color){
@@ -118,13 +169,56 @@ $(document).ready(function(){
             obj.beginFill(color);
             obj.drawCircle(0, 0, 10);
             obj.endFill();
+            obj.interactive = true
             var x_circle = this.rect.position.x + offset*(this.out.length + 1);
             var y_circle = this.rect.position.y + Activity.rect_height;
             obj.position.set(x_circle, y_circle);
             reposition_out(this.out)
-            console.log(this.rect.position)
             this.rect.addChild(obj)
             this.out.push(obj)
+            this.output_lines.push({})
+
+            function onDragStart(event){
+                event.stopPropagation()
+                this.alpha = 0.5
+                this.dragging = true
+                var index = event.currentTarget.line_index
+                var globalPosition = obj.getGlobalPosition()
+                var line = new Line([globalPosition.x, globalPosition.y, event.data.global.x, event.data.global.y], 10, 0x6EA62E)
+                viewport.addChild(line)
+                event.currentTarget.output_lines[index] = line
+            }
+        
+            function onDragEnd(event){
+                event.stopPropagation()
+                this.alpha = 1
+                this.dragging = false
+                this.data = null
+            }
+        
+            function onDragMove(event){
+                if(this.dragging){
+                    event.stopPropagation()
+                    var index = event.currentTarget.line_index
+                    var line = event.currentTarget.output_lines[index]
+                    var globalPosition = obj.getGlobalPosition()
+                    line.updatePoints([globalPosition.x, globalPosition.y, event.data.global.x, event.data.global.y])
+                }
+            }
+
+            obj
+                .on('mousedown', onDragStart)
+                .on('touchstart', onDragStart)
+                .on('mouseup', onDragEnd)
+                .on('mouseupoutside', onDragEnd)
+                .on('touchend', onDragEnd)
+                .on('touchendoutside', onDragEnd)
+                .on('mousemove', onDragMove)
+                .on('touchmove', onDragMove)
+                .line_index = this.out.length - 1
+            obj.output_lines = this.output_lines
+
+
         }
 
         draw_input(color){
@@ -136,13 +230,39 @@ $(document).ready(function(){
                 obj.endFill();
                 var x = this.rect.position.x + this.rect.width/2;
                 var y = this.rect.position.y
-                console.log(this.rect.position)
                 obj.position.set(x, y)
                 this.input = obj
                 this.rect.addChild(obj)
             }
         }
 
+    }
+
+    class Line extends PIXI.Graphics {
+        constructor(points, lineSize, lineColor){
+            super();
+            var size = this.lineWidth = lineSize || 5;
+            var color = this.lineColor = lineColor || 0x000000;
+
+            this.points = points;
+
+            this.lineStyle(size, color)
+
+            this.moveTo(points[0], points[1])
+            this.lineTo(points[2], points[3])
+        }
+
+        updatePoints(p){
+            var points = this.points = p.map((val, index) => val || this.points[index])
+
+            var size = this.lineWidth
+            var color = this.lineColor
+
+            this.clear()
+            this.lineStyle(size, color)
+            this.moveTo(points[0], points[1])
+            this.lineTo(points[2], points[3])
+        }
     }
 
     var activity = new Activity("pippo")
