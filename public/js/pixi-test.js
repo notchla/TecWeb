@@ -51,7 +51,6 @@ class TreeNode {
     }
 }
 
-var ActivityList = [] //list that contains all the spawned activities
   
 $(document).ready(function(){
     let app = new PIXI.Application({
@@ -203,6 +202,7 @@ $(document).ready(function(){
                 graphics.input_lines = data.input_lines
                 graphics.out = data.out
                 graphics.input = data.input
+                graphics.nodeID = data.nodeID
 
                 Activity.rect_height = graphics.height
                 return graphics
@@ -263,20 +263,15 @@ $(document).ready(function(){
                 this.alpha = 1
                 this.dragging = false
                 var collision = false;
-                for (let index = 0; index < ActivityList.length; index++) {
-                    var activity = ActivityList[index]
-                    if(activity.nodeID != event.currentTarget.nodeID){
-                        if(checkCollision(event.data.global, activity.input[0])){
-                            collision = true
-                            activity.input_lines.push(event.currentTarget.output_lines[event.currentTarget.line_index])
-                            break;
-                        }
-                            
+
+                var activity = app.renderer.plugins.interaction.hitTest(event.data.global)
+                if(activity && activity.nodeID != event.currentTarget.nodeID){
+                    if(checkCollision(event.data.global, activity.input[0])){
+                        collision = true
+                        activity.input_lines.push(event.currentTarget.output_lines[event.currentTarget.line_index])
                     }
-                    
                 }
                     
-                console.log(collision)
             }
         
             function onDragMove(event){
@@ -358,7 +353,5 @@ $(document).ready(function(){
     var act = new Activity("pluto")
     act.draw_output(BUTTON_COLOR)
 
-    ActivityList.push(activity)
-    ActivityList.push(act)
 
 })
