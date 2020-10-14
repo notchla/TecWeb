@@ -99,10 +99,59 @@ $(document).ready(function(){
             this.out = []
             this.input_lines = []
             this.output_lines = []
+            this.oldOutputLines = []
             this.rect_height = 0
-            //draw activity graphics block
-            this.rect = (function(data){
+            var graphics = this.rect = new PIXI.Graphics()
 
+            var width = BLOCK_WIDTH
+            var height = BLOCK_HEIGHT
+            graphics.interactive = true
+            graphics.lineStyle(2, 0x000000, 1);
+            graphics.beginFill(BUTTON_COLOR);
+            graphics.drawRect(0, 0, width, height);
+            graphics.endFill();
+            var text = new PIXI.Text(type,
+                {
+                    fontFamily: FONT,
+                    fontSize: FONT_SIZE,
+                    fill: TEXT_COLOR,
+                })
+            text.anchor.set(0.5, 0.5);
+            text.position.set(graphics.width / 2, graphics.height / 2);
+            graphics.addChild(text);
+            viewport.addChild(graphics)
+
+            graphics
+                .on('mousedown', onDragStart)
+                .on('touchstart', onDragStart)
+                .on('mouseup', onDragEnd)
+                .on('mouseupoutside', onDragEnd)
+                .on('touchend', onDragEnd)
+                .on('touchendoutside', onDragEnd)
+                .on('mousemove', onDragMove)
+                .on('touchmove', onDragMove)
+            graphics.input_lines = this.input_lines
+            graphics.output_lines = this.output_lines
+            graphics.out = this.out
+            graphics.input = this.input
+            graphics.nodeID = this.nodeID
+
+            Activity.original_height = this.rect.height
+
+            function onDragStart(event){
+                this.data = event.data
+                this.alpha = 0.5
+                this.dragging = true;
+                this.oldPosition = this.data.getLocalPosition(this.parent)
+            }
+
+            function onDragEnd(){
+                this.alpha = 1
+                this.dragging = false
+                this.data = null
+            }
+
+            function onDragMove(event){
                 function traslateOutputLines(lines, positions){
                     
                     lines.forEach((element, index) => {
@@ -121,92 +170,38 @@ $(document).ready(function(){
                     })
                 }
 
-                function onDragStart(event){
-                    this.data = event.data
-                    this.alpha = 0.5
-                    this.dragging = true;
-                    this.oldPosition = this.data.getLocalPosition(this.parent)
-                }
-            
-                function onDragEnd(){
-                    this.alpha = 1
-                    this.dragging = false
-                    this.data = null
-                }
-            
-                function onDragMove(event){
-
-                    function getOutPositions(out){
-                        var positions = []
-                        out.forEach(element => {
-                            var globalPosition = element.getGlobalPosition()
-                            positions.push([globalPosition.x, globalPosition.y, null, null])
-                        })
-                        return positions;
-                    }
-
-                    function getInputPosition(input){
-                        var position = []
-                        var globalPosition = input.getGlobalPosition()
-                        position = [null, null, globalPosition.x, globalPosition.y]
-                        return position
-                    }
-
-                    if(this.dragging){
-                        var newPosition = this.data.getLocalPosition(this.parent);
-                        this.position.x += (newPosition.x - this.oldPosition.x)
-                        this.position.y += (newPosition.y - this.oldPosition.y)
-                        this.oldPosition = newPosition
-                        if(event.currentTarget.input_lines.length){
-                            var position = getInputPosition(event.currentTarget.input[0])
-                            traslateInputLines(event.currentTarget.input_lines, position)
-                        }
-                        if(event.currentTarget.output_lines.length){
-                            var positions = getOutPositions(event.currentTarget.out)
-                            traslateOutputLines(event.currentTarget.output_lines, positions)
-                        }
-
-                    }
-                }
-    
-                var width = BLOCK_WIDTH
-                var height = BLOCK_HEIGHT
-                var graphics = new PIXI.Graphics();
-                graphics.interactive = true
-                graphics.lineStyle(2, 0x000000, 1);
-                graphics.beginFill(BUTTON_COLOR);
-                graphics.drawRect(0, 0, width, height);
-                graphics.endFill();
-                var text = new PIXI.Text(type,
-                    {
-                        fontFamily: FONT,
-                        fontSize: FONT_SIZE,
-                        fill: TEXT_COLOR,
+                function getOutPositions(out){
+                    var positions = []
+                    out.forEach(element => {
+                        var globalPosition = element.getGlobalPosition()
+                        positions.push([globalPosition.x, globalPosition.y, null, null])
                     })
-                text.anchor.set(0.5, 0.5);
-                text.position.set(graphics.width / 2, graphics.height / 2);
-                graphics.addChild(text);
-                viewport.addChild(graphics)
-        
-                graphics
-                .on('mousedown', onDragStart)
-                .on('touchstart', onDragStart)
-                .on('mouseup', onDragEnd)
-                .on('mouseupoutside', onDragEnd)
-                .on('touchend', onDragEnd)
-                .on('touchendoutside', onDragEnd)
-                .on('mousemove', onDragMove)
-                .on('touchmove', onDragMove)
-                .output_lines = data.output_lines
+                    return positions;
+                }
 
-                graphics.input_lines = data.input_lines
-                graphics.out = data.out
-                graphics.input = data.input
-                graphics.nodeID = data.nodeID
+                function getInputPosition(input){
+                    var position = []
+                    var globalPosition = input.getGlobalPosition()
+                    position = [null, null, globalPosition.x, globalPosition.y]
+                    return position
+                }
 
-                Activity.rect_height = graphics.height
-                return graphics
-            })(this);
+                if(this.dragging){
+                    console.log("dragging", event.currentTarget.oldOutputLines, event.currentTarget.output_lines)
+                    var newPosition = this.data.getLocalPosition(this.parent);
+                    this.position.x += (newPosition.x - this.oldPosition.x)
+                    this.position.y += (newPosition.y - this.oldPosition.y)
+                    this.oldPosition = newPosition
+                    if(event.currentTarget.input_lines.length){
+                        var position = getInputPosition(event.currentTarget.input[0])
+                        traslateInputLines(event.currentTarget.input_lines, position)
+                    }
+                    if(event.currentTarget.output_lines.length){
+                        var positions = getOutPositions(event.currentTarget.out)
+                        traslateOutputLines(event.currentTarget.output_lines, positions)
+                    }
+                }
+            }
         }
 
         draw_output(color){
@@ -227,22 +222,29 @@ $(document).ready(function(){
             obj.endFill();
             obj.interactive = true
             var x_circle = this.rect.position.x + offset*(this.out.length + 1);
-            var y_circle = this.rect.position.y + Activity.rect_height;
+            var y_circle = this.rect.position.y + Activity.original_height
             obj.position.set(x_circle, y_circle);
             reposition_out(this.out)
             this.rect.addChild(obj)
             this.out.push(obj)
             this.output_lines.push({})
+            this.oldOutputLines.push({})
 
             function onDragStart(event){
                 event.stopPropagation()
                 this.alpha = 0.5
                 this.dragging = true
                 var index = event.currentTarget.line_index
+                event.currentTarget.output_lines.forEach((element, index)=>{
+                    event.currentTarget.oldOutputLines[index] = element
+                })
                 var globalPosition = obj.getGlobalPosition()
                 var line = new Line([globalPosition.x, globalPosition.y, event.data.global.x, event.data.global.y], 10, 0x6EA62E)
                 viewport.addChild(line)
                 event.currentTarget.output_lines[index] = line
+                console.log("start target", event.currentTarget == event.target)
+                event.oldtarget = event.currentTarget
+                event.oldinfo = [this, event]
             }
         
             function onDragEnd(event){
@@ -262,15 +264,41 @@ $(document).ready(function(){
                 event.stopPropagation()
                 this.alpha = 1
                 this.dragging = false
+                event.oldinfo[0].alpha = 1
+                event.oldinfo[0].dragging = false
+                event.oldinfo[1].stopPropagation()
                 var collision = false;
 
                 var activity = app.renderer.plugins.interaction.hitTest(event.data.global)
-                if(activity && activity.nodeID != event.currentTarget.nodeID){
+                console.log("nodeID from-to", event.oldtarget.nodeID, activity.nodeID)
+                console.log("activity", activity)
+                console.log("currentTarget",event.oldtarget)
+                if(activity && activity.nodeID != event.oldtarget.nodeID){
                     if(checkCollision(event.data.global, activity.input[0])){
                         collision = true
-                        activity.input_lines.push(event.currentTarget.output_lines[event.currentTarget.line_index])
+                        activity.input_lines.push(event.oldtarget.output_lines[event.oldtarget.line_index])
                     }
                 }
+                if(!collision){
+                    var index = event.oldtarget.line_index
+                    if(event.oldtarget.output_lines[index] instanceof PIXI.Graphics)
+                        console.log("here")
+                        event.oldtarget.output_lines[index].destroy()
+                    if(event.oldtarget.oldOutputLines){
+                        event.oldtarget.oldOutputLines.forEach((element, index) => {
+                            event.oldtarget.output_lines[index] = element
+                        });
+                    }
+                    else
+                        event.oldtarget.output_lines[index] = {}
+                }
+                else{//collision
+                    var index = event.oldtarget.line_index
+                    if(event.oldtarget.oldOutputLines[index] instanceof PIXI.Graphics)
+                        event.oldtarget.oldOutputLines[index].destroy()
+                    //todo handle input remotion
+                }
+                console.log("ondragend",collision,event.oldtarget.oldOutputLines,event.oldtarget.output_lines)
                     
             }
         
@@ -280,7 +308,8 @@ $(document).ready(function(){
                     var index = event.currentTarget.line_index
                     var line = event.currentTarget.output_lines[index]
                     var globalPosition = obj.getGlobalPosition()
-                    line.updatePoints([globalPosition.x, globalPosition.y, event.data.global.x, event.data.global.y])
+                    if(line instanceof PIXI.Graphics)
+                        line.updatePoints([globalPosition.x, globalPosition.y, event.data.global.x, event.data.global.y])
                 }
             }
 
@@ -296,7 +325,8 @@ $(document).ready(function(){
                 .line_index = this.out.length - 1
             obj.output_lines = this.output_lines
             obj.nodeID = this.nodeID
-
+            obj.input = this.input
+            obj.oldOutputLines = this.oldOutputLines
 
         }
 
@@ -352,6 +382,7 @@ $(document).ready(function(){
 
     var act = new Activity("pluto")
     act.draw_output(BUTTON_COLOR)
+    act.draw_input(BUTTON_COLOR)
 
 
 })
