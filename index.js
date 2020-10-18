@@ -66,7 +66,7 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({extended: true}))
 
 app.use(cookieParser(credentials.cookieSecret))
-//cookie middleware MUST be before session 
+//cookie middleware MUST be before session
 app.use(expressSession({
     resave: false,
     saveUninitialized: false,
@@ -96,6 +96,10 @@ app.post("/register-user", handlers.registerUser);
 
 app.get("/pixi", (req, res) => res.render("test-pixi"))
 
+app.get("/createstory", (req, res) => res.render("storycreate"))
+
+app.get("/activities/", handlers.getActivities)
+
 app.use(handlers.notFound); // need to be after all others routing handlers
 
 app.use(handlers.serverError); //called when a function throws a new Error() and nothing intercept it
@@ -113,4 +117,3 @@ if(require.main === module){
 else{
     module.exports = startServer
 }
-
