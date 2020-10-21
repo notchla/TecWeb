@@ -100,6 +100,8 @@ app.get("/createstory", (req, res) => res.render("storycreate"))
 
 app.get("/activities/", handlers.getActivities)
 
+app.get("/activities/forms/:type", handlers.getActivityForm)
+
 app.use(handlers.notFound); // need to be after all others routing handlers
 
 app.use(handlers.serverError); //called when a function throws a new Error() and nothing intercept it

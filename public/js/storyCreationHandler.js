@@ -5,7 +5,7 @@ var Counter = function(){
     }
 }();
 
-var activities = []
+var activities = [];
 
 function actToId(act) {
   return act.replace(" ", "-");
@@ -15,19 +15,42 @@ function idToAct(id) {
   return id.replace("-", " ");
 }
 
-function generateForm4Activity(name) {
-  if(name != "root") {
-    var index = actToId(name);
-    //TODO generic and modular function call for form generation
-    //has to be modular to load custom templates
-
-    //TODO collect all activity form data for serialization (unique incremental ids for each activity)
-    //example for a description activity
-    return "<label for=\"message-text\" class=\"col-form-label\"> " + activities[index].type + " </label> "+
-              "<textarea class=\"form-control\" id=\"temp\"></textarea>"
-  } else {
-    return "<p> root </p>"
+function generateForm4Activity(type) {
+  //TODO collect all activity form data for serialization (unique incremental ids for each activity)
+  //example for a description activity
+  var ret = "<p> root </p>";
+  if(type != "root") {
+    var index = actToId(type);
+    $.ajax({
+      type: "get",
+      async: false,
+      url: "/activities/forms/" + type,
+      crossDomain: true,
+      success: function(data) {
+        ret = data.form;
+      },
+      error: function(data) {
+      }
+    })
   }
+  return ret;
+}
+
+function packActivityData(formData) {
+  var inputs = formData.find("input, textarea");
+  var data = {};
+  inputs.each(function(_, el) {
+    var id = el.id
+    if(data[id] == null){
+      data[id] = [];
+    }
+    if(id == "answer") {
+      data[id].push(el.value.split(","));
+    } else {
+      data[id].push(el.value);
+    }
+  });
+  return data
 }
 
 class TreeNode {
@@ -129,6 +152,7 @@ $(document).ready(function(){
             this.output_lines = []
             this.oldOutputLines = []
             this.rect_height = 0
+
             var graphics = this.rect = new PIXI.Graphics()
 
             var width = BLOCK_WIDTH
@@ -173,7 +197,7 @@ $(document).ready(function(){
             Activity.original_height = this.rect.height
 
             // modals creation
-            var idEdit = actToId(this.type) + "-edit-modal";
+            var idEdit = actToId(this.type) + this.nodeID + "-edit-modal";
             var modalBody = generateForm4Activity(this.type);
             //TODO modal form compilation based on request
             var modal = "<div class=\"modal fade\" id=\"" + idEdit + "\" role=\"dialog\">" +
@@ -183,17 +207,28 @@ $(document).ready(function(){
                     "<h5 class=\"modal-title\"> Edit activity </h5>" +
                     "<button type=\"button\" class=\"close\" data-dismiss=\"modal\">&times;</button>" +
                   "</div>" +
-                  "<div class=\"modal-body\">" +
+                  "<div id=\"activity-form\" class=\"modal-body\">" +
                     modalBody +
                   "</div>" +
                   "<div class=\"modal-footer\">" +
-                    "<button type=\"button\" class=\"btn btn-primary\" data-dismiss=\"modal\">Close</button>" +
+                    "<button type=\"button\" class=\"btn btn-primary\" id=\"" + idEdit + "-button\">Close</button>" +
                   "</div>" +
                 "</div>" +
               "</div>" +
             "</div>";
 
+            // TODO update outputs on close
             $("body").append(modal);
+
+            //add value update on modal close
+            $("#" + idEdit + "-button").click(() => {
+              this.data = packActivityData($("#" + idEdit))
+              //add outputs to the activity node according to the answers
+              // for(var i = 0; i < this.data["answer"].length; i++) {
+              //   this.draw_output(BUTTON_COLOR);
+              // }
+              $("#" + idEdit).modal("hide");
+            });
 
             // -------- event handlers --------
             function onDragStart(event){
@@ -275,7 +310,7 @@ $(document).ready(function(){
         }
 
         edit() {
-          var id = actToId(this.type) + "-edit-modal";
+          var id = actToId(this.type) + this.nodeID + "-edit-modal";
           $("#" + id).modal();
         }
 
@@ -517,7 +552,7 @@ $(document).ready(function(){
         },
         error: function(data) {
         }
-      })
+      });
     }
     console.log(activities)
     // custom menu event handler
