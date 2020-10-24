@@ -41,13 +41,11 @@ function packActivityData(formData) {
   var data = {};
   inputs.each(function(_, el) {
     var id = el.id
-    if(data[id] == null){
-      data[id] = [];
-    }
     if(id == "answer") {
-      data[id].push(el.value.split(","));
+      data[id] = el.value.split(",");
+      data[id] = data[id].filter(e => e !== "");
     } else {
-      data[id].push(el.value);
+      data[id] = (el.value);
     }
   });
   return data
@@ -135,7 +133,7 @@ $(document).ready(function(){
     var contextActivity;
 
     var FONT = 'Arial';
-    var FONT_SIZE = 18;
+    var TITLE_COLOR = 'red';
     var TEXT_COLOR = 'white';
     var BUTTON_COLOR = 0x5DBCD2;
     var BLOCK_WIDTH = 200
@@ -154,23 +152,26 @@ $(document).ready(function(){
             this.rect_height = 0
 
             var graphics = this.rect = new PIXI.Graphics()
-
             var width = BLOCK_WIDTH
             var height = BLOCK_HEIGHT
             graphics.interactive = true
             graphics.lineStyle(2, 0x000000, 1);
             graphics.beginFill(BUTTON_COLOR);
-            graphics.drawRect(0, 0, width, height);
+            graphics.drawRect(0, 0, width, height, 15);
             graphics.endFill();
-            var text = new PIXI.Text(type,
+            var title = new PIXI.Text(type.toUpperCase(),
                 {
                     fontFamily: FONT,
-                    fontSize: FONT_SIZE,
-                    fill: TEXT_COLOR,
+                    fontWeight: 800,
+                    fill: TITLE_COLOR,
                 })
-            text.anchor.set(0.5, 0.5);
-            text.position.set(graphics.width / 2, graphics.height / 2);
-            graphics.addChild(text);
+            title.anchor.set(0.5, 0.5);
+            title.width = this.rect.width / 1.4;
+            title.scale.y = title.scale.x;
+            // no more blurry text
+            title.resolution = 2;
+            title.position.set(graphics.width / 2, graphics.height / 4);
+            graphics.addChild(title);
             viewport.addChild(graphics)
 
             graphics
@@ -223,10 +224,25 @@ $(document).ready(function(){
             //add value update on modal close
             $("#" + idEdit + "-button").click(() => {
               this.data = packActivityData($("#" + idEdit))
+              if(this.text == null) {
+                var short = this.data["question"].replace(/(.{8})..+/, "$1…");
+                this.text = new PIXI.Text(short,
+                    {
+                        fontFamily: FONT,
+                        fill: TEXT_COLOR,
+                        fontSize: 14
+                    })
+                this.text.anchor.set(0.5, 0.5);
+                this.text.position.set(graphics.width / 2, graphics.height / 2);
+                graphics.addChild(this.text);
+              } else {
+                this.text.text = this.data["question"];
+              }
               //add outputs to the activity node according to the answers
-              // for(var i = 0; i < this.data["answer"].length; i++) {
-              //   this.draw_output(BUTTON_COLOR);
-              // }
+              for(var i = this.output_lines.length; i < this.data["answer"].length; i++) {
+                console.log(this.data["answer"])
+                this.draw_output(BUTTON_COLOR);
+              }
               $("#" + idEdit).modal("hide");
             });
 
@@ -300,7 +316,7 @@ $(document).ready(function(){
 
             // show context menu (edit and delete)
             function onRightClick(event) {
-              var contextY = event.target.position.y + $("#activity-context-menu").height();
+              var contextY = event.target.position.y + $("#activity-context-menu").height() * 1.3;
               var contextX = event.target.position.x;
               $("#activity-context-menu").finish().toggle(100).css({
                 top: contextY + "px",
@@ -354,8 +370,9 @@ $(document).ready(function(){
             obj.drawCircle(0, 0, 10);
             obj.endFill();
             obj.interactive = true
-            var x_circle = this.rect.position.x + offset*(this.out.length + 1);
-            var y_circle = this.rect.position.y + Activity.original_height
+            // the circle position is relative to its parent
+            var x_circle = offset*(this.out.length + 1);
+            var y_circle = Activity.original_height
             obj.position.set(x_circle, y_circle);
             reposition_out(this.out)
             this.rect.addChild(obj)
@@ -545,7 +562,6 @@ $(document).ready(function(){
             $("#" + actToId(act.type)).click(function(event) {
               //create new activity
               var activity = new Activity(idToAct(event.target.id));
-              activity.draw_output(BUTTON_COLOR)
               activity.draw_input(BUTTON_COLOR)
             });
           });
