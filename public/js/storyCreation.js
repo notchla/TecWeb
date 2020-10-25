@@ -5,6 +5,8 @@ var Counter = function(){
     }
 }();
 
+var activities = [];
+
 function actToId(act) {
     return act.replace(" ", "-");
   }
@@ -140,8 +142,11 @@ $(document).ready(function(){
 
     window.addEventListener('resize', resize);
 
+    // activity that was clicked on for the context menu
+    var contextActivity;
+
     var FONT = 'Arial';
-    var FONT_SIZE = 18;
+    var TITLE_COLOR = 'red';
     var TEXT_COLOR = 'white';
     var BUTTON_COLOR = 0x5DBCD2;
     var BLOCK_WIDTH = 200
@@ -165,17 +170,21 @@ $(document).ready(function(){
             graphics.interactive = true
             graphics.lineStyle(2, 0x000000, 1);
             graphics.beginFill(BUTTON_COLOR);
-            graphics.drawRect(0, 0, width, height);
+            graphics.drawRect(0, 0, width, height, 15);
             graphics.endFill();
-            var text = new PIXI.Text(type,
+            var title = new PIXI.Text(type.toUpperCase(),
                 {
                     fontFamily: FONT,
-                    fontSize: FONT_SIZE,
-                    fill: TEXT_COLOR,
+                    fontWeight: 800,
+                    fill: TITLE_COLOR,
                 })
-            text.anchor.set(0.5, 0.5);
-            text.position.set(graphics.width / 2, graphics.height / 2);
-            graphics.addChild(text);
+            title.anchor.set(0.5, 0.5);
+            title.width = this.rect.width / 1.4;
+            title.scale.y = title.scale.x;
+            // no more blurry text
+            title.resolution = 2;
+            title.position.set(graphics.width / 2, graphics.height / 4);
+            graphics.addChild(title);
             viewport.addChild(graphics)
 
             graphics
@@ -187,17 +196,73 @@ $(document).ready(function(){
                 .on('touchendoutside', onDragEnd)
                 .on('mousemove', onDragMove)
                 .on('touchmove', onDragMove)
-                .on('rightclick', this.delete)
+                .on('rightclick', (event) => {
+                  // lambda to preserve class context (lost on constructor funcion call)
+                  // set context menu caller
+                  contextActivity = this;
+                  onRightClick(event);
+              });
+
             graphics.input_lines = this.input_lines
             graphics.output_lines = this.output_lines
             graphics.out = this.out
             graphics.input = this.input
             graphics.nodeID = this.nodeID
             graphics.classptr = this
-
             Activity.original_height = this.rect.height
 
+            // modals creation
+            var idEdit = actToId(this.type) + this.nodeID + "-edit-modal";
+            var modalBody = generateForm4Activity(this.type);
+            //TODO modal form compilation based on request
+            var modal = "<div class=\"modal fade\" id=\"" + idEdit + "\" role=\"dialog\">" +
+              "<div class=\"modal-dialog modal-dialog-centered\" role=\"document\">" +
+                "<div class=\"modal-content\">" +
+                  "<div class=\"modal-header\">" +
+                    "<h5 class=\"modal-title\"> Edit activity </h5>" +
+                    "<button type=\"button\" class=\"close\" data-dismiss=\"modal\">&times;</button>" +
+                  "</div>" +
+                  "<div id=\"activity-form\" class=\"modal-body\">" +
+                    modalBody +
+                  "</div>" +
+                  "<div class=\"modal-footer\">" +
+                    "<button type=\"button\" class=\"btn btn-primary\" id=\"" + idEdit + "-button\">Close</button>" +
+                  "</div>" +
+                "</div>" +
+              "</div>" +
+            "</div>";
+
+            // TODO update outputs on close
+            $("body").append(modal);
+
+            //add value update on modal close
+            $("#" + idEdit + "-button").click(() => {
+              this.data = packActivityData($("#" + idEdit))
+              if(this.text == null) {
+                var short = this.data["question"].replace(/(.{8})..+/, "$1…");
+                this.text = new PIXI.Text(short,
+                    {
+                        fontFamily: FONT,
+                        fill: TEXT_COLOR,
+                        fontSize: 14
+                    })
+                this.text.anchor.set(0.5, 0.5);
+                this.text.position.set(graphics.width / 2, graphics.height / 2);
+                graphics.addChild(this.text);
+              } else {
+                this.text.text = this.data["question"];
+              }
+              //add outputs to the activity node according to the answers
+              for(var i = this.output_lines.length; i < this.data["answer"].length; i++) {
+                console.log(this.data["answer"])
+                this.draw_output(BUTTON_COLOR);
+              }
+              $("#" + idEdit).modal("hide");
+            });
+
+            // -------- event handlers --------
             function onDragStart(event){
+                $("#activity-context-menu").finish().hide(100);
                 this.data = event.data
                 this.alpha = 0.5
                 this.dragging = true;
@@ -205,6 +270,7 @@ $(document).ready(function(){
             }
 
             function onDragEnd(){
+                $("#activity-context-menu").finish().hide(100);
                 this.alpha = 1
                 this.dragging = false
                 this.data = null
@@ -212,7 +278,6 @@ $(document).ready(function(){
 
             function onDragMove(event){
                 function traslateOutputLines(lines, positions){
-                    
                     lines.forEach((element, index) => {
                         if(element instanceof PIXI.Graphics){
                             var pos = positions[index]
@@ -260,11 +325,50 @@ $(document).ready(function(){
                     }
                 }
             }
+
+            // show context menu (edit and delete)
+            function onRightClick(event) {
+              var contextY = event.target.position.y + $("#activity-context-menu").height() * 1.3;
+              var contextX = event.target.position.x;
+              $("#activity-context-menu").finish().toggle(100).css({
+                top: contextY + "px",
+                left: contextX + "px"
+              });
+            }
+        }
+
+        edit() {
+          var id = actToId(this.type) + this.nodeID + "-edit-modal";
+          $("#" + id).modal();
+        }
+
+        delete() {
+          // var id = actToId(this.type) + "-delete-modal"
+          // $("#" + id).modal();
+          if(this.type != "root") {
+              this.type = null
+              this.deleteChilds()
+              this.deleteParents()
+            //   this.input = []
+            //   this.out = []
+              // this.input_lines.forEach(function(line) {
+              //   if(line instanceof PIXI.Graphics)
+              //     line.destroy();
+              // });
+              // this.output_lines.forEach(function(line) {
+              //   if(line instanceof PIXI.Graphics)
+              //     line.destroy();
+              // });
+              // this.oldOutputLines.forEach(function(line) {
+              //   if(line instanceof PIXI.Graphics)
+              //     line.destroy();
+              // });
+              this.rect.destroy();
+          }
         }
 
         draw_output(color){
             var offset = this.rect.width / (this.out.length > 0 ? this.out.length + 2 : 2)
-            
             function reposition_out(out){
                 var index = out.length
                 for (let i = 0; i < index; i++) {
@@ -279,6 +383,7 @@ $(document).ready(function(){
             obj.drawCircle(0, 0, 10);
             obj.endFill();
             obj.interactive = true
+            // the circle position is relative to its parent
             var x_circle = offset*(this.out.length + 1);
             var y_circle = Activity.original_height
             obj.position.set(x_circle, y_circle);
@@ -424,23 +529,6 @@ $(document).ready(function(){
             this.parents = {}
         }
 
-        delete(event) {
-            console.log("before delete")
-            console.log(event.currentTarget.classptr.childs)
-            console.log(event.currentTarget.classptr.parents)
-            console.log(event.currentTarget.classptr.input_lines)
-            console.log(event.currentTarget.classptr.output_lines)
-            event.currentTarget.classptr.deleteChilds()
-            event.currentTarget.classptr.deleteParents()
-            console.log("after delete")
-            console.log(event.currentTarget.classptr.childs)
-            console.log(event.currentTarget.classptr.parents)
-            console.log(event.currentTarget.classptr.input_lines)
-            console.log(event.currentTarget.classptr.output_lines)
-            event.currentTarget.classptr.rect.destroy()
-        }
-
-
     }
 
     class Line extends PIXI.Graphics {
@@ -470,18 +558,74 @@ $(document).ready(function(){
         }
     }
 
-    var activity = new Activity("pippo")
-    activity.draw_output(BUTTON_COLOR)
-    activity.draw_output(BUTTON_COLOR)
-    activity.draw_output(BUTTON_COLOR)
-    activity.draw_input(BUTTON_COLOR)
+    function getConfigs() {
+      $.ajax({
+        type: "get",
+        url: "/activities/",
+        crossDomain: true,
+        success: function(data) {
+          data.activities.forEach(function(act) {
+            index = actToId(act.type)
+            activities[index] = {
+              "type" : act.type,
+              "name" : act.name
+            }
+          });
+        },
+        error: function(data) {
+        }
+      })
+    }
 
-    var act = new Activity("pluto")
-    act.draw_output(BUTTON_COLOR)
-    act.draw_input(BUTTON_COLOR)
+    function getActivities() {
+      $.ajax({
+        type: "get",
+        url: "/activities/",
+        crossDomain: true,
+        success: function(data) {
+          var activityList = ""
+          data.activities.forEach(function(act) {
+            index = actToId(act.type)
+            activities[index] = {
+              "type" : act.type
+            }
+            activityList += "<button type=\"button\" class=\"dropdown-item\" id = \"" + index + "\"> " + act.type + " </button>";
+          });
+          $("#activity-selector").append(activityList);
+          data.activities.forEach(function(act) {
+            $("#" + actToId(act.type)).click(function(event) {
+              //create new activity
+              var activity = new Activity(idToAct(event.target.id));
+              activity.draw_input(BUTTON_COLOR)
+            });
+          });
+        },
+        error: function(data) {
+        }
+      });
+    }
+    console.log(activities)
+    // custom menu event handler
+    $("#activity-context-menu span").click(function(){
+      console.log(contextActivity);
+      // This is the triggered action name
+      switch($(this).attr("data-action")) {
+        // A case for each action. Your actions here
+        case "edit": contextActivity.edit(); break;
+        case "delete": contextActivity.delete(); break;
+      }
 
-    var act2 = new Activity("paperino")
-    act2.draw_input(BUTTON_COLOR)
+      // Hide it AFTER the action was triggered
+      $("#activity-context-menu").hide(100);
+    });
+
+
+    // activity selection menu initialization
+    getActivities();
+
+    //root activity
+    var root = new Activity("root")
+    root.draw_output(BUTTON_COLOR)
 
 
 })
