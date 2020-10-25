@@ -10,16 +10,24 @@ class TreeNode {
     //child tree
     //siblings
     constructor() {
-      this.parent = null; //root
-      this.child = null;
-      this.sibling = null;
+      this.parents = {}; //root
+      this.childs = {};
+      this.lastChildAdded = null
       this.nodeID = Counter.get()
     }
   
-    insertChild(child) {
-      child.parent = this;
-      child.sibling = this.child;
-        this.child = child;
+    insertChild(out, outLine, inLine, child) {
+        var parent = this
+        if(child.parents[this])
+            child.parents[this].push({out, outLine, inLine, parent})
+        else
+            child.parents[this] = [{out, outLine, inLine, parent}]
+
+
+        if(this.childs[child])
+            this.childs[child].push({out, outLine, inLine, child})
+        else
+            this.childs[child] = [{out, outLine, inLine, child}]
     }
 
     insertSibling(sibling) {
@@ -49,6 +57,11 @@ class TreeNode {
     getfirstChild() {
         return this.child;
     }
+
+}
+
+TreeNode.prototype.toString = function() {
+    return this.nodeID
 }
 
   
@@ -130,11 +143,13 @@ $(document).ready(function(){
                 .on('touchendoutside', onDragEnd)
                 .on('mousemove', onDragMove)
                 .on('touchmove', onDragMove)
+                .on('rightclick', this.delete)
             graphics.input_lines = this.input_lines
             graphics.output_lines = this.output_lines
             graphics.out = this.out
             graphics.input = this.input
             graphics.nodeID = this.nodeID
+            graphics.classptr = this
 
             Activity.original_height = this.rect.height
 
@@ -187,7 +202,6 @@ $(document).ready(function(){
                 }
 
                 if(this.dragging){
-                    console.log("dragging", event.currentTarget.oldOutputLines, event.currentTarget.output_lines)
                     var newPosition = this.data.getLocalPosition(this.parent);
                     this.position.x += (newPosition.x - this.oldPosition.x)
                     this.position.y += (newPosition.y - this.oldPosition.y)
@@ -221,8 +235,8 @@ $(document).ready(function(){
             obj.drawCircle(0, 0, 10);
             obj.endFill();
             obj.interactive = true
-            var x_circle = this.rect.position.x + offset*(this.out.length + 1);
-            var y_circle = this.rect.position.y + Activity.original_height
+            var x_circle = offset*(this.out.length + 1);
+            var y_circle = Activity.original_height
             obj.position.set(x_circle, y_circle);
             reposition_out(this.out)
             this.rect.addChild(obj)
@@ -242,7 +256,6 @@ $(document).ready(function(){
                 var line = new Line([globalPosition.x, globalPosition.y, event.data.global.x, event.data.global.y], 10, 0x6EA62E)
                 viewport.addChild(line)
                 event.currentTarget.output_lines[index] = line
-                console.log("start target", event.currentTarget == event.target)
                 event.oldtarget = event.currentTarget
                 event.oldinfo = [this, event]
             }
@@ -270,19 +283,16 @@ $(document).ready(function(){
                 var collision = false;
 
                 var activity = app.renderer.plugins.interaction.hitTest(event.data.global)
-                console.log("nodeID from-to", event.oldtarget.nodeID, activity.nodeID)
-                console.log("activity", activity)
-                console.log("currentTarget",event.oldtarget)
                 if(activity && activity.nodeID != event.oldtarget.nodeID){
                     if(checkCollision(event.data.global, activity.input[0])){
                         collision = true
                         activity.input_lines.push(event.oldtarget.output_lines[event.oldtarget.line_index])
+                        event.oldtarget.classptr.insertChild(event.oldtarget, event.oldtarget.line_index, activity.input_lines.length - 1, activity.classptr)
                     }
                 }
                 if(!collision){
                     var index = event.oldtarget.line_index
                     if(event.oldtarget.output_lines[index] instanceof PIXI.Graphics)
-                        console.log("here")
                         event.oldtarget.output_lines[index].destroy()
                     if(event.oldtarget.oldOutputLines){
                         event.oldtarget.oldOutputLines.forEach((element, index) => {
@@ -298,7 +308,6 @@ $(document).ready(function(){
                         event.oldtarget.oldOutputLines[index].destroy()
                     //todo handle input remotion
                 }
-                console.log("ondragend",collision,event.oldtarget.oldOutputLines,event.oldtarget.output_lines)
                     
             }
         
@@ -327,7 +336,7 @@ $(document).ready(function(){
             obj.nodeID = this.nodeID
             obj.input = this.input
             obj.oldOutputLines = this.oldOutputLines
-
+            obj.classptr = this
         }
 
         draw_input(color){
@@ -344,6 +353,49 @@ $(document).ready(function(){
                 this.rect.addChild(obj)
             }
         }
+
+        deleteChilds(){
+            for (const [key, childs] of Object.entries(this.childs)){
+                childs.forEach((element, index) => {
+                    var line = this.output_lines[element.outLine]
+                    this.output_lines[element.outLine] = {}
+                    element.child.input_lines[element.inLine] = {}
+                    line.destroy()
+                    delete element.child.parents[this.nodeID]
+                })
+            }
+            this.childs = {}
+        }
+
+        deleteParents(){
+            for(const [key, parents] of Object.entries(this.parents)){
+                parents.forEach((element, index) => {
+                    var line = this.input_lines[element.inLine]
+                    this.input_lines[element.inLine] = {}
+                    element.parent.output_lines[element.outLine] = {}
+                    line.destroy()
+                    delete element.parent.childs[this.nodeID]
+                })
+            }
+            this.parents = {}
+        }
+
+        delete(event) {
+            console.log("before delete")
+            console.log(event.currentTarget.classptr.childs)
+            console.log(event.currentTarget.classptr.parents)
+            console.log(event.currentTarget.classptr.input_lines)
+            console.log(event.currentTarget.classptr.output_lines)
+            event.currentTarget.classptr.deleteChilds()
+            event.currentTarget.classptr.deleteParents()
+            console.log("after delete")
+            console.log(event.currentTarget.classptr.childs)
+            console.log(event.currentTarget.classptr.parents)
+            console.log(event.currentTarget.classptr.input_lines)
+            console.log(event.currentTarget.classptr.output_lines)
+            event.currentTarget.classptr.rect.destroy()
+        }
+
 
     }
 
@@ -383,6 +435,9 @@ $(document).ready(function(){
     var act = new Activity("pluto")
     act.draw_output(BUTTON_COLOR)
     act.draw_input(BUTTON_COLOR)
+
+    var act2 = new Activity("paperino")
+    act2.draw_input(BUTTON_COLOR)
 
 
 })
