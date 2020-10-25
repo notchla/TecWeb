@@ -7,7 +7,6 @@ var Counter = (function () {
     },
   };
 })();
-//ciao
 
 var activities = [];
 
@@ -63,6 +62,7 @@ class TreeNode {
     this.childs = {};
     this.lastChildAdded = null;
     this.nodeID = Counter.get();
+    this.outToChild = {};
   }
 
   insertChild(out, outLine, inLine, child) {
@@ -74,6 +74,8 @@ class TreeNode {
     if (this.childs[child])
       this.childs[child].push({ out, outLine, inLine, child });
     else this.childs[child] = [{ out, outLine, inLine, child }];
+
+    // this.outToChild[outLine] = child;
   }
 
   insertSibling(sibling) {
@@ -85,24 +87,38 @@ class TreeNode {
     }
   }
 
-  deleteChild() {
-    if (this.child != null) {
-      this.child = this.child.sibling;
+  outLinetoChildInputLine(outLine) {
+    for (const [key, child] of Object.entries(this.childs)) {
+      for (const element of child) {
+        if (element.outLine == outLine) {
+          return [element.child, element.inLine];
+        }
+      }
     }
+    return [null, null];
   }
 
-  deleteSibling() {
-    if (this.child != null) {
-      this.sibling = this.sibling.sibling;
+  deleteParent(parent, outLine) {
+    var parentConn = this.parents[parent];
+    for (const [index, element] of Object.entries(parentConn)) {
+      if (element.outLine === outLine) {
+        parentConn.splice(index, 1);
+        break;
+      }
     }
+    if (parentConn.length == 0) delete this.parents[parent];
   }
 
-  getnextSibling() {
-    return this.sibling;
-  }
-
-  getfirstChild() {
-    return this.child;
+  deleteChild(child, outLine) {
+    var childConn = this.childs[child];
+    console.log("childConn", childConn);
+    for (const [index, element] of Object.entries(childConn)) {
+      if (element.outLine === outLine) {
+        childConn.splice(index, 1);
+        break;
+      }
+    }
+    if (childConn.length == 0) delete this.childs[child];
   }
 }
 
@@ -194,6 +210,12 @@ $(document).ready(function () {
         .on("touchendoutside", onDragEnd)
         .on("mousemove", onDragMove)
         .on("touchmove", onDragMove)
+        .on("rightclick", () => {
+          console.log("parents", this.parents);
+          console.log("childs", this.childs);
+          console.log("input lines", this.input_lines);
+          console.log("output lines", this.output_lines);
+        })
         .on("rightclick", (event) => {
           // lambda to preserve class context (lost on constructor funcion call)
           // set context menu caller
@@ -452,12 +474,34 @@ $(document).ready(function () {
         event.oldinfo[1].stopPropagation();
         var collision = false;
 
+        //ray cast
         var activity = app.renderer.plugins.interaction.hitTest(
           event.data.global
         );
         if (activity && activity.nodeID != event.oldtarget.nodeID) {
           if (checkCollision(event.data.global, activity.input[0])) {
             collision = true;
+            const [
+              oldchild,
+              inLine,
+            ] = event.oldtarget.classptr.outLinetoChildInputLine(
+              event.oldtarget.line_index
+            );
+
+            console.log("oldChild", oldchild, "inLine", inLine);
+
+            if (oldchild && inLine != null) {
+              oldchild.input_lines[inLine] = {};
+              oldchild.deleteParent(
+                event.oldtarget.classptr,
+                event.oldtarget.line_index
+              );
+              event.oldtarget.classptr.deleteChild(
+                oldchild,
+                event.oldtarget.line_index
+              );
+            }
+
             activity.input_lines.push(
               event.oldtarget.output_lines[event.oldtarget.line_index]
             );
@@ -483,7 +527,16 @@ $(document).ready(function () {
           var index = event.oldtarget.line_index;
           if (event.oldtarget.oldOutputLines[index] instanceof PIXI.Graphics)
             event.oldtarget.oldOutputLines[index].destroy();
-          //todo handle input remotion
+
+          // var input_line_index = event.oldtarget.classptr.getChildInputLineIndex(
+          //   activity.classptr,
+          //   event.oldtarget.line_index
+          // );
+
+          // console.log("index", input_line_index);
+          // console.log("input_lines", activity.input_lines);
+          // activity.input_lines[input_line_index] = {};
+          // //todo handle input remotion
         }
       }
 
