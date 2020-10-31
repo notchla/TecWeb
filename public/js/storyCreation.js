@@ -5,6 +5,9 @@ var Counter = (function () {
       i = i + 1;
       return i;
     },
+    curr : function() {
+      return i;
+    }
   };
 })();
 
@@ -38,7 +41,7 @@ function generateForm4Activity(type) {
   return ret;
 }
 
-function packActivityData(formData) {
+function packFormData(formData) {
   var inputs = formData.find("input, textarea");
   var data = {};
   inputs.each(function (_, el) {
@@ -51,6 +54,58 @@ function packActivityData(formData) {
     }
   });
   return data;
+}
+
+function packStory(root) {
+  //adjacency lists
+  var adj = new Map();
+  // node array
+  var nodes = [];
+  // visited as array with size as max ID
+  dfsActivity(root,
+    adj,
+    nodes,
+    Array.apply(null, Array(Counter.curr())).map(function (x, i) { return false; })
+  );
+  var json = {
+    adj : Array.from(adj, ([k, v]) => ({ k, v })),
+    nodes : nodes
+  }
+  return JSON.stringify(json)
+}
+
+function dfsActivity(node, adj, nodes, visited) {
+  visited[node.nodeID] = true
+  for (const [_, v] of Object.entries(node.childs)) {
+    for (var element of v) {
+      // exclude root
+      nodes.push(packActivity(element.child));
+      if(node.nodeID != 1) {
+        if(adj.has(node.nodeID)) {
+          adj.get(node.nodeID).push(element.child.nodeID);
+        } else {
+          adj.set(node.nodeID, [element.child.nodeID])
+        }
+      }
+      //avoid iterating on already visited or empty nodes
+      if((Object.keys(element.child.childs).length > 0)
+          && (!visited[element.child.nodeID]))
+      {
+        dfsActivity(element.child, adj, nodes, visited);
+      }
+    }
+  }
+
+}
+
+function packActivity(activity) {
+  var ret =
+  {
+    id : activity.nodeID,
+    type : activity.type,
+    content : activity.data
+  }
+  return ret;
 }
 
 class TreeNode {
@@ -199,6 +254,16 @@ $(document).ready(function () {
       title.resolution = 2;
       title.position.set(graphics.width / 2, graphics.height / 4);
       graphics.addChild(title);
+      var idlabel = new PIXI.Text(this.nodeID.toString(), {
+        fontFamily: FONT,
+        fontWeight: 800,
+        fontSize: 10,
+        fill: TEXT_COLOR,
+      });
+      idlabel.anchor.set(0.5, 0.5);
+      idlabel.position.set(10, 10);
+      graphics.addChild(idlabel);
+
       viewport.addChild(graphics);
 
       graphics
@@ -231,6 +296,10 @@ $(document).ready(function () {
       graphics.classptr = this;
       Activity.original_height = this.rect.height;
 
+      if(this.type == "description") {
+        this.draw_output(BUTTON_COLOR);
+      }
+
       // modals creation
       var idEdit = actToId(this.type) + this.nodeID + "-edit-modal";
       var modalBody = generateForm4Activity(this.type);
@@ -262,7 +331,7 @@ $(document).ready(function () {
 
       //add value update on modal close
       $("#" + idEdit + "-button").click(() => {
-        this.data = packActivityData($("#" + idEdit));
+        this.data = packFormData($("#" + idEdit));
         if (this.text == null) {
           var short = this.data["question"].replace(/(.{8})..+/, "$1…");
           this.text = new PIXI.Text(short, {
@@ -274,16 +343,18 @@ $(document).ready(function () {
           this.text.position.set(graphics.width / 2, graphics.height / 2);
           graphics.addChild(this.text);
         } else {
-          this.text.text = this.data["question"];
+          this.text.text = this.data["question"].replace(/(.{8})..+/, "$1…");
         }
+        if(this.type != "description") {
         //add outputs to the activity node according to the answers
-        for (
-          var i = this.output_lines.length;
-          i < this.data["answer"].length;
-          i++
-        ) {
-          console.log(this.data["answer"]);
-          this.draw_output(BUTTON_COLOR);
+          for (
+            var i = this.output_lines.length;
+            i < this.data["answer"].length;
+            i++
+          ) {
+            console.log(this.data["answer"]);
+            this.draw_output(BUTTON_COLOR);
+          }
         }
         $("#" + idEdit).modal("hide");
       });
@@ -375,26 +446,10 @@ $(document).ready(function () {
     }
 
     delete() {
-      // var id = actToId(this.type) + "-delete-modal"
-      // $("#" + id).modal();
       if (this.type != "root") {
         this.type = null;
         this.deleteChilds();
         this.deleteParents();
-        //   this.input = []
-        //   this.out = []
-        // this.input_lines.forEach(function(line) {
-        //   if(line instanceof PIXI.Graphics)
-        //     line.destroy();
-        // });
-        // this.output_lines.forEach(function(line) {
-        //   if(line instanceof PIXI.Graphics)
-        //     line.destroy();
-        // });
-        // this.oldOutputLines.forEach(function(line) {
-        //   if(line instanceof PIXI.Graphics)
-        //     line.destroy();
-        // });
         this.rect.destroy();
       }
     }
@@ -643,24 +698,6 @@ $(document).ready(function () {
     }
   }
 
-  function getConfigs() {
-    $.ajax({
-      type: "get",
-      url: "/activities/",
-      crossDomain: true,
-      success: function (data) {
-        data.activities.forEach(function (act) {
-          index = actToId(act.type);
-          activities[index] = {
-            type: act.type,
-            name: act.name,
-          };
-        });
-      },
-      error: function (data) {},
-    });
-  }
-
   function getActivities() {
     $.ajax({
       type: "get",
@@ -692,7 +729,6 @@ $(document).ready(function () {
       error: function (data) {},
     });
   }
-  console.log(activities);
   // custom menu event handler
   $("#activity-context-menu span").click(function () {
     console.log(contextActivity);
@@ -717,4 +753,9 @@ $(document).ready(function () {
   //root activity
   var root = new Activity("root");
   root.draw_output(BUTTON_COLOR);
+
+  $("#save-button").click(function () {
+    var json = packStory(root);
+    console.log(json);
+  });
 });
