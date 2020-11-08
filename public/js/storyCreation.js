@@ -5,9 +5,9 @@ var Counter = (function () {
       i = i + 1;
       return i;
     },
-    curr : function() {
+    curr: function () {
       return i;
-    }
+    },
   };
 })();
 
@@ -62,49 +62,51 @@ function packStory(root) {
   // node array
   var nodes = [];
   // visited as array with size as max ID
-  dfsActivity(root,
+  dfsActivity(
+    root,
     adj,
     nodes,
-    Array.apply(null, Array(Counter.curr())).map(function (x, i) { return false; })
+    Array.apply(null, Array(Counter.curr())).map(function (x, i) {
+      return false;
+    })
   );
   var json = {
-    adj : Array.from(adj, ([k, v]) => ({ k, v })),
-    nodes : nodes
-  }
-  return JSON.stringify(json)
+    adj: Array.from(adj, ([k, v]) => ({ k, v })),
+    nodes: nodes,
+  };
+  return json;
 }
 
 function dfsActivity(node, adj, nodes, visited) {
-  visited[node.nodeID] = true
+  visited[node.nodeID] = true;
   for (const [_, v] of Object.entries(node.childs)) {
     for (var element of v) {
       // exclude root
       nodes.push(packActivity(element.child));
-      if(node.nodeID != 1) {
-        if(adj.has(node.nodeID)) {
+      if (node.nodeID != 1) {
+        if (adj.has(node.nodeID)) {
           adj.get(node.nodeID).push(element.child.nodeID);
         } else {
-          adj.set(node.nodeID, [element.child.nodeID])
+          adj.set(node.nodeID, [element.child.nodeID]);
         }
       }
       //avoid iterating on already visited or empty nodes
-      if((Object.keys(element.child.childs).length > 0)
-          && (!visited[element.child.nodeID]))
-      {
+      if (
+        Object.keys(element.child.childs).length > 0 &&
+        !visited[element.child.nodeID]
+      ) {
         dfsActivity(element.child, adj, nodes, visited);
       }
     }
   }
-
 }
 
 function packActivity(activity) {
-  var ret =
-  {
-    id : activity.nodeID,
-    type : activity.type,
-    content : activity.data
-  }
+  var ret = {
+    id: activity.nodeID,
+    type: activity.type,
+    content: activity.data,
+  };
   return ret;
 }
 
@@ -166,7 +168,6 @@ class TreeNode {
 
   deleteChild(child, outLine) {
     var childConn = this.childs[child];
-    console.log("childConn", childConn);
     for (const [index, element] of Object.entries(childConn)) {
       if (element.outLine === outLine) {
         childConn.splice(index, 1);
@@ -275,12 +276,6 @@ $(document).ready(function () {
         .on("touchendoutside", onDragEnd)
         .on("mousemove", onDragMove)
         .on("touchmove", onDragMove)
-        .on("rightclick", () => {
-          console.log("parents", this.parents);
-          console.log("childs", this.childs);
-          console.log("input lines", this.input_lines);
-          console.log("output lines", this.output_lines);
-        })
         .on("rightclick", (event) => {
           // lambda to preserve class context (lost on constructor funcion call)
           // set context menu caller
@@ -296,7 +291,7 @@ $(document).ready(function () {
       graphics.classptr = this;
       Activity.original_height = this.rect.height;
 
-      if(this.type == "description") {
+      if (this.type == "description") {
         this.draw_output(BUTTON_COLOR);
       }
 
@@ -345,14 +340,13 @@ $(document).ready(function () {
         } else {
           this.text.text = this.data["question"].replace(/(.{8})..+/, "$1…");
         }
-        if(this.type != "description") {
-        //add outputs to the activity node according to the answers
+        if (this.type != "description") {
+          //add outputs to the activity node according to the answers
           for (
             var i = this.output_lines.length;
             i < this.data["answer"].length;
             i++
           ) {
-            console.log(this.data["answer"]);
             this.draw_output(BUTTON_COLOR);
           }
         }
@@ -543,8 +537,6 @@ $(document).ready(function () {
               event.oldtarget.line_index
             );
 
-            console.log("oldChild", oldchild, "inLine", inLine);
-
             if (oldchild && inLine != null) {
               oldchild.input_lines[inLine] = {};
               oldchild.deleteParent(
@@ -587,9 +579,6 @@ $(document).ready(function () {
           //   activity.classptr,
           //   event.oldtarget.line_index
           // );
-
-          // console.log("index", input_line_index);
-          // console.log("input_lines", activity.input_lines);
           // activity.input_lines[input_line_index] = {};
           // //todo handle input remotion
         }
@@ -731,7 +720,6 @@ $(document).ready(function () {
   }
   // custom menu event handler
   $("#activity-context-menu span").click(function () {
-    console.log(contextActivity);
     // This is the triggered action name
     switch ($(this).attr("data-action")) {
       // A case for each action. Your actions here
@@ -756,6 +744,23 @@ $(document).ready(function () {
 
   $("#save-button").click(function () {
     var json = packStory(root);
+
+    const body = JSON.stringify({
+      adj: json.adj,
+      nodes: json.nodes,
+    });
+    console.log(body);
+    const headers = { "Content-Type": "application/json" };
+
+    fetch("/stories/registerStory", { method: "post", body, headers })
+      .then((resp) => {
+        if (resp.status < 200 || resp.status >= 300)
+          throw new Error(`request failed with status ${resp.status}`);
+        return;
+      })
+      .catch((err) => {
+        alert(err);
+      });
     console.log(json);
   });
 });
