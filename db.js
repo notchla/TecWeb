@@ -53,7 +53,8 @@ module.exports = {
   saveUser: async (username, id) => {
     await User.updateOne({ id }, { username }, { upsert: true });
   },
-  getStories: async (options = {}, fields = "") => Story.find(options, fields),
+  getStories: async (options = {}, fields = "") =>
+    NewStory.find(options, fields),
   saveStory: async (adj, nodes) => {
     await NewStory.updateOne(
       { title: "example1" },

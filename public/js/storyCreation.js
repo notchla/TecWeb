@@ -340,7 +340,9 @@ $(document).ready(function () {
         } else {
           this.text.text = this.data["question"].replace(/(.{8})..+/, "$1…");
         }
-        if (this.type != "description") {
+        console.log(this.type);
+        if (this.type != "description" && this.type != "end") {
+          console.log(this.type);
           //add outputs to the activity node according to the answers
           for (
             var i = this.output_lines.length;

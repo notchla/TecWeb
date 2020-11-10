@@ -89,12 +89,16 @@ app.use(usernameSession); //check for username in session
 
 app.use(sessionIDMiddleware);
 
+//load home with qr code
 app.get("/", handlers.home);
 
+//load the story called storyname
 app.get("/stories/:storyname", handlers.loadStory);
 
+//return the json representing the story called storyname
 app.get("/stories/json/:storyname", handlers.loadJson);
 
+//return the activity template
 app.get("/stories/template/:templatename", handlers.loadTemplate);
 
 app.get("/checkqr/:code", handlers.checkStoryExists);
