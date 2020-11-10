@@ -1,8 +1,9 @@
-body {
+#pixi-area {
   margin:0;
   padding:0;
   overflow:hidden;
 }
+
 #activity-context-menu {
   display: none;
   z-index: 1000;
@@ -22,4 +23,8 @@ body {
 
 #activity-context-menu span:hover {
   background-color: #DEF;
+}
+
+.form-group {
+  position: relative;
 }

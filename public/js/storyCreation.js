@@ -744,25 +744,48 @@ $(document).ready(function () {
   var root = new Activity("root");
   root.draw_output(BUTTON_COLOR);
 
-  $("#save-button").click(function () {
-    var json = packStory(root);
+  // ---- forms
 
-    const body = JSON.stringify({
-      adj: json.adj,
-      nodes: json.nodes,
-    });
-    console.log(body);
-    const headers = { "Content-Type": "application/json" };
-
-    fetch("/stories/registerStory", { method: "post", body, headers })
-      .then((resp) => {
-        if (resp.status < 200 || resp.status >= 300)
-          throw new Error(`request failed with status ${resp.status}`);
-        return;
-      })
-      .catch((err) => {
-        alert(err);
+  //tooltip
+  $(".needs-validation").submit(function(event) {
+      if ($(".needs-validation")[0].checkValidity() === false) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      $(".needs-validation")[0].classList.add('was-validated');
+  });
+  
+  // submit
+  $("#send-story").click(function() {
+    var storyname = $("#story-name").val();
+    if(storyname.length < 4 || storyname.length > 256) {
+    } else {
+      var published = $("#published").prop('checked');
+      var data = packStory(root);
+      const body = JSON.stringify({
+        adj: data.adj,
+        nodes: data.nodes,
+        storyname: storyname,
+        published: published
       });
-    console.log(json);
+
+      const headers = { "Content-Type": "application/json" };
+
+      fetch("/stories/registerStory", { method: "post", body, headers })
+        .then((resp) => {
+          if (resp.status < 200 || resp.status >= 300)
+            throw new Error(`request failed with status ${resp.status}`);
+          return;
+        })
+        .catch((err) => {
+          alert(err);
+        });
+      console.log(data);
+    }
+  });
+
+  $("#save-button").click(function () {
+    $("#confirm-modal").modal();
+
   });
 });

@@ -57,4 +57,38 @@
       </svg>
       Delete </span>
   </div>
+
+  <div class="modal fade" id="confirm-modal" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title"> Confirm story creation </h4>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <form class="needs-validation" novalidate>
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="message-text" class="col-form-label"> Enter story name </label>
+              <input class="form-control" id="story-name" name="storyname" placeholder="Story name" required minlength="4" maxlength="256">
+              <div class="valid-tooltip">
+                OK
+              </div>
+              <div class="invalid-tooltip">
+                Please choose a valid story name (between 4 and 256 characters).
+              </div>
+            </div>
+            <br><br>
+            <label for="vehicle1"> Publish </label><br>
+            <input type="checkbox" id="published" name="published">
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary" id="send-story">Save changes</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 </body>
