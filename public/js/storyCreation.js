@@ -752,14 +752,10 @@ $(document).ready(function () {
         event.preventDefault();
         event.stopPropagation();
       }
+
       $(".needs-validation")[0].classList.add('was-validated');
-  });
-  
-  // submit
-  $("#send-story").click(function() {
-    var storyname = $("#story-name").val();
-    if(storyname.length < 4 || storyname.length > 256) {
-    } else {
+
+      var storyname = $("#story-name").val();
       var published = $("#published").prop('checked');
       var data = packStory(root);
       const body = JSON.stringify({
@@ -780,8 +776,16 @@ $(document).ready(function () {
         .catch((err) => {
           alert(err);
         });
-      console.log(data);
-    }
+      console.log(body);
+      // close modal
+      $("#confirm-modal").modal("toggle");
+      // do not reload page
+      return false;
+  });
+
+  // submit
+  $("#send-story").click(function() {
+
   });
 
   $("#save-button").click(function () {
