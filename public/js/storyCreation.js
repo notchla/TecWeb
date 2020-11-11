@@ -11,8 +11,6 @@ var Counter = (function () {
   };
 })();
 
-var activities = [];
-
 function actToId(act) {
   return act.replace(" ", "-");
 }
@@ -61,28 +59,33 @@ function packStory(root) {
   var adj = new Map();
   // node array
   var nodes = [];
-  // visited as array with size as max ID
+  // data to recontruct tree (pixi graphics objects)
+  var pixiNodes = [];
   dfsActivity(
     root,
     adj,
     nodes,
-    Array.apply(null, Array(Counter.curr())).map(function (x, i) {
+    pixiNodes,
+    // visited as array with size as max ID
+    Array.apply(null, Array(Counter.curr() + 1)).map(function (x, i) {
       return false;
     })
   );
   var json = {
     adj: Array.from(adj, ([k, v]) => ({ k, v })),
-    nodes: nodes,
+    nodes: nodes
+    // pixiNodes: pixiNodes
   };
   return json;
 }
 
-function dfsActivity(node, adj, nodes, visited) {
+function dfsActivity(node, adj, nodes, pixiNodes, visited) {
   visited[node.nodeID] = true;
   for (const [_, v] of Object.entries(node.childs)) {
     for (var element of v) {
       // exclude root
-      nodes.push(packActivity(element.child));
+      nodes.push(packActivity(element.child)); // (pixiNodes.length)));
+      // pixiNodes.push(element.child.rect);
       if (node.nodeID != 1) {
         if (adj.has(node.nodeID)) {
           adj.get(node.nodeID).push(element.child.nodeID);
@@ -95,21 +98,22 @@ function dfsActivity(node, adj, nodes, visited) {
         Object.keys(element.child.childs).length > 0 &&
         !visited[element.child.nodeID]
       ) {
-        dfsActivity(element.child, adj, nodes, visited);
+        dfsActivity(element.child, adj, nodes, pixiNodes, visited);
       }
     }
   }
 }
 
-function packActivity(activity) {
+function packActivity(activity, rectIndex) {
+  // pixiNodeIndex represents the index of the pixiNodes array relative to this activity
   var ret = {
     id: activity.nodeID,
     type: activity.type,
-    content: activity.data,
+    content: activity.data
+    // rectIndex : rectIndex
   };
   return ret;
 }
-
 class TreeNode {
   //parent node
   //child tree
@@ -689,6 +693,25 @@ $(document).ready(function () {
     }
   }
 
+  function loadStory(name) {
+    var test = ""
+    // $.ajax({
+    //   type: "get",
+    //   url: "/stories/json/" + name,
+    //   crossDomain: true,
+    //   success: function (data) {
+    //     console.log(data);
+    //   },
+    //   error: function (data) {},
+    // });
+    // TODO retrieve actual story data
+
+    // hide modal AND backdrop shadow
+    $("#indicator-overlay").removeClass("in");
+    $(".modal-backdrop").remove();
+    $("#indicator-overlay").hide();
+  }
+
   function getActivities() {
     $.ajax({
       type: "get",
@@ -698,9 +721,6 @@ $(document).ready(function () {
         var activityList = "";
         data.activities.forEach(function (act) {
           index = actToId(act.type);
-          activities[index] = {
-            type: act.type,
-          };
           activityList +=
             '<button type="button" class="dropdown-item" id = "' +
             index +
@@ -744,8 +764,47 @@ $(document).ready(function () {
   var root = new Activity("root");
   root.draw_output(BUTTON_COLOR);
 
-  // ---- forms
+  function storyList() {
+    $('#indicator').show();
+    $.ajax({
+      type: "get",
+      url: "/createstory/names",
+      crossDomain: true,
+      success: function (data) {
+        $('#indicator').hide();
+        data.storynames.forEach(function(name) {
+          if(name) {
+            $("#list-stories").append(
+              "<div id=" + name +"-open\" class=\"list-group-item list-group-item-action flex-column align-items-start\">" +
+              "<span> " + name + " </span>"+
+              "<button id=" + name +"-delete\" type=\"button\" class=\"btn btn-danger float-right\"> Delete </button>" +
+              "</div>");
+              //TODO delete button prompts to remove selected story
+          }
+        });
+      },
+      error: function (data) {},
+    });
+    $("#list-stories").click(function(e) {
+      //hide selection modal
+      $("#main-modal").modal("toggle");
+      // show spinner
+      $("#indicator-overlay").modal("show");
 
+      $(this).toggleClass("active");
+      e.preventDefault();
+      //load story objects
+      loadStory(event.target.id.replace("\"", "").replace("-open", ""));
+    });
+  }
+
+  // main (story selector) modal
+  storyList();
+
+
+  $("#main-modal").modal();
+
+  // ---- forms
   //tooltip
   $(".needs-validation").submit(function(event) {
       if ($(".needs-validation")[0].checkValidity() === false) {
@@ -758,25 +817,39 @@ $(document).ready(function () {
       var storyname = $("#story-name").val();
       var published = $("#published").prop('checked');
       var data = packStory(root);
+      var seen = [];
+
       const body = JSON.stringify({
         adj: data.adj,
         nodes: data.nodes,
+        rect: data.pixiNodes,
         storyname: storyname,
         published: published
+      },
+      function(key, val) {
+        if (val != null && typeof val == "object") {
+        if (seen.indexOf(val) >= 0) {
+          return;
+        }
+          seen.push(val);
+        }
+        return val;
       });
+
+      console.log(body);
 
       const headers = { "Content-Type": "application/json" };
 
-      fetch("/stories/registerStory", { method: "post", body, headers })
-        .then((resp) => {
-          if (resp.status < 200 || resp.status >= 300)
-            throw new Error(`request failed with status ${resp.status}`);
-          return;
-        })
-        .catch((err) => {
-          alert(err);
-        });
-      console.log(body);
+      // fetch("/stories/registerStory", { method: "post", body, headers })
+      //   .then((resp) => {
+      //     if (resp.status < 200 || resp.status >= 300)
+      //       throw new Error(`request failed with status ${resp.status}`);
+      //     return;
+      //   })
+      //   .catch((err) => {
+      //     alert(err);
+      //   });
+      //console.log(body);
       // close modal
       $("#confirm-modal").modal("toggle");
       // do not reload page

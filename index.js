@@ -115,6 +115,8 @@ app.get("/activities/forms/:type", handlers.getActivityForm);
 
 app.post("/stories/registerStory", handlers.registerStory);
 
+app.get("/createstory/names", handlers.getStoryNames);
+
 app.use(handlers.notFound); // need to be after all others routing handlers
 
 app.use(handlers.serverError); //called when a function throws a new Error() and nothing intercept it

@@ -18,7 +18,7 @@
       <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"/>
     </svg>
   </a>
-  <span class="navbar-brand mb-0 h1 mx-auto"> Create a story </span>
+  <span class="navbar-brand mb-0 h1 mx-auto"> Story editor </span>
   <div class="float-right row">
     <div class ="dropdown">
       <button class="btn btn-secondary dropdown-toggle mr-1" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -40,8 +40,6 @@
 </nav>
 
 <body>
-  <div id="pixi-area">
-  </div>
   <div id='activity-context-menu'>
     <span data-action="edit">
       <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-pencil-square" fill="currentColor">
@@ -56,6 +54,58 @@
         <path fill-rule="evenodd" d="M12.9 3c-.18-.14-.497-.307-.974-.466C10.967 2.214 9.58 2 8 2s-2.968.215-3.926.534c-.477.16-.795.327-.975.466.18.14.498.307.975.466C5.032 3.786 6.42 4 8 4s2.967-.215 3.926-.534c.477-.16.795-.327.975-.466zM8 5c3.314 0 6-.895 6-2s-2.686-2-6-2-6 .895-6 2 2.686 2 6 2z"/>
       </svg>
       Delete </span>
+  </div>
+  <div id="indicator-overlay" class="modal fade bd-example-modal-lg" data-backdrop="static" data-keyboard="false" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content container-fluid">
+          <div class="row justify-content-center">
+            <div class="spinner-border text-primary" style="width: 4rem; height: 4rem; margin-bottom: 10px;" role="status">
+               <span class="sr-only">Loading story...</span>
+           </div>
+          </div>
+          <br>
+          <div class="row justify-content-center">
+            <span style="color: white;"> Collecting story... </span>
+          </div>
+        </div>
+    </div>
+  </div>
+  <div class="modal fade" id="main-modal" role="dialog">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Pick a story or crate a new one</h4>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <button type="button" class="btn btn-primary">
+            <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-plus-square" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" d="M14 1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/>
+              <path fill-rule="evenodd" d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+            </svg>
+            <span> New story </span>
+          </button>
+          <br>
+          <br>
+          <span>
+            Stories:
+          </span>
+          <div id="list-stories" class="list-group">
+            <div class="text-center">
+              <div id="indicator" class="spinner-border text-primary" role="status">
+                <span class="sr-only">Loading...</span>
+              </div>
+            </div>
+          </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <div id="pixi-area">
   </div>
 
   <div class="modal fade" id="confirm-modal" role="dialog">
