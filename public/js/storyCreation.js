@@ -8,6 +8,9 @@ var Counter = (function () {
     curr: function () {
       return i;
     },
+    set: function(mi) {
+      i = mi;
+    }
   };
 })();
 
@@ -54,18 +57,31 @@ function packFormData(formData) {
   return data;
 }
 
+function UNpackFormData(form, oldData) {
+  // opposite of packFormData, sets input values from the content object array
+  var inputs = form.find("input, textarea");
+  var data = {};
+  inputs.each(function (_, el) {
+    var id = el.id;
+    if (id == "answer") {
+      $(el).val(oldData[id].join(","));
+    } else {
+      $(el).val(oldData[id]);
+    }
+  });
+  return data;
+}
+
 function packStory(root) {
   //adjacency lists
   var adj = new Map();
   // node array
   var nodes = [];
   // data to recontruct tree (pixi graphics objects)
-  var pixiNodes = [];
   dfsActivity(
     root,
     adj,
     nodes,
-    pixiNodes,
     // visited as array with size as max ID
     Array.apply(null, Array(Counter.curr() + 1)).map(function (x, i) {
       return false;
@@ -74,18 +90,19 @@ function packStory(root) {
   var json = {
     adj: Array.from(adj, ([k, v]) => ({ k, v })),
     nodes: nodes
-    // pixiNodes: pixiNodes
   };
   return json;
 }
 
-function dfsActivity(node, adj, nodes, pixiNodes, visited) {
+function dfsActivity(node, adj, nodes, visited) {
   visited[node.nodeID] = true;
   for (const [_, v] of Object.entries(node.childs)) {
     for (var element of v) {
-      // exclude root
-      nodes.push(packActivity(element.child)); // (pixiNodes.length)));
-      // pixiNodes.push(element.child.rect);
+      // exclude already visited
+      if(!visited[element.child.nodeID]) {
+        // exclude root (directly child)
+        nodes.push(packActivity(element.child));
+      }
       if (node.nodeID != 1) {
         if (adj.has(node.nodeID)) {
           adj.get(node.nodeID).push(element.child.nodeID);
@@ -98,31 +115,39 @@ function dfsActivity(node, adj, nodes, pixiNodes, visited) {
         Object.keys(element.child.childs).length > 0 &&
         !visited[element.child.nodeID]
       ) {
-        dfsActivity(element.child, adj, nodes, pixiNodes, visited);
+        dfsActivity(element.child, adj, nodes, visited);
       }
     }
   }
 }
 
-function packActivity(activity, rectIndex) {
+function packActivity(activity) {
   // pixiNodeIndex represents the index of the pixiNodes array relative to this activity
   var ret = {
     id: activity.nodeID,
     type: activity.type,
-    content: activity.data
-    // rectIndex : rectIndex
+    content: activity.content,
+    x: activity.rect.x,
+    y: activity.rect.y
   };
   return ret;
 }
+
 class TreeNode {
   //parent node
   //child tree
   //siblings
-  constructor() {
+  constructor(id) {
     this.parents = {};
     this.childs = {};
     this.lastChildAdded = null;
-    this.nodeID = Counter.get();
+    if(id === undefined) {
+      id = Counter.get();
+    } else {
+      // set the counter iteratively to the last (max) id assigned
+      Counter.set(Math.max(Counter.curr(), id))
+    }
+    this.nodeID = id;
     this.outToChild = {};
   }
 
@@ -228,15 +253,12 @@ $(document).ready(function () {
   var BLOCK_HEIGHT = 150;
 
   class Activity extends TreeNode {
-    constructor(type) {
-      super();
-      this.type = type;
-
-      this.input = []; //test
-      this.out = [];
-      this.input_lines = [];
-      this.output_lines = [];
-      this.oldOutputLines = [];
+    constructor(type, oldNode) {
+      if((oldNode !== undefined)) {
+        super(oldNode.nodeID);
+      } else {
+        super();
+      }
       this.rect_height = 0;
       var graphics = (this.rect = new PIXI.Graphics());
 
@@ -268,6 +290,13 @@ $(document).ready(function () {
       idlabel.anchor.set(0.5, 0.5);
       idlabel.position.set(10, 10);
       graphics.addChild(idlabel);
+
+      this.input = [];
+      this.out = [];
+      this.input_lines = [];
+      this.output_lines = [];
+      this.oldOutputLines = [];
+      this.type = type;
 
       viewport.addChild(graphics);
 
@@ -325,32 +354,62 @@ $(document).ready(function () {
         "</div>" +
         "</div>";
 
-      // TODO update outputs on close
-      $("body").append(modal);
+        $("body").append(modal);
 
-      //add value update on modal close
-      $("#" + idEdit + "-button").click(() => {
-        this.data = packFormData($("#" + idEdit));
-        if (this.text == null) {
-          var short = this.data["question"].replace(/(.{8})..+/, "$1…");
+        // rebuild old node
+        if(oldNode !== undefined) {
+          this.draw_input(BUTTON_COLOR)
+
+          this.content = oldNode.content;
+
+          var short = this.content["question"].replace(/(.{8})..+/, "$1…");
           this.text = new PIXI.Text(short, {
             fontFamily: FONT,
             fill: TEXT_COLOR,
             fontSize: 14,
           });
           this.text.anchor.set(0.5, 0.5);
-          this.text.position.set(graphics.width / 2, graphics.height / 2);
+          this.text.position.set( graphics.width / 2, graphics.height / 2);
+          graphics.addChild(this.text);
+
+          UNpackFormData($("#" + idEdit), oldNode.content);
+
+          if((type != "description") && (type != "end")) {
+            // refill form with old data
+            for(var i = 0;
+            i < oldNode.content["answer"].length;
+            i++
+            ) {
+              this.draw_output(BUTTON_COLOR);
+            }
+          }
+          // position has to bset after all children have been added
+          this.rect.position.set(oldNode.x, oldNode.y);
+        }
+
+
+      //add value update on modal close
+      $("#" + idEdit + "-button").click(() => {
+        this.content = packFormData($("#" + idEdit));
+        if (this.text == null) {
+          var short = this.content["question"].replace(/(.{8})..+/, "$1…");
+          this.text = new PIXI.Text(short, {
+            fontFamily: FONT,
+            fill: TEXT_COLOR,
+            fontSize: 14,
+          });
+          this.text.anchor.set(0.5, 0.5);
+          this.text.position.set( graphics.width / 2, graphics.height / 2);
           graphics.addChild(this.text);
         } else {
-          this.text.text = this.data["question"].replace(/(.{8})..+/, "$1…");
+          this.text.text = this.content["question"].replace(/(.{8})..+/, "$1…");
         }
         console.log(this.type);
         if (this.type != "description" && this.type != "end") {
-          console.log(this.type);
           //add outputs to the activity node according to the answers
           for (
             var i = this.output_lines.length;
-            i < this.data["answer"].length;
+            i < this.content["answer"].length;
             i++
           ) {
             this.draw_output(BUTTON_COLOR);
@@ -428,7 +487,7 @@ $(document).ready(function () {
       // show context menu (edit and delete)
       function onRightClick(event) {
         var contextY =
-          event.target.position.y + $("#activity-context-menu").height() * 1.3;
+           event.target.position.y + $("#activity-context-menu").height() * 1.3;
         var contextX = event.target.position.x;
         $("#activity-context-menu")
           .finish()
@@ -662,6 +721,7 @@ $(document).ready(function () {
       }
       this.parents = {};
     }
+
   }
 
   class Line extends PIXI.Graphics {
@@ -692,6 +752,13 @@ $(document).ready(function () {
       this.lineTo(points[2], points[3]);
     }
   }
+
+
+
+
+
+
+
 
   function loadStory(name) {
     var test = ""
@@ -810,48 +877,38 @@ $(document).ready(function () {
       if ($(".needs-validation")[0].checkValidity() === false) {
         event.preventDefault();
         event.stopPropagation();
+      } else {
+        var storyname = $("#story-name").val();
+        var published = $("#published").prop('checked');
+        var data = packStory(root);
+        var seen = [];
+
+        const body = JSON.stringify({
+          adj: data.adj,
+          nodes: data.nodes,
+          storyname: storyname,
+          published: published
+        });
+
+        console.log(body);
+
+        const headers = { "Content-Type": "application/json" };
+
+        // fetch("/stories/registerStory", { method: "post", body, headers })
+        //   .then((resp) => {
+        //     if (resp.status < 200 || resp.status >= 300)
+        //       throw new Error(`request failed with status ${resp.status}`);
+        //     return;
+        //   })
+        //   .catch((err) => {
+        //     alert(err);
+        //   });
+        //console.log(body);
+        // close modal
+        $("#confirm-modal").modal("toggle");
+
       }
-
       $(".needs-validation")[0].classList.add('was-validated');
-
-      var storyname = $("#story-name").val();
-      var published = $("#published").prop('checked');
-      var data = packStory(root);
-      var seen = [];
-
-      const body = JSON.stringify({
-        adj: data.adj,
-        nodes: data.nodes,
-        rect: data.pixiNodes,
-        storyname: storyname,
-        published: published
-      },
-      function(key, val) {
-        if (val != null && typeof val == "object") {
-        if (seen.indexOf(val) >= 0) {
-          return;
-        }
-          seen.push(val);
-        }
-        return val;
-      });
-
-      console.log(body);
-
-      const headers = { "Content-Type": "application/json" };
-
-      // fetch("/stories/registerStory", { method: "post", body, headers })
-      //   .then((resp) => {
-      //     if (resp.status < 200 || resp.status >= 300)
-      //       throw new Error(`request failed with status ${resp.status}`);
-      //     return;
-      //   })
-      //   .catch((err) => {
-      //     alert(err);
-      //   });
-      //console.log(body);
-      // close modal
-      $("#confirm-modal").modal("toggle");
       // do not reload page
       return false;
   });
@@ -864,5 +921,31 @@ $(document).ready(function () {
   $("#save-button").click(function () {
     $("#confirm-modal").modal();
 
+  });
+
+  // TEST!!
+  body = '{"adj":[{"k":2,"v":[3]},{"k":3,"v":[4,5]},'+
+  '{"k":4,"v":[5]}],"nodes":[{"id":2,"type":"description","content":{"question":"test"},'+
+  '"x":403,"y":200},{"id":3,"type":"open question","content":{"question":"test2","answer":["a","b"]},"x":838,"y":300},'+
+  '{"id":4,"type":"description","content":{"question":"test3"},"x":426,"y":600},{"id":5,"type":"end","content":{"question":""},"x":811,"y":700}],'+
+  '"storyname":"hhhhh","published":false}'
+  oldTree = JSON.parse(body);
+  nodes = new Map();
+  oldTree.nodes.forEach(function(el, _) {
+    var oldNode = {
+      content: el.content,
+      x: el.x,
+      y: el.y,
+      nodeID: el.id
+    }
+    var tmp = new Activity(el.type, oldNode);
+    nodes.set(tmp.nodeID, tmp);
+  });
+  adj.forEach(function(el, _) {
+    var from = nodes.get(el.k);
+    el.v.forEach(function(val, _) {
+      var to = nodes.get(val);
+      // TODO trace lines from -> to and add children
+    });
   });
 });
