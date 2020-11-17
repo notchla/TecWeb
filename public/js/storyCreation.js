@@ -404,7 +404,6 @@ $(document).ready(function () {
         } else {
           this.text.text = this.content["question"].replace(/(.{8})..+/, "$1…");
         }
-        console.log(this.type);
         if (this.type != "description" && this.type != "end") {
           //add outputs to the activity node according to the answers
           for (
@@ -722,6 +721,37 @@ $(document).ready(function () {
       this.parents = {};
     }
 
+    addChildActivity(activityTo, answerIndex) {
+      if (activityTo) {
+
+        var positionFrom = this.out[answerIndex].getGlobalPosition();
+        var positionTo = activityTo.input[0].getGlobalPosition();
+
+        var line = new Line(
+          [
+            positionFrom.x,
+            positionFrom.y,
+            positionTo.x,
+            positionTo.y
+          ],
+          10,
+          0x6ea62e
+        );
+        viewport.addChild(line);
+
+        this.output_lines[answerIndex] = line;
+        activityTo.input_lines.push(
+          this.output_lines[answerIndex]
+        );
+        // console.log(this.nodeID, activityTo.nodeID, this.output_lines);
+        this.insertChild(
+          this,
+          answerIndex,
+          activityTo.input_lines.length - 1,
+          activityTo
+        );
+      }
+    }
   }
 
   class Line extends PIXI.Graphics {
@@ -758,7 +788,34 @@ $(document).ready(function () {
 
 
 
+  function rebuildTree(root, body) {
+    oldTree = JSON.parse(body);
+    nodes = new Map();
 
+    oldTree.nodes.forEach(function(el, _) {
+      var oldNode = {
+        content: el.content,
+        x: el.x,
+        y: el.y,
+        nodeID: el.id
+      }
+      // rebuild activities with old content
+      var tmp = new Activity(el.type, oldNode);
+      nodes.set(tmp.nodeID, tmp);
+    });
+    // rebuild old connections
+    oldTree.adj.forEach(function(el, _) {
+      var from = nodes.get(el.k);
+      answerIndex = 0;
+      el.v.forEach(function(val, _) {
+        var to = nodes.get(val);
+        from.addChildActivity(to, answerIndex++);
+      });
+    });
+    // add root entry point
+    var entryPoint = nodes.get(oldTree.adj[0].k);
+    root.addChildActivity(entryPoint, 0);
+  }
 
   function loadStory(name) {
     var test = ""
@@ -928,24 +985,9 @@ $(document).ready(function () {
   '{"k":4,"v":[5]}],"nodes":[{"id":2,"type":"description","content":{"question":"test"},'+
   '"x":403,"y":200},{"id":3,"type":"open question","content":{"question":"test2","answer":["a","b"]},"x":838,"y":300},'+
   '{"id":4,"type":"description","content":{"question":"test3"},"x":426,"y":600},{"id":5,"type":"end","content":{"question":""},"x":811,"y":700}],'+
-  '"storyname":"hhhhh","published":false}'
-  oldTree = JSON.parse(body);
-  nodes = new Map();
-  oldTree.nodes.forEach(function(el, _) {
-    var oldNode = {
-      content: el.content,
-      x: el.x,
-      y: el.y,
-      nodeID: el.id
-    }
-    var tmp = new Activity(el.type, oldNode);
-    nodes.set(tmp.nodeID, tmp);
-  });
-  adj.forEach(function(el, _) {
-    var from = nodes.get(el.k);
-    el.v.forEach(function(val, _) {
-      var to = nodes.get(val);
-      // TODO trace lines from -> to and add children
-    });
-  });
+  '"storyname":"hhhhh","published":false}';
+  // body = '{"adj":[{"k":7,"v":[5]}],"nodes":[{"id":7,"type":"open question",' +
+  // '"content":{"question":"domanda","answer":["test"]},"x":209,"y":338},{"id":5,"type":"end","content":{"question":""},"x":781,"y":252}],'+
+  // '"storyname":"trt454","published":false}';
+  rebuildTree(root, body);
 });
