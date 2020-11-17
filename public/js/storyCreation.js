@@ -818,7 +818,6 @@ $(document).ready(function () {
   }
 
   function loadStory(name) {
-    var test = ""
     // $.ajax({
     //   type: "get",
     //   url: "/stories/json/" + name,
@@ -829,11 +828,22 @@ $(document).ready(function () {
     //   error: function (data) {},
     // });
     // TODO retrieve actual story data
-
     // hide modal AND backdrop shadow
-    $("#indicator-overlay").removeClass("in");
-    $(".modal-backdrop").remove();
-    $("#indicator-overlay").hide();
+    // TEST!!
+    body = '{"adj":[{"k":2,"v":[3]},{"k":3,"v":[4,5]},'+
+    '{"k":4,"v":[5]}],"nodes":[{"id":2,"type":"description","content":{"question":"test"},'+
+    '"x":403,"y":200},{"id":3,"type":"open question","content":{"question":"test2","answer":["a","b"]},"x":838,"y":300},'+
+    '{"id":4,"type":"description","content":{"question":"test3"},"x":426,"y":600},{"id":5,"type":"end","content":{"question":""},"x":811,"y":700}],'+
+    '"storyname":"hhhhh","published":false}';
+    // body = '{"adj":[{"k":7,"v":[5]}],"nodes":[{"id":7,"type":"open question",' +
+    // '"content":{"question":"domanda","answer":["test"]},"x":209,"y":338},{"id":5,"type":"end","content":{"question":""},"x":781,"y":252}],'+
+    // '"storyname":"trt454","published":false}';
+    setTimeout(rebuildTree(root, body), 1000);
+    $("#indicator-overlay").fadeOut(1000,function(){
+      $("#indicator-overlay").removeClass("in");
+      $(".modal-backdrop").remove();
+      $('#indicator-overlay').modal('hide');
+    });
   }
 
   function getActivities() {
@@ -979,15 +989,4 @@ $(document).ready(function () {
     $("#confirm-modal").modal();
 
   });
-
-  // TEST!!
-  body = '{"adj":[{"k":2,"v":[3]},{"k":3,"v":[4,5]},'+
-  '{"k":4,"v":[5]}],"nodes":[{"id":2,"type":"description","content":{"question":"test"},'+
-  '"x":403,"y":200},{"id":3,"type":"open question","content":{"question":"test2","answer":["a","b"]},"x":838,"y":300},'+
-  '{"id":4,"type":"description","content":{"question":"test3"},"x":426,"y":600},{"id":5,"type":"end","content":{"question":""},"x":811,"y":700}],'+
-  '"storyname":"hhhhh","published":false}';
-  // body = '{"adj":[{"k":7,"v":[5]}],"nodes":[{"id":7,"type":"open question",' +
-  // '"content":{"question":"domanda","answer":["test"]},"x":209,"y":338},{"id":5,"type":"end","content":{"question":""},"x":781,"y":252}],'+
-  // '"storyname":"trt454","published":false}';
-  rebuildTree(root, body);
 });
