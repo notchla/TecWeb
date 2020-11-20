@@ -1,0 +1,9 @@
+implementare bottone nuova storia
+implementare delete
+rifare path applicazione
+middleware controllo username solo su path
+sistemare dfs, bug attivita duplicate se connesse piu volte
+aggiungere bottone per riaprire modale
+aggiungere icona nel modale per far vedere se storia è pubblicata
+fare che visualizzatore legge risposte dal grafo
+controllo nome storia
