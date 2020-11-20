@@ -5,6 +5,7 @@ const storySchema = mongoose.Schema({
   pages: Number,
   adj: [],
   nodes: [],
+  published: Boolean,
 });
 
 const NewStory = mongoose.model("newstory", storySchema);

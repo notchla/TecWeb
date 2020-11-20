@@ -8,9 +8,9 @@ var Counter = (function () {
     curr: function () {
       return i;
     },
-    set: function(mi) {
+    set: function (mi) {
       i = mi;
-    }
+    },
   };
 })();
 
@@ -89,7 +89,7 @@ function packStory(root) {
   );
   var json = {
     adj: Array.from(adj, ([k, v]) => ({ k, v })),
-    nodes: nodes
+    nodes: nodes,
   };
   return json;
 }
@@ -99,7 +99,7 @@ function dfsActivity(node, adj, nodes, visited) {
   for (const [_, v] of Object.entries(node.childs)) {
     for (var element of v) {
       // exclude already visited
-      if(!visited[element.child.nodeID]) {
+      if (!visited[element.child.nodeID]) {
         // exclude root (directly child)
         nodes.push(packActivity(element.child));
       }
@@ -128,7 +128,7 @@ function packActivity(activity) {
     type: activity.type,
     content: activity.content,
     x: activity.rect.x,
-    y: activity.rect.y
+    y: activity.rect.y,
   };
   return ret;
 }
@@ -141,11 +141,11 @@ class TreeNode {
     this.parents = {};
     this.childs = {};
     this.lastChildAdded = null;
-    if(id === undefined) {
+    if (id === undefined) {
       id = Counter.get();
     } else {
       // set the counter iteratively to the last (max) id assigned
-      Counter.set(Math.max(Counter.curr(), id))
+      Counter.set(Math.max(Counter.curr(), id));
     }
     this.nodeID = id;
     this.outToChild = {};
@@ -212,28 +212,42 @@ TreeNode.prototype.toString = function () {
 };
 
 $(document).ready(function () {
+  var [W, H] = [4 * 1024, 3 * 1024];
+
   let app = new PIXI.Application({
-    antialias: false,
+    antialias: true,
     autoresize: true,
     resoluzion: window.devicePixelRatio,
+    view: document.getElementById("pixi-canvas"),
   });
   app.renderer.backgroundColor = 0x202125;
   app.renderer.view.style.position = "absolute";
   app.renderer.view.style.display = "block";
+  app.render.autoResize = true;
   document.body.appendChild(app.view);
 
   var viewport = new Viewport.Viewport({
     screenWidth: window.innerWidth,
     screenHeight: window.innerHeight,
-    worldWidth: 3500,
-    worldHeight: 2000,
+    worldWidth: W,
+    worldHeight: H,
     disableOnContextMenu: true,
     interaction: app.renderer.plugins.interaction,
   });
 
+  // viewport.drag().wheel();
+  viewport
+    .drag({
+      wheel: false,
+      mouseButtons: "left",
+      keyToPress: ["ControlLeft", "ControlRight", "ShiftLeft", "ShiftRight"],
+    })
+    .wheel();
+
   app.stage.addChild(viewport);
   app.renderer.render(viewport);
   app.renderer.resize(window.innerWidth, window.innerHeight);
+
   function resize() {
     viewport.screenWidth = window.innerWidth;
     viewport.screenHeight = window.innerHeight;
@@ -254,7 +268,7 @@ $(document).ready(function () {
 
   class Activity extends TreeNode {
     constructor(type, oldNode) {
-      if((oldNode !== undefined)) {
+      if (oldNode !== undefined) {
         super(oldNode.nodeID);
       } else {
         super();
@@ -354,39 +368,35 @@ $(document).ready(function () {
         "</div>" +
         "</div>";
 
-        $("body").append(modal);
+      $("body").append(modal);
 
-        // rebuild old node
-        if(oldNode !== undefined) {
-          this.draw_input(BUTTON_COLOR)
+      // rebuild old node
+      if (oldNode !== undefined) {
+        this.draw_input(BUTTON_COLOR);
 
-          this.content = oldNode.content;
+        this.content = oldNode.content;
 
-          var short = this.content["question"].replace(/(.{8})..+/, "$1…");
-          this.text = new PIXI.Text(short, {
-            fontFamily: FONT,
-            fill: TEXT_COLOR,
-            fontSize: 14,
-          });
-          this.text.anchor.set(0.5, 0.5);
-          this.text.position.set( graphics.width / 2, graphics.height / 2);
-          graphics.addChild(this.text);
+        var short = this.content["question"].replace(/(.{8})..+/, "$1…");
+        this.text = new PIXI.Text(short, {
+          fontFamily: FONT,
+          fill: TEXT_COLOR,
+          fontSize: 14,
+        });
+        this.text.anchor.set(0.5, 0.5);
+        this.text.position.set(graphics.width / 2, graphics.height / 2);
+        graphics.addChild(this.text);
 
-          UNpackFormData($("#" + idEdit), oldNode.content);
+        UNpackFormData($("#" + idEdit), oldNode.content);
 
-          if((type != "description") && (type != "end")) {
-            // refill form with old data
-            for(var i = 0;
-            i < oldNode.content["answer"].length;
-            i++
-            ) {
-              this.draw_output(BUTTON_COLOR);
-            }
+        if (type != "description" && type != "end") {
+          // refill form with old data
+          for (var i = 0; i < oldNode.content["answer"].length; i++) {
+            this.draw_output(BUTTON_COLOR);
           }
-          // position has to bset after all children have been added
-          this.rect.position.set(oldNode.x, oldNode.y);
         }
-
+        // position has to bset after all children have been added
+        this.rect.position.set(oldNode.x, oldNode.y);
+      }
 
       //add value update on modal close
       $("#" + idEdit + "-button").click(() => {
@@ -399,7 +409,7 @@ $(document).ready(function () {
             fontSize: 14,
           });
           this.text.anchor.set(0.5, 0.5);
-          this.text.position.set( graphics.width / 2, graphics.height / 2);
+          this.text.position.set(graphics.width / 2, graphics.height / 2);
           graphics.addChild(this.text);
         } else {
           this.text.text = this.content["question"].replace(/(.{8})..+/, "$1…");
@@ -426,7 +436,7 @@ $(document).ready(function () {
         this.oldPosition = this.data.getLocalPosition(this.parent);
       }
 
-      function onDragEnd() {
+      function onDragEnd(event) {
         $("#activity-context-menu").finish().hide(100);
         this.alpha = 1;
         this.dragging = false;
@@ -454,7 +464,7 @@ $(document).ready(function () {
         function getOutPositions(out) {
           var positions = [];
           out.forEach((element) => {
-            var globalPosition = element.getGlobalPosition();
+            var globalPosition = viewport.toWorld(element.getGlobalPosition());
             positions.push([globalPosition.x, globalPosition.y, null, null]);
           });
           return positions;
@@ -462,7 +472,7 @@ $(document).ready(function () {
 
         function getInputPosition(input) {
           var position = [];
-          var globalPosition = input.getGlobalPosition();
+          var globalPosition = viewport.toWorld(input.getGlobalPosition());
           position = [null, null, globalPosition.x, globalPosition.y];
           return position;
         }
@@ -485,15 +495,14 @@ $(document).ready(function () {
 
       // show context menu (edit and delete)
       function onRightClick(event) {
-        var contextY =
-           event.target.position.y + $("#activity-context-menu").height() * 1.3;
-        var contextX = event.target.position.x;
+        var position = event.currentTarget.getGlobalPosition();
+        position.y += $("#activity-context-menu").height() * 1.3;
         $("#activity-context-menu")
           .finish()
           .toggle(100)
           .css({
-            top: contextY + "px",
-            left: contextX + "px",
+            top: position.y + "px",
+            left: position.x + "px",
           });
       }
     }
@@ -547,14 +556,11 @@ $(document).ready(function () {
         event.currentTarget.output_lines.forEach((element, index) => {
           event.currentTarget.oldOutputLines[index] = element;
         });
-        var globalPosition = obj.getGlobalPosition();
+        var globalPosition = viewport.toWorld(obj.getGlobalPosition());
+        var data = { x: event.data.global.x, y: event.data.global.y };
+        var dataGlobal = viewport.toWorld(data);
         var line = new Line(
-          [
-            globalPosition.x,
-            globalPosition.y,
-            event.data.global.x,
-            event.data.global.y,
-          ],
+          [globalPosition.x, globalPosition.y, dataGlobal.x, dataGlobal.y],
           10,
           0x6ea62e
         );
@@ -653,13 +659,15 @@ $(document).ready(function () {
           event.stopPropagation();
           var index = event.currentTarget.line_index;
           var line = event.currentTarget.output_lines[index];
-          var globalPosition = obj.getGlobalPosition();
+          var globalPosition = viewport.toWorld(obj.getGlobalPosition());
+          var data = { x: event.data.global.x, y: event.data.global.y };
+          var dataGlobal = viewport.toWorld(data);
           if (line instanceof PIXI.Graphics)
             line.updatePoints([
               globalPosition.x,
               globalPosition.y,
-              event.data.global.x,
-              event.data.global.y,
+              dataGlobal.x,
+              dataGlobal.y,
             ]);
         }
       }
@@ -723,26 +731,18 @@ $(document).ready(function () {
 
     addChildActivity(activityTo, answerIndex) {
       if (activityTo) {
-
         var positionFrom = this.out[answerIndex].getGlobalPosition();
         var positionTo = activityTo.input[0].getGlobalPosition();
 
         var line = new Line(
-          [
-            positionFrom.x,
-            positionFrom.y,
-            positionTo.x,
-            positionTo.y
-          ],
+          [positionFrom.x, positionFrom.y, positionTo.x, positionTo.y],
           10,
           0x6ea62e
         );
         viewport.addChild(line);
 
         this.output_lines[answerIndex] = line;
-        activityTo.input_lines.push(
-          this.output_lines[answerIndex]
-        );
+        activityTo.input_lines.push(this.output_lines[answerIndex]);
         // console.log(this.nodeID, activityTo.nodeID, this.output_lines);
         this.insertChild(
           this,
@@ -783,31 +783,26 @@ $(document).ready(function () {
     }
   }
 
-
-
-
-
-
   function rebuildTree(root, body) {
     oldTree = JSON.parse(body);
     nodes = new Map();
 
-    oldTree.nodes.forEach(function(el, _) {
+    oldTree.nodes.forEach(function (el, _) {
       var oldNode = {
         content: el.content,
         x: el.x,
         y: el.y,
-        nodeID: el.id
-      }
+        nodeID: el.id,
+      };
       // rebuild activities with old content
       var tmp = new Activity(el.type, oldNode);
       nodes.set(tmp.nodeID, tmp);
     });
     // rebuild old connections
-    oldTree.adj.forEach(function(el, _) {
+    oldTree.adj.forEach(function (el, _) {
       var from = nodes.get(el.k);
       answerIndex = 0;
-      el.v.forEach(function(val, _) {
+      el.v.forEach(function (val, _) {
         var to = nodes.get(val);
         from.addChildActivity(to, answerIndex++);
       });
@@ -818,32 +813,34 @@ $(document).ready(function () {
   }
 
   function loadStory(name) {
-    // $.ajax({
-    //   type: "get",
-    //   url: "/stories/json/" + name,
-    //   crossDomain: true,
-    //   success: function (data) {
-    //     console.log(data);
-    //   },
-    //   error: function (data) {},
-    // });
+    $.ajax({
+      type: "get",
+      url: "/stories/json/" + name,
+      crossDomain: true,
+      success: function (data) {
+        console.log(JSON.stringify(data));
+        const body = JSON.stringify(data);
+        setTimeout(rebuildTree(root, body), 1000);
+        $("#indicator-overlay").fadeOut(1000, function () {
+          $("#indicator-overlay").removeClass("in");
+          $(".modal-backdrop").remove();
+          $("#indicator-overlay").modal("hide");
+        });
+      },
+      error: function (data) {},
+    });
     // TODO retrieve actual story data
     // hide modal AND backdrop shadow
     // TEST!!
-    body = '{"adj":[{"k":2,"v":[3]},{"k":3,"v":[4,5]},'+
-    '{"k":4,"v":[5]}],"nodes":[{"id":2,"type":"description","content":{"question":"test"},'+
-    '"x":403,"y":200},{"id":3,"type":"open question","content":{"question":"test2","answer":["a","b"]},"x":838,"y":300},'+
-    '{"id":4,"type":"description","content":{"question":"test3"},"x":426,"y":600},{"id":5,"type":"end","content":{"question":""},"x":811,"y":700}],'+
-    '"storyname":"hhhhh","published":false}';
+    // body =
+    //   '{"adj":[{"k":2,"v":[3]},{"k":3,"v":[4,5]},' +
+    //   '{"k":4,"v":[5]}],"nodes":[{"id":2,"type":"description","content":{"question":"test"},' +
+    //   '"x":403,"y":200},{"id":3,"type":"open question","content":{"question":"test2","answer":["a","b"]},"x":838,"y":300},' +
+    //   '{"id":4,"type":"description","content":{"question":"test3"},"x":426,"y":600},{"id":5,"type":"end","content":{"question":""},"x":811,"y":700}],' +
+    //   '"storyname":"hhhhh","published":false}';
     // body = '{"adj":[{"k":7,"v":[5]}],"nodes":[{"id":7,"type":"open question",' +
     // '"content":{"question":"domanda","answer":["test"]},"x":209,"y":338},{"id":5,"type":"end","content":{"question":""},"x":781,"y":252}],'+
     // '"storyname":"trt454","published":false}';
-    setTimeout(rebuildTree(root, body), 1000);
-    $("#indicator-overlay").fadeOut(1000,function(){
-      $("#indicator-overlay").removeClass("in");
-      $(".modal-backdrop").remove();
-      $('#indicator-overlay').modal('hide');
-    });
   }
 
   function getActivities() {
@@ -899,27 +896,34 @@ $(document).ready(function () {
   root.draw_output(BUTTON_COLOR);
 
   function storyList() {
-    $('#indicator').show();
+    $("#indicator").show();
     $.ajax({
       type: "get",
       url: "/createstory/names",
       crossDomain: true,
       success: function (data) {
-        $('#indicator').hide();
-        data.storynames.forEach(function(name) {
-          if(name) {
+        $("#indicator").hide();
+        data.storynames.forEach(function (name) {
+          if (name) {
             $("#list-stories").append(
-              "<div id=" + name +"-open\" class=\"list-group-item list-group-item-action flex-column align-items-start\">" +
-              "<span> " + name + " </span>"+
-              "<button id=" + name +"-delete\" type=\"button\" class=\"btn btn-danger float-right\"> Delete </button>" +
-              "</div>");
-              //TODO delete button prompts to remove selected story
+              "<div id=" +
+                name +
+                '-open" class="list-group-item list-group-item-action flex-column align-items-start">' +
+                "<span> " +
+                name +
+                " </span>" +
+                "<button id=" +
+                name +
+                '-delete" type="button" class="btn btn-danger float-right"> Delete </button>' +
+                "</div>"
+            );
+            //TODO delete button prompts to remove selected story
           }
         });
       },
       error: function (data) {},
     });
-    $("#list-stories").click(function(e) {
+    $("#list-stories").click(function (e) {
       //hide selection modal
       $("#main-modal").modal("toggle");
       // show spinner
@@ -928,65 +932,60 @@ $(document).ready(function () {
       $(this).toggleClass("active");
       e.preventDefault();
       //load story objects
-      loadStory(event.target.id.replace("\"", "").replace("-open", ""));
+      loadStory(event.target.id.replace('"', "").replace("-open", ""));
     });
   }
 
   // main (story selector) modal
   storyList();
 
-
   $("#main-modal").modal();
 
   // ---- forms
   //tooltip
-  $(".needs-validation").submit(function(event) {
-      if ($(".needs-validation")[0].checkValidity() === false) {
-        event.preventDefault();
-        event.stopPropagation();
-      } else {
-        var storyname = $("#story-name").val();
-        var published = $("#published").prop('checked');
-        var data = packStory(root);
-        var seen = [];
+  $(".needs-validation").submit(function (event) {
+    if ($(".needs-validation")[0].checkValidity() === false) {
+      event.preventDefault();
+      event.stopPropagation();
+    } else {
+      var storyname = $("#story-name").val();
+      var published = $("#published").prop("checked");
+      var data = packStory(root);
+      var seen = [];
 
-        const body = JSON.stringify({
-          adj: data.adj,
-          nodes: data.nodes,
-          storyname: storyname,
-          published: published
+      const body = JSON.stringify({
+        adj: data.adj,
+        nodes: data.nodes,
+        storyname: storyname,
+        published: published,
+      });
+
+      console.log(body);
+
+      const headers = { "Content-Type": "application/json" };
+
+      fetch("/stories/registerStory", { method: "post", body, headers })
+        .then((resp) => {
+          if (resp.status < 200 || resp.status >= 300)
+            throw new Error(`request failed with status ${resp.status}`);
+          return;
+        })
+        .catch((err) => {
+          alert(err);
         });
-
-        console.log(body);
-
-        const headers = { "Content-Type": "application/json" };
-
-        // fetch("/stories/registerStory", { method: "post", body, headers })
-        //   .then((resp) => {
-        //     if (resp.status < 200 || resp.status >= 300)
-        //       throw new Error(`request failed with status ${resp.status}`);
-        //     return;
-        //   })
-        //   .catch((err) => {
-        //     alert(err);
-        //   });
-        //console.log(body);
-        // close modal
-        $("#confirm-modal").modal("toggle");
-
-      }
-      $(".needs-validation")[0].classList.add('was-validated');
-      // do not reload page
-      return false;
+      //console.log(body);
+      // close modal
+      $("#confirm-modal").modal("toggle");
+    }
+    $(".needs-validation")[0].classList.add("was-validated");
+    // do not reload page
+    return false;
   });
 
   // submit
-  $("#send-story").click(function() {
-
-  });
+  $("#send-story").click(function () {});
 
   $("#save-button").click(function () {
     $("#confirm-modal").modal();
-
   });
 });

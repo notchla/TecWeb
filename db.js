@@ -58,8 +58,7 @@ module.exports = {
   saveStory: async (storyname, adj, nodes, published) => {
     await NewStory.updateOne(
       { title: storyname },
-      { pages: nodes.length + 1, adj, nodes },
-      // { published : published},
+      { pages: nodes.length + 1, adj, nodes, published },
       { upsert: true }
     );
     // await new NewStory({
