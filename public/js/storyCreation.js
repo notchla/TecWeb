@@ -62,12 +62,14 @@ function UNpackFormData(form, oldData) {
   var inputs = form.find("input, textarea");
   var data = {};
   inputs.each(function (_, el) {
-    var id = el.id;
-    if (id == "answer") {
-      $(el).val(oldData[id].join(","));
-    } else {
-      $(el).val(oldData[id]);
-    }
+    try {
+      var id = el.id;
+      if (id == "answer") {
+        $(el).val(oldData[id].join(","));
+      } else {
+        $(el).val(oldData[id]);
+      }
+    } catch (e) {}
   });
   return data;
 }
@@ -376,23 +378,26 @@ $(document).ready(function () {
 
         this.content = oldNode.content;
 
-        var short = this.content["question"].replace(/(.{8})..+/, "$1…");
-        this.text = new PIXI.Text(short, {
-          fontFamily: FONT,
-          fill: TEXT_COLOR,
-          fontSize: 14,
-        });
-        this.text.anchor.set(0.5, 0.5);
-        this.text.position.set(graphics.width / 2, graphics.height / 2);
-        graphics.addChild(this.text);
-
+        try {
+          var short = this.content["question"].replace(/(.{8})..+/, "$1…");
+          this.text = new PIXI.Text(short, {
+            fontFamily: FONT,
+            fill: TEXT_COLOR,
+            fontSize: 14,
+          });
+          this.text.anchor.set(0.5, 0.5);
+          this.text.position.set(graphics.width / 2, graphics.height / 2);
+          graphics.addChild(this.text);
+        } catch (e) {}
         UNpackFormData($("#" + idEdit), oldNode.content);
 
         if (type != "description" && type != "end") {
           // refill form with old data
-          for (var i = 0; i < oldNode.content["answer"].length; i++) {
-            this.draw_output(BUTTON_COLOR);
-          }
+          try {
+            for (var i = 0; i < oldNode.content["answer"].length; i++) {
+              this.draw_output(BUTTON_COLOR);
+            }
+          } catch (e) {}
         }
         // position has to bset after all children have been added
         this.rect.position.set(oldNode.x, oldNode.y);
