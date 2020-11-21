@@ -74,6 +74,20 @@ function UNpackFormData(form, oldData) {
   return data;
 }
 
+function sendStory(body) {
+  const headers = { "Content-Type": "application/json" };
+  console.log(body);
+  fetch("/stories/registerStory", { method: "post", body, headers })
+    .then((resp) => {
+      if (resp.status < 200 || resp.status >= 300)
+        throw new Error(`request failed with status ${resp.status}`);
+      return;
+    })
+    .catch((err) => {
+      alert(err);
+    });
+}
+
 function packStory(root) {
   //adjacency lists
   var adj = new Map();
@@ -212,6 +226,11 @@ class TreeNode {
 TreeNode.prototype.toString = function () {
   return this.nodeID;
 };
+
+// GLOBAL ROOT ACTIVITY
+var root = null;
+
+
 
 $(document).ready(function () {
   var [W, H] = [4 * 1024, 3 * 1024];
@@ -788,11 +807,10 @@ $(document).ready(function () {
     }
   }
 
-  function rebuildTree(root, body) {
-    oldTree = JSON.parse(body);
+  function rebuildTree(root, data) {
     nodes = new Map();
 
-    oldTree.nodes.forEach(function (el, _) {
+    data.nodes.forEach(function (el, _) {
       var oldNode = {
         content: el.content,
         x: el.x,
@@ -804,7 +822,7 @@ $(document).ready(function () {
       nodes.set(tmp.nodeID, tmp);
     });
     // rebuild old connections
-    oldTree.adj.forEach(function (el, _) {
+    data.adj.forEach(function (el, _) {
       var from = nodes.get(el.k);
       answerIndex = 0;
       el.v.forEach(function (val, _) {
@@ -813,7 +831,7 @@ $(document).ready(function () {
       });
     });
     // add root entry point
-    var entryPoint = nodes.get(oldTree.adj[0].k);
+    var entryPoint = nodes.get(data.adj[0].k);
     root.addChildActivity(entryPoint, 0);
   }
 
@@ -823,10 +841,12 @@ $(document).ready(function () {
       url: "/stories/json/" + name,
       crossDomain: true,
       success: function (data) {
-        console.log(JSON.stringify(data));
-        const body = JSON.stringify(data);
-        setTimeout(rebuildTree(root, body), 1000);
-        $("#indicator-overlay").fadeOut(1000, function () {
+        console.log(data);
+        // set storyname form data
+        $("#story-name").val(data.title);
+        $("#published").prop('checked', data.published);
+        rebuildTree(root, data);
+        $("#indicator-overlay").fadeOut(300, function () {
           $("#indicator-overlay").removeClass("in");
           $(".modal-backdrop").remove();
           $("#indicator-overlay").modal("hide");
@@ -834,18 +854,22 @@ $(document).ready(function () {
       },
       error: function (data) {},
     });
-    // TODO retrieve actual story data
-    // hide modal AND backdrop shadow
-    // TEST!!
-    // body =
-    //   '{"adj":[{"k":2,"v":[3]},{"k":3,"v":[4,5]},' +
-    //   '{"k":4,"v":[5]}],"nodes":[{"id":2,"type":"description","content":{"question":"test"},' +
-    //   '"x":403,"y":200},{"id":3,"type":"open question","content":{"question":"test2","answer":["a","b"]},"x":838,"y":300},' +
-    //   '{"id":4,"type":"description","content":{"question":"test3"},"x":426,"y":600},{"id":5,"type":"end","content":{"question":""},"x":811,"y":700}],' +
-    //   '"storyname":"hhhhh","published":false}';
-    // body = '{"adj":[{"k":7,"v":[5]}],"nodes":[{"id":7,"type":"open question",' +
-    // '"content":{"question":"domanda","answer":["test"]},"x":209,"y":338},{"id":5,"type":"end","content":{"question":""},"x":781,"y":252}],'+
-    // '"storyname":"trt454","published":false}';
+  }
+
+  function resetScene() {
+    // iteratively empty the pixi stage children, then add root
+    // state.children[0] is main stage, stage.children[0].children are the rendered elements in the main stage
+    while(app.stage.children[0].children[0]) {
+        app.stage.children[0].removeChild(app.stage.children[0].children[0]);
+    }
+    // reset the form
+    $("#story-name").val("");
+    $("#published").prop('checked', false);
+    // reset the counter
+    Counter.set(0);
+    // add root back
+    root = new Activity("root");
+    root.draw_output(BUTTON_COLOR);
   }
 
   function getActivities() {
@@ -893,12 +917,11 @@ $(document).ready(function () {
     $("#activity-context-menu").hide(100);
   });
 
-  // activity selection menu initialization
-  getActivities();
 
-  //root activity
-  var root = new Activity("root");
-  root.draw_output(BUTTON_COLOR);
+  //NO NEED TO ADD ROOT WITH RESET
+  // //root activity
+  // var root = new Activity("root");
+  // root.draw_output(BUTTON_COLOR);
 
   function storyList() {
     $("#indicator").show();
@@ -936,15 +959,34 @@ $(document).ready(function () {
 
       $(this).toggleClass("active");
       e.preventDefault();
+      // empty scene
+      resetScene();
       //load story objects
-      loadStory(event.target.id.replace('"', "").replace("-open", ""));
+      loadStory(e.target.id.replace('"', "").replace("-open", ""));
     });
   }
+
+
+
+  // main
+
+  // activity selection menu initialization
+  getActivities();
 
   // main (story selector) modal
   storyList();
 
   $("#main-modal").modal();
+
+  // new empty story
+  $("#edit-new-story").click(function() {
+    $("#main-modal").modal("hide");
+    resetScene();
+  })
+
+  $("#open-story-modal").click(function() {
+    $("#main-modal").modal("show");
+  })
 
   // ---- forms
   //tooltip
@@ -965,22 +1007,30 @@ $(document).ready(function () {
         published: published,
       });
 
-      console.log(body);
 
-      const headers = { "Content-Type": "application/json" };
 
-      fetch("/stories/registerStory", { method: "post", body, headers })
-        .then((resp) => {
-          if (resp.status < 200 || resp.status >= 300)
-            throw new Error(`request failed with status ${resp.status}`);
-          return;
-        })
-        .catch((err) => {
-          alert(err);
-        });
-      //console.log(body);
-      // close modal
-      $("#confirm-modal").modal("toggle");
+      $.ajax({
+        type: "get",
+        url: "/checkqr/" + storyname,
+        crossDomain: true,
+        success: function (data) {
+          if(data.exists) {
+            $("#confirm-changes-modal").modal("show");
+            $("#confirm-send-story").click(function() {
+              sendStory(body);
+              // close modals
+              $("#confirm-changes-modal").modal("hide");
+              $("#confirm-modal").modal("hide");
+            });
+          }
+          else {
+            sendStory(body);
+            // close modal
+            $("#confirm-modal").modal("hide");
+          }
+        },
+        error: function (data) {},
+      });
     }
     $(".needs-validation")[0].classList.add("was-validated");
     // do not reload page
