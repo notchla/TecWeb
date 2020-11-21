@@ -97,11 +97,7 @@ function packStory(root) {
   dfsActivity(
     root,
     adj,
-    nodes,
-    // visited as array with size as max ID
-    Array.apply(null, Array(Counter.curr() + 1)).map(function (x, i) {
-      return false;
-    })
+    nodes
   );
   var json = {
     adj: Array.from(adj, ([k, v]) => ({ k, v })),
@@ -110,12 +106,11 @@ function packStory(root) {
   return json;
 }
 
-function dfsActivity(node, adj, nodes, visited) {
-  visited[node.nodeID] = true;
+function dfsActivity(node, adj, nodes) {
   for (const [_, v] of Object.entries(node.childs)) {
     for (var element of v) {
       // exclude already visited
-      if (!visited[element.child.nodeID]) {
+      if (!nodes.map(n => n.id).includes(element.child.nodeID)) {
         // exclude root (directly child)
         nodes.push(packActivity(element.child));
       }
@@ -128,10 +123,9 @@ function dfsActivity(node, adj, nodes, visited) {
       }
       //avoid iterating on already visited or empty nodes
       if (
-        Object.keys(element.child.childs).length > 0 &&
-        !visited[element.child.nodeID]
+        Object.keys(element.child.childs).length > 0
       ) {
-        dfsActivity(element.child, adj, nodes, visited);
+        dfsActivity(element.child, adj, nodes);
       }
     }
   }
@@ -227,9 +221,11 @@ TreeNode.prototype.toString = function () {
   return this.nodeID;
 };
 
-// GLOBAL ROOT ACTIVITY
+// GLOBAL
+// ROOT ACTIVITY
 var root = null;
-
+// keep track of active forms
+var activityFormQueue = [];
 
 
 $(document).ready(function () {
@@ -366,7 +362,8 @@ $(document).ready(function () {
       // modals creation
       var idEdit = actToId(this.type) + this.nodeID + "-edit-modal";
       var modalBody = generateForm4Activity(this.type);
-      //TODO modal form compilation based on request
+      activityFormQueue.push(idEdit);
+
       var modal =
         '<div class="modal fade" id="' +
         idEdit +
@@ -867,6 +864,10 @@ $(document).ready(function () {
     // reset the form
     $("#story-name").val("");
     $("#published").prop('checked', false);
+
+    activityFormQueue.forEach(function(form) {
+      $("#" + form)
+    });
     // reset the counter
     Counter.set(0);
     // add root back
@@ -1040,6 +1041,7 @@ $(document).ready(function () {
   })
 
   $("#open-story-modal").click(function() {
+    storyList();
     $("#main-modal").modal("show");
   })
 
