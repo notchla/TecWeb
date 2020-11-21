@@ -163,8 +163,30 @@
             <p>Do you want to overwrite the existing story?</p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-danger" id="confirm-send-story"> Save changes</button>
+            <button type="button" class="btn btn-warning" id="confirm-send-story"> Save changes</button>
             <button type="button" class="btn btn-secondary" id="dismiss-send-story" data-dismiss="modal">Dismiss</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="confirm-delete-modal" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title" id="delete-modal-title"> </h4>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <form class="needs-validation" novalidate>
+          <div class="modal-body">
+            <p>Are you sure?</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-danger" id="confirm-delete-story"> Delete </button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal"> Cancel </button>
           </div>
         </form>
       </div>

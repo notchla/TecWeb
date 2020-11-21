@@ -68,4 +68,7 @@ module.exports = {
     //   nodes: nodes,
     // }).save();
   },
+  deleteStory: async (options = {}) => {
+    NewStory.deleteOne(options, function (err) {});
+  }
 };

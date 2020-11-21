@@ -115,7 +115,9 @@ app.get("/activities/forms/:type", handlers.getActivityForm);
 
 app.post("/stories/registerStory", handlers.registerStory);
 
-app.get("/createstory/names", handlers.getStoryNames);
+app.get("/createstory/names", handlers.getStoryList);
+
+app.get("/createstory/delete/:title", handlers.deleteStory);
 
 app.use(handlers.notFound); // need to be after all others routing handlers
 

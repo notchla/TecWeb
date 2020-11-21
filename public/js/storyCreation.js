@@ -809,30 +809,31 @@ $(document).ready(function () {
 
   function rebuildTree(root, data) {
     nodes = new Map();
-
-    data.nodes.forEach(function (el, _) {
-      var oldNode = {
-        content: el.content,
-        x: el.x,
-        y: el.y,
-        nodeID: el.id,
-      };
-      // rebuild activities with old content
-      var tmp = new Activity(el.type, oldNode);
-      nodes.set(tmp.nodeID, tmp);
-    });
-    // rebuild old connections
-    data.adj.forEach(function (el, _) {
-      var from = nodes.get(el.k);
-      answerIndex = 0;
-      el.v.forEach(function (val, _) {
-        var to = nodes.get(val);
-        from.addChildActivity(to, answerIndex++);
+    if(data.nodes) {
+      data.nodes.forEach(function (el, _) {
+        var oldNode = {
+          content: el.content,
+          x: el.x,
+          y: el.y,
+          nodeID: el.id,
+        };
+        // rebuild activities with old content
+        var tmp = new Activity(el.type, oldNode);
+        nodes.set(tmp.nodeID, tmp);
       });
-    });
-    // add root entry point
-    var entryPoint = nodes.get(data.adj[0].k);
-    root.addChildActivity(entryPoint, 0);
+      // rebuild old connections
+      data.adj.forEach(function (el, _) {
+        var from = nodes.get(el.k);
+        answerIndex = 0;
+        el.v.forEach(function (val, _) {
+          var to = nodes.get(val);
+          from.addChildActivity(to, answerIndex++);
+        });
+      });
+      // add root entry point
+      var entryPoint = nodes.get(data.adj[0].k);
+      root.addChildActivity(entryPoint, 0);
+    }
   }
 
   function loadStory(name) {
@@ -859,8 +860,9 @@ $(document).ready(function () {
   function resetScene() {
     // iteratively empty the pixi stage children, then add root
     // state.children[0] is main stage, stage.children[0].children are the rendered elements in the main stage
-    while(app.stage.children[0].children[0]) {
-        app.stage.children[0].removeChild(app.stage.children[0].children[0]);
+    var mainStage = app.stage.children[0];
+    while(mainStage.children[0]) {
+      mainStage.removeChild(mainStage.children[0]);
     }
     // reset the form
     $("#story-name").val("");
@@ -900,6 +902,71 @@ $(document).ready(function () {
       error: function (data) {},
     });
   }
+
+  //NO NEED TO ADD ROOT WITH RESET
+  // //root activity
+  // var root = new Activity("root");
+  // root.draw_output(BUTTON_COLOR);
+
+  var invisible =
+  '<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-eye-slash" fill="currentColor" xmlns="http://www.w3.org/2000/svg">' +
+    '<path d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7.028 7.028 0 0 0-2.79.588l.77.771A5.944 5.944 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.134 13.134 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755-.165.165-.337.328-.517.486l.708.709z"/>' +
+    '<path d="M11.297 9.176a3.5 3.5 0 0 0-4.474-4.474l.823.823a2.5 2.5 0 0 1 2.829 2.829l.822.822zm-2.943 1.299l.822.822a3.5 3.5 0 0 1-4.474-4.474l.823.823a2.5 2.5 0 0 0 2.829 2.829z"/>' +
+    '<path d="M3.35 5.47c-.18.16-.353.322-.518.487A13.134 13.134 0 0 0 1.172 8l.195.288c.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c.716 0 1.39-.133 2.02-.36l.77.772A7.029 7.029 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709z"/>' +
+    '<path fill-rule="evenodd" d="M13.646 14.354l-12-12 .708-.708 12 12-.708.708z"/>' +
+  '</svg>';
+
+  var visible =
+  '<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-eye" fill="currentColor" xmlns="http://www.w3.org/2000/svg">' +
+    '<path fill-rule="evenodd" d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.134 13.134 0 0 0 1.66 2.043C4.12 11.332 5.88 12.5 8 12.5c2.12 0 3.879-1.168 5.168-2.457A13.134 13.134 0 0 0 14.828 8a13.133 13.133 0 0 0-1.66-2.043C11.879 4.668 10.119 3.5 8 3.5c-2.12 0-3.879 1.168-5.168 2.457A13.133 13.133 0 0 0 1.172 8z"/>' +
+    '<path fill-rule="evenodd" d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>' +
+  '</svg>'
+
+
+  function storyList() {
+    $("#indicator").show();
+    $.ajax({
+      type: "get",
+      url: "/createstory/names",
+      crossDomain: true,
+      success: function (data) {
+        $("#indicator").hide();
+        // clear list
+        $("#list-stories").empty();
+        data.stories.forEach(function (story) {
+          if (story.title) {
+            var storyEntry =
+            '<div id=' +
+              story.title +
+              '-open" class="list-group-item list-group-item-action flex-column align-items-start">' +
+              '<span class="h5 mx-auto"> ' +
+              story.title +
+              ' </span>';
+              // published icon
+              storyEntry += '<div class="mr-5 float-left">';
+              if(story.published) {
+                storyEntry +=  visible;
+              } else {
+                storyEntry += invisible;
+              }
+              storyEntry +='</div>';
+
+              storyEntry +=
+              '<button id=' +
+              story.title +
+              '-delete" type="button" class="btn btn-danger float-right"> Delete </button>' +
+              '</div>'
+            $("#list-stories").append(storyEntry);
+            //TODO delete button prompts to remove selected story
+          }
+        });
+      },
+      error: function (data) {},
+    });
+
+
+    // main
+
   // custom menu event handler
   $("#activity-context-menu span").click(function () {
     // This is the triggered action name
@@ -917,58 +984,46 @@ $(document).ready(function () {
     $("#activity-context-menu").hide(100);
   });
 
-
-  //NO NEED TO ADD ROOT WITH RESET
-  // //root activity
-  // var root = new Activity("root");
-  // root.draw_output(BUTTON_COLOR);
-
-  function storyList() {
-    $("#indicator").show();
-    $.ajax({
-      type: "get",
-      url: "/createstory/names",
-      crossDomain: true,
-      success: function (data) {
-        $("#indicator").hide();
-        data.storynames.forEach(function (name) {
-          if (name) {
-            $("#list-stories").append(
-              "<div id=" +
-                name +
-                '-open" class="list-group-item list-group-item-action flex-column align-items-start">' +
-                "<span> " +
-                name +
-                " </span>" +
-                "<button id=" +
-                name +
-                '-delete" type="button" class="btn btn-danger float-right"> Delete </button>' +
-                "</div>"
-            );
-            //TODO delete button prompts to remove selected story
-          }
-        });
-      },
-      error: function (data) {},
-    });
     $("#list-stories").click(function (e) {
       //hide selection modal
       $("#main-modal").modal("toggle");
-      // show spinner
-      $("#indicator-overlay").modal("show");
+      if(e.target.id.includes("-open")) {
+        // show choosen story
+        // show spinner
+        $("#indicator-overlay").modal("show");
 
-      $(this).toggleClass("active");
-      e.preventDefault();
-      // empty scene
-      resetScene();
-      //load story objects
-      loadStory(e.target.id.replace('"', "").replace("-open", ""));
+        $(this).toggleClass("active");
+        e.preventDefault();
+        // empty scene
+        resetScene();
+        //load story objects
+        loadStory(e.target.id.replace('"', "").replace("-open", ""));
+      } else if(e.target.id.includes("-delete")) {
+        //prompt delete
+        var storyname = e.target.id.replace('"', "").replace("-delete", "")
+        $("#delete-modal-title").text("Delete story " + storyname);
+        $("#confirm-delete-modal").modal("show");
+        $("#confirm-delete-story").click(function() {
+          $.ajax({
+            type: "get",
+            url: "/createstory/delete/" + storyname,
+            crossDomain: true,
+            success: function (data) {
+              console.log("succesfully deleted")
+            },
+            error: function (data) {},
+          });
+          $("#confirm-delete-modal").modal("hide");
+          // reload updated stories and show modal
+          storyList();
+          $("#main-modal").modal("show");
+        })
+      }
     });
   }
 
 
 
-  // main
 
   // activity selection menu initialization
   getActivities();
@@ -1014,7 +1069,7 @@ $(document).ready(function () {
         url: "/checkqr/" + storyname,
         crossDomain: true,
         success: function (data) {
-          if(data.exists) {
+          if(data.exists === "true") {
             $("#confirm-changes-modal").modal("show");
             $("#confirm-send-story").click(function() {
               sendStory(body);

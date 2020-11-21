@@ -1,9 +1,9 @@
 implementare bottone nuova storia FATTO
-implementare delete
-rifare path applicazione
+implementare delete FATTO
+rifare path applicazione FATTO
 middleware controllo username solo su path
-sistemare dfs, bug attivita duplicate se connesse piu volte
+sistemare dfs, bug attivita duplicate se connesse piu volte FATTO
 aggiungere bottone per riaprire modale FATTO
-aggiungere icona nel modale per far vedere se storia è pubblicata
+aggiungere icona nel modale per far vedere se storia è pubblicata FATTO
 fare che visualizzatore legge risposte dal grafo
 controllo nome storia FATTO
