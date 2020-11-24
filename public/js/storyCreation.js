@@ -221,12 +221,13 @@ TreeNode.prototype.toString = function () {
   return this.nodeID;
 };
 
+
+
+
+
 // GLOBAL
 // ROOT ACTIVITY
 var root = null;
-// keep track of active forms
-var activityFormQueue = [];
-
 
 $(document).ready(function () {
   var [W, H] = [4 * 1024, 3 * 1024];
@@ -260,6 +261,19 @@ $(document).ready(function () {
       keyToPress: ["ControlLeft", "ControlRight", "ShiftLeft", "ShiftRight"],
     })
     .wheel();
+
+  viewport
+  .on("drag-start", function() {
+    $("#activity-context-menu").finish().hide(100);
+    console.log(viewport)
+  })
+  .on("wheel", function() {
+    $("#activity-context-menu").finish().hide(100);
+  });
+
+  // save the initial viewed area
+  viewport.initialPosition = viewport.hitArea;
+
 
   app.stage.addChild(viewport);
   app.renderer.render(viewport);
@@ -362,7 +376,6 @@ $(document).ready(function () {
       // modals creation
       var idEdit = actToId(this.type) + this.nodeID + "-edit-modal";
       var modalBody = generateForm4Activity(this.type);
-      activityFormQueue.push(idEdit);
 
       var modal =
         '<div class="modal fade" id="' +
@@ -386,7 +399,7 @@ $(document).ready(function () {
         "</div>" +
         "</div>";
 
-      $("body").append(modal);
+      $("#activity-modal-container").append(modal);
 
       // rebuild old node
       if (oldNode !== undefined) {
@@ -857,17 +870,19 @@ $(document).ready(function () {
   function resetScene() {
     // iteratively empty the pixi stage children, then add root
     // state.children[0] is main stage, stage.children[0].children are the rendered elements in the main stage
+    $("#pixi-area").empty();
     var mainStage = app.stage.children[0];
     while(mainStage.children[0]) {
       mainStage.removeChild(mainStage.children[0]);
     }
-    // reset the form
+    // reset viewport zoom and position
+    viewport.x = 0;
+    viewport.y = 0;
+    viewport.setZoom(1);
+    // reset the forms
     $("#story-name").val("");
     $("#published").prop('checked', false);
-
-    activityFormQueue.forEach(function(form) {
-      $("#" + form)
-    });
+    $("#activity-modal-container").empty();
     // reset the counter
     Counter.set(0);
     // add root back
@@ -984,44 +999,44 @@ $(document).ready(function () {
     // Hide it AFTER the action was triggered
     $("#activity-context-menu").hide(100);
   });
-
-    $("#list-stories").click(function (e) {
-      //hide selection modal
-      $("#main-modal").modal("toggle");
-      if(e.target.id.includes("-open")) {
-        // show choosen story
-        // show spinner
-        $("#indicator-overlay").modal("show");
-
-        $(this).toggleClass("active");
-        e.preventDefault();
-        // empty scene
-        resetScene();
-        //load story objects
-        loadStory(e.target.id.replace('"', "").replace("-open", ""));
-      } else if(e.target.id.includes("-delete")) {
-        //prompt delete
-        var storyname = e.target.id.replace('"', "").replace("-delete", "")
-        $("#delete-modal-title").text("Delete story " + storyname);
-        $("#confirm-delete-modal").modal("show");
-        $("#confirm-delete-story").click(function() {
-          $.ajax({
-            type: "get",
-            url: "/createstory/delete/" + storyname,
-            crossDomain: true,
-            success: function (data) {
-              console.log("succesfully deleted")
-            },
-            error: function (data) {},
-          });
-          $("#confirm-delete-modal").modal("hide");
-          // reload updated stories and show modal
-          storyList();
-          $("#main-modal").modal("show");
-        })
-      }
-    });
   }
+
+  $("#list-stories").click(function (e) {
+    //hide selection modal
+    $("#main-modal").modal("toggle");
+    if(e.target.id.includes("-open")) {
+      // show choosen story
+      // show spinner
+      $("#indicator-overlay").modal("show");
+
+      $(this).toggleClass("active");
+      e.preventDefault();
+      // empty scene
+      resetScene();
+      //load story objects
+      loadStory(e.target.id.replace('"', "").replace("-open", ""));
+    } else if(e.target.id.includes("-delete")) {
+      //prompt delete
+      var storyname = e.target.id.replace('"', "").replace("-delete", "")
+      $("#delete-modal-title").text("Delete story " + storyname);
+      $("#confirm-delete-modal").modal("show");
+      $("#confirm-delete-story").click(function() {
+        $.ajax({
+          type: "get",
+          url: "/createstory/delete/" + storyname,
+          crossDomain: true,
+          success: function (data) {
+            console.log("succesfully deleted")
+          },
+          error: function (data) {},
+        });
+        $("#confirm-delete-modal").modal("hide");
+        // reload updated stories and show modal
+        storyList();
+        $("#main-modal").modal("show");
+      })
+    }
+  });
 
 
 
