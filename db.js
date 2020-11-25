@@ -61,11 +61,8 @@ module.exports = {
       { pages: nodes.length + 1, adj, nodes, published },
       { upsert: true }
     );
-    // await new NewStory({
-    //   title: "example1",
-    //   pages: nodes.length + 1,
-    //   adj: adj,
-    //   nodes: nodes,
-    // }).save();
+  },
+  deleteStory: async (options = {}) => {
+    NewStory.deleteOne(options, function (err) {});
   },
 };

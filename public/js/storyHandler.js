@@ -14,31 +14,43 @@ var CounterClass = function (max) {
 };
 
 var counter;
-var story_data;
+var story_data; //story json
+var story_templates = {};
 
 function updateContent(data) {
-  $.get(`/stories/template/${data.type}`).then(
-    function (handlebar) {
-      var template = Handlebars.compile(handlebar);
-      var context = data.content;
-      var html = template(context);
-      document.getElementById("entry-template").innerHTML = html;
-      var js = `/js/${data.type}.js`;
-      addCompletedScript(js);
-    },
-    function () {
-      alert("error in loading template");
-    }
-  );
+  var type = data.type;
+  console.log(Object.keys(story_templates));
+  var template = story_templates[data.type];
+  var context = data.content;
+  console.log(template);
+  var html = template(context);
+  document.getElementById("entry-template").innerHTML = html;
+  var js = `/js/${data.type}.js`;
+  addCompletedScript(js);
+}
+
+//load all the templates used in the story
+async function loadTemplates(data) {
+  return new Promise(async (resolve) => {
+    var templates = {};
+    data.nodes.forEach((element) => {
+      templates[element.type] = element.type;
+    });
+
+    await getTemplate(templates);
+    resolve();
+  });
 }
 
 $(document).ready(function () {
   var name = window.location.href.split("/");
   name = name[name.length - 1];
   $.get(`/stories/json/${name}`).then(
-    function (data) {
+    async function (data) {
       counter = CounterClass(data.pages);
       story_data = data;
+      await loadTemplates(data);
+      console.log("here");
       updateContent(data.nodes[counter.get()]);
     },
     function () {
@@ -61,4 +73,21 @@ function addCompletedScript(scriptName) {
   script.src = scriptName;
   script.id = "activity_checker";
   head.appendChild(script);
+}
+
+async function getTemplate(templates) {
+  return new Promise(async (res) => {
+    for (const template in templates) {
+      await new Promise((resolve) =>
+        $.get(`/stories/template/${template}`)
+          .then(function (handlebar) {
+            story_templates[template] = Handlebars.compile(handlebar);
+            console.log(template);
+            resolve();
+          })
+          .catch(() => alert("error in loading templates please try again"))
+      );
+    }
+    res();
+  });
 }
