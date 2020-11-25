@@ -1047,7 +1047,10 @@ $(document).ready(function () {
   // main (story selector) modal
   storyList();
 
-  $("#main-modal").modal();
+  $("#main-modal").modal({
+    backdrop: 'static', 
+    keyboard: false
+  });
 
   // new empty story
   $("#edit-new-story").click(function() {
@@ -1078,8 +1081,6 @@ $(document).ready(function () {
         storyname: storyname,
         published: published,
       });
-
-
 
       $.ajax({
         type: "get",

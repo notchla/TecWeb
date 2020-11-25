@@ -7,3 +7,4 @@ aggiungere bottone per riaprire modale FATTO
 aggiungere icona nel modale per far vedere se storia è pubblicata FATTO
 fare che visualizzatore legge risposte dal grafo
 controllo nome storia FATTO
+BUG in costruzione lista di adiacenza, non viene mantenuto l'ordine delle risposte
