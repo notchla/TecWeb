@@ -107,6 +107,7 @@ function packStory(root) {
 }
 
 function dfsActivity(node, adj, nodes) {
+  console.log(Object.entries(node.childs));
   for (const [_, v] of Object.entries(node.childs)) {
     for (var element of v) {
       // exclude already visited
@@ -115,15 +116,15 @@ function dfsActivity(node, adj, nodes) {
         nodes.push(packActivity(element.child));
       }
       if (node.nodeID != 1) {
-        if (adj.has(node.nodeID)) {
-          adj.get(node.nodeID).push(element.child.nodeID);
-        } else {
-          adj.set(node.nodeID, [element.child.nodeID]);
+        if (!adj.has(node.nodeID)) {
+          // new entry in the adjacency list, as an array with the size of the answers
+          adj.set(node.nodeID, Array(node.output_lines.length - 1).fill(0));
         }
+        adj.get(node.nodeID)[element.outLine] = element.child.nodeID;
       }
-      //avoid iterating on already visited or empty nodes
       if (
-        Object.keys(element.child.childs).length > 0
+        Object.keys(element.child.childs).length > 0 &&
+        !adj.has(element.child.nodeID)
       ) {
         dfsActivity(element.child, adj, nodes);
       }
@@ -1048,7 +1049,7 @@ $(document).ready(function () {
   storyList();
 
   $("#main-modal").modal({
-    backdrop: 'static', 
+    backdrop: 'static',
     keyboard: false
   });
 
