@@ -16,13 +16,12 @@ var CounterClass = function (max) {
 var counter;
 var story_data; //story json
 var story_templates = {};
+var current_adj = 0;
 
 function updateContent(data) {
   var type = data.type;
-  console.log(Object.keys(story_templates));
   var template = story_templates[data.type];
   var context = data.content;
-  console.log(template);
   var html = template(context);
   document.getElementById("entry-template").innerHTML = html;
   var js = `/js/${data.type}.js`;
@@ -50,7 +49,6 @@ $(document).ready(function () {
       counter = CounterClass(data.pages);
       story_data = data;
       await loadTemplates(data);
-      console.log("here");
       updateContent(data.nodes[counter.get()]);
     },
     function () {
@@ -82,7 +80,6 @@ async function getTemplate(templates) {
         $.get(`/stories/template/${template}`)
           .then(function (handlebar) {
             story_templates[template] = Handlebars.compile(handlebar);
-            console.log(template);
             resolve();
           })
           .catch(() => alert("error in loading templates please try again"))
@@ -90,4 +87,18 @@ async function getTemplate(templates) {
     }
     res();
   });
+}
+
+function getAdjIndex() {
+  return current_adj;
+}
+
+function setAdjIndex(index) {
+  const i = story_data.adj.findIndex((adj) => adj.k == index);
+  current_adj = i;
+  return;
+}
+
+function getNodeIndex(id) {
+  return story_data.nodes.findIndex((node) => node.id == id);
 }
