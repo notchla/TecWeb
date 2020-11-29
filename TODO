@@ -1,10 +1,17 @@
-implementare bottone nuova storia FATTO
-implementare delete FATTO
-rifare path applicazione
-middleware controllo username solo su path
-sistemare dfs, bug attivita duplicate se connesse piu volte
-aggiungere bottone per riaprire modale FATTO
-aggiungere icona nel modale per far vedere se storia è pubblicata FATTO
-fare che visualizzatore legge risposte dal grafo
-controllo nome storia FATTO
-BUG in costruzione lista di adiacenza, non viene mantenuto l'ordine delle risposte
+rifare path applicazione togheter
+middleware controllo username solo su path lorenzo
+
+CREATORE
+inserimento risposta sbagliata gallo
+controllo build storia gallo
+cambiare comportamento getActivities e dare supporto per default, numero pallino di output gallo
+controllare pixi scroll lorenzo
+
+VISUALIZZATORE
+fare che visualizzatore legge risposte dal grafo (da finire per tutte attivita) lorenzo
+fare closed question lorenzo
+fare open question lorenzo
+fare immagini in descrizione 
+fare navigazione
+
+
