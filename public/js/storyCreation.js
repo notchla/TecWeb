@@ -243,7 +243,7 @@ $(document).ready(function () {
   app.renderer.view.style.position = "absolute";
   app.renderer.view.style.display = "block";
   app.render.autoResize = true;
-  document.body.appendChild(app.view);
+  $("#pixi-area").append(app.view);
 
   var viewport = new Viewport.Viewport({
     screenWidth: window.innerWidth,
@@ -254,7 +254,6 @@ $(document).ready(function () {
     interaction: app.renderer.plugins.interaction,
   });
 
-  // viewport.drag().wheel();
   viewport
     .drag({
       wheel: false,
@@ -262,6 +261,10 @@ $(document).ready(function () {
       keyToPress: ["ControlLeft", "ControlRight", "ShiftLeft", "ShiftRight"],
     })
     .wheel();
+
+  $(window).scroll(function(e) {
+    $('.main-navbar').removeClass("navbar-hide");
+  });
 
   viewport
   .on("drag-start", function() {
@@ -431,6 +434,9 @@ $(document).ready(function () {
         }
         // position has to bset after all children have been added
         this.rect.position.set(oldNode.x, oldNode.y);
+      } else {
+        // set root position to new center (not overlapping the navbar)
+        this.rect.position.set(10, $("#main-navbar").innerHeight() + 10)
       }
 
       //add value update on modal close
@@ -871,7 +877,6 @@ $(document).ready(function () {
   function resetScene() {
     // iteratively empty the pixi stage children, then add root
     // state.children[0] is main stage, stage.children[0].children are the rendered elements in the main stage
-    $("#pixi-area").empty();
     var mainStage = app.stage.children[0];
     while(mainStage.children[0]) {
       mainStage.removeChild(mainStage.children[0]);
@@ -1041,6 +1046,16 @@ $(document).ready(function () {
 
 
 
+// disable navbar selection
+  $('#main-navbar').attr('unselectable','on')
+  .css({'-moz-user-select':'-moz-none',
+  '-moz-user-select':'none',
+  '-o-user-select':'none',
+  '-khtml-user-select':'none', /* you could also put this in a class */
+  '-webkit-user-select':'none',/* and add the CSS class here instead */
+  '-ms-user-select':'none',
+  'user-select':'none'
+}).bind('selectstart', function(){ return false; });
 
   // activity selection menu initialization
   getActivities();
