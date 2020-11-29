@@ -1,17 +1,15 @@
-rifare path applicazione togheter
+rifare path applicazione togheter FATTO
 middleware controllo username solo su path lorenzo
 
 CREATORE
 inserimento risposta sbagliata gallo
 controllo build storia gallo
 cambiare comportamento getActivities e dare supporto per default, numero pallino di output gallo
-controllare pixi scroll lorenzo
+controllare pixi scroll lorenzo FATTO
 
 VISUALIZZATORE
 fare che visualizzatore legge risposte dal grafo (da finire per tutte attivita) lorenzo
 fare closed question lorenzo
 fare open question lorenzo
-fare immagini in descrizione 
+fare immagini in descrizione
 fare navigazione
-
-

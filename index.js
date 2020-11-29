@@ -92,32 +92,36 @@ app.use(sessionIDMiddleware);
 //load home with qr code
 app.get("/", handlers.home);
 
+app.post("/registeruser", handlers.registerUser);
+
+app.get("/createstory", (req, res) => res.render("storycreate"));
+
+
 //load the story called storyname
-app.get("/stories/:storyname", handlers.loadStory);
+app.get("/stories/get/:storyname", handlers.loadStory);
 
 //return the json representing the story called storyname
 app.get("/stories/json/:storyname", handlers.loadJson);
 
+app.post("/stories/registerstory", handlers.registerStory);
+
+app.get("/stories/exists/:code", handlers.checkStoryExists);
+
+app.get("/stories/getnames/", handlers.getStoryList);
+
+app.get("/stories/delete/:title", handlers.deleteStory);
+
+
 //return the activity template
-app.get("/stories/template/:templatename", handlers.loadTemplate);
+app.get("/templates/get/:templatename", handlers.loadTemplate);
 
-app.get("/checkqr/:code", handlers.checkStoryExists);
+app.get("/templates/getnames", handlers.getActivities);
 
-app.post("/register-user", handlers.registerUser);
+app.get("/templates/forms/:type", handlers.getActivityForm);
 
-app.get("/pixi", (req, res) => res.render("test-pixi"));
 
-app.get("/createstory", (req, res) => res.render("storycreate"));
 
-app.get("/activities/", handlers.getActivities);
 
-app.get("/activities/forms/:type", handlers.getActivityForm);
-
-app.post("/stories/registerStory", handlers.registerStory);
-
-app.get("/createstory/names", handlers.getStoryList);
-
-app.get("/createstory/delete/:title", handlers.deleteStory);
 
 app.use(handlers.notFound); // need to be after all others routing handlers
 

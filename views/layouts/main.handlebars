@@ -5,7 +5,7 @@
     {{{_sections.scripts}}}
     {{#if flash}}
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">  
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
     <script>
@@ -18,7 +18,7 @@
         })
         const headers = {"Content-Type": "application/json"}
         const container = document.getElementById("username-alert")
-        fetch("/register-user", {method: "post", body, headers}).then(
+        fetch("/registeruser", {method: "post", body, headers}).then(
           resp => {
             console.log(resp)
             if(resp.status < 200 || resp.status >= 300)
@@ -40,7 +40,7 @@
           name: "anonymous",
         })
         const headers = {"Content-Type": "application/json"}
-        fetch("/register-user", {method:"post", body, headers}).then( () => window.location.replace(""))
+        fetch("/registeruser", {method:"post", body, headers}).then( () => window.location.replace(""))
       })
       })
     </script>
@@ -50,7 +50,7 @@
   <body>
     {{#if flash}}
     <div class="alert alert-dismissible alert-{{flash.type}}" id="username-alert">
-      <button type="button" class="close" 
+      <button type="button" class="close"
         data-dismiss="alert" aria-hidden="true" id="closeButton">&times;
       </button>
       <strong>{{flash.intro}}</strong> {{{flash.message}}}

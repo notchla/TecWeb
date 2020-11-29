@@ -31,7 +31,7 @@ function generateForm4Activity(type) {
     $.ajax({
       type: "get",
       async: false,
-      url: "/activities/forms/" + type,
+      url: "/templates/forms/" + type,
       crossDomain: true,
       success: function (data) {
         ret = data.form;
@@ -77,7 +77,7 @@ function UNpackFormData(form, oldData) {
 function sendStory(body) {
   const headers = { "Content-Type": "application/json" };
   console.log(body);
-  fetch("/stories/registerStory", { method: "post", body, headers })
+  fetch("/stories/registerstory", { method: "post", body, headers })
     .then((resp) => {
       if (resp.status < 200 || resp.status >= 300)
         throw new Error(`request failed with status ${resp.status}`);
@@ -260,7 +260,11 @@ $(document).ready(function () {
       mouseButtons: "left",
       keyToPress: ["ControlLeft", "ControlRight", "ShiftLeft", "ShiftRight"],
     })
-    .wheel();
+    .wheel()
+    .clampZoom({
+      minScale: .3,
+      maxScale: 1.3
+    });
 
   $(window).scroll(function(e) {
     $('.main-navbar').removeClass("navbar-hide");
@@ -899,7 +903,7 @@ $(document).ready(function () {
   function getActivities() {
     $.ajax({
       type: "get",
-      url: "/activities/",
+      url: "/templates/getnames/",
       crossDomain: true,
       success: function (data) {
         var activityList = "";
@@ -949,7 +953,7 @@ $(document).ready(function () {
     $("#indicator").show();
     $.ajax({
       type: "get",
-      url: "/createstory/names",
+      url: "/stories/getnames",
       crossDomain: true,
       success: function (data) {
         $("#indicator").hide();
@@ -1029,7 +1033,7 @@ $(document).ready(function () {
       $("#confirm-delete-story").click(function() {
         $.ajax({
           type: "get",
-          url: "/createstory/delete/" + storyname,
+          url: "/stories/delete/" + storyname,
           crossDomain: true,
           success: function (data) {
             console.log("succesfully deleted")
@@ -1100,7 +1104,7 @@ $(document).ready(function () {
 
       $.ajax({
         type: "get",
-        url: "/checkqr/" + storyname,
+        url: "/stories/exists/" + storyname,
         crossDomain: true,
         success: function (data) {
           if(data.exists === "true") {

@@ -13,7 +13,7 @@ function startQRReader() {
         console.log(qrCodeMessage);
         $.ajax({
           type: "get",
-          url: "/checkqr/" + qrCodeMessage,
+          url: "/stories/exists/" + qrCodeMessage,
           crossDomain: true,
           success: function(data) {
             console.log("data");

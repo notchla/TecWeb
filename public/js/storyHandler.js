@@ -77,7 +77,7 @@ async function getTemplate(templates) {
   return new Promise(async (res) => {
     for (const template in templates) {
       await new Promise((resolve) =>
-        $.get(`/stories/template/${template}`)
+        $.get(`/templates/get/${template}`)
           .then(function (handlebar) {
             story_templates[template] = Handlebars.compile(handlebar);
             resolve();
