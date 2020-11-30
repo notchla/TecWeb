@@ -23,11 +23,8 @@ function idToAct(id) {
 }
 
 function generateForm4Activity(type) {
-  //TODO collect all activity form data for serialization (unique incremental ids for each activity)
-  //example for a description activity
   var ret = "<p> root </p>";
   if (type != "root") {
-    var index = actToId(type);
     $.ajax({
       type: "get",
       async: false,
@@ -107,7 +104,6 @@ function packStory(root) {
 }
 
 function dfsActivity(node, adj, nodes) {
-  console.log(Object.entries(node.childs));
   for (const [_, v] of Object.entries(node.childs)) {
     for (var element of v) {
       // exclude already visited
@@ -118,7 +114,7 @@ function dfsActivity(node, adj, nodes) {
       if (node.nodeID != 1) {
         if (!adj.has(node.nodeID)) {
           // new entry in the adjacency list, as an array with the size of the answers
-          adj.set(node.nodeID, Array(node.output_lines.length - 1).fill(0));
+          adj.set(node.nodeID, Array(node.out.length).fill(0));
         }
         adj.get(node.nodeID)[element.outLine] = element.child.nodeID;
       }
@@ -273,7 +269,6 @@ $(document).ready(function () {
   viewport
   .on("drag-start", function() {
     $("#activity-context-menu").finish().hide(100);
-    console.log(viewport)
   })
   .on("wheel", function() {
     $("#activity-context-menu").finish().hide(100);
@@ -541,7 +536,6 @@ $(document).ready(function () {
       // show context menu (edit and delete)
       function onRightClick(event) {
         var position = event.currentTarget.getGlobalPosition();
-        position.y += $("#activity-context-menu").height() * 1.3;
         $("#activity-context-menu")
           .finish()
           .toggle(100)
@@ -740,8 +734,8 @@ $(document).ready(function () {
         obj.beginFill(color);
         obj.drawCircle(0, 0, 10);
         obj.endFill();
-        var x = this.rect.position.x + this.rect.width / 2;
-        var y = this.rect.position.y;
+        var x = this.rect.width / 2;
+        var y = 0;
         obj.position.set(x, y);
         this.input.push(obj);
         this.rect.addChild(obj);
@@ -788,7 +782,6 @@ $(document).ready(function () {
 
         this.output_lines[answerIndex] = line;
         activityTo.input_lines.push(this.output_lines[answerIndex]);
-        // console.log(this.nodeID, activityTo.nodeID, this.output_lines);
         this.insertChild(
           this,
           answerIndex,
@@ -929,10 +922,17 @@ $(document).ready(function () {
     });
   }
 
-  //NO NEED TO ADD ROOT WITH RESET
-  // //root activity
-  // var root = new Activity("root");
-  // root.draw_output(BUTTON_COLOR);
+  function isBuildable(adj) {
+    var r = true
+    // check if there are any unused outputs
+    adj.forEach(function(el, _) {
+      if(el.v.includes(0)) {
+        r = false;
+      }
+    });
+    return r;
+  }
+
 
   var invisible =
   '<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-eye-slash" fill="currentColor" xmlns="http://www.w3.org/2000/svg">' +
@@ -991,8 +991,7 @@ $(document).ready(function () {
     });
 
 
-    // main
-
+  // ######## CALLBACKS ########
   // custom menu event handler
   $("#activity-context-menu span").click(function () {
     // This is the triggered action name
@@ -1036,7 +1035,6 @@ $(document).ready(function () {
           url: "/stories/delete/" + storyname,
           crossDomain: true,
           success: function (data) {
-            console.log("succesfully deleted")
           },
           error: function (data) {},
         });
@@ -1046,30 +1044,6 @@ $(document).ready(function () {
         $("#main-modal").modal("show");
       })
     }
-  });
-
-
-
-// disable navbar selection
-  $('#main-navbar').attr('unselectable','on')
-  .css({'-moz-user-select':'-moz-none',
-  '-moz-user-select':'none',
-  '-o-user-select':'none',
-  '-khtml-user-select':'none', /* you could also put this in a class */
-  '-webkit-user-select':'none',/* and add the CSS class here instead */
-  '-ms-user-select':'none',
-  'user-select':'none'
-}).bind('selectstart', function(){ return false; });
-
-  // activity selection menu initialization
-  getActivities();
-
-  // main (story selector) modal
-  storyList();
-
-  $("#main-modal").modal({
-    backdrop: 'static',
-    keyboard: false
   });
 
   // new empty story
@@ -1083,9 +1057,7 @@ $(document).ready(function () {
     $("#main-modal").modal("show");
   })
 
-  // ---- forms
-  //tooltip
-  $(".needs-validation").submit(function (event) {
+  $("#send-story").click(function() {
     if ($(".needs-validation")[0].checkValidity() === false) {
       event.preventDefault();
       event.stopPropagation();
@@ -1101,39 +1073,65 @@ $(document).ready(function () {
         storyname: storyname,
         published: published,
       });
-
-      $.ajax({
-        type: "get",
-        url: "/stories/exists/" + storyname,
-        crossDomain: true,
-        success: function (data) {
-          if(data.exists === "true") {
-            $("#confirm-changes-modal").modal("show");
-            $("#confirm-send-story").click(function() {
+      if(published && !isBuildable(data.adj)) {
+        $("#incomplete-story-modal").modal("show");
+      } else {
+        $.ajax({
+          type: "get",
+          url: "/stories/exists/" + storyname,
+          crossDomain: true,
+          success: function (data) {
+            if(data.exists === "true") {
+              $("#confirm-changes-modal").modal("show");
+              $("#confirm-send-story").click(function() {
+                sendStory(body);
+                // close modals
+                $("#confirm-changes-modal").modal("hide");
+                $("#confirm-modal").modal("hide");
+              });
+            }
+            else {
               sendStory(body);
-              // close modals
-              $("#confirm-changes-modal").modal("hide");
+              // close modal
               $("#confirm-modal").modal("hide");
-            });
-          }
-          else {
-            sendStory(body);
-            // close modal
-            $("#confirm-modal").modal("hide");
-          }
-        },
-        error: function (data) {},
-      });
+            }
+          },
+          error: function (data) {},
+        });
+      }
     }
     $(".needs-validation")[0].classList.add("was-validated");
-    // do not reload page
-    return false;
   });
-
-  // submit
-  $("#send-story").click(function () {});
 
   $("#save-button").click(function () {
     $("#confirm-modal").modal();
   });
+
+  // ######## SETTINGS ########
+
+  // disable navbar selection
+  $('#main-navbar').attr('unselectable','on')
+  .css({
+    '-moz-user-select':'-moz-none',
+    '-moz-user-select':'none',
+    '-o-user-select':'none',
+    '-khtml-user-select':'none',
+    '-webkit-user-select':'none',
+    '-ms-user-select':'none',
+    'user-select':'none'
+  })
+  .bind('selectstart', function(){ return false; });
+
+    $("#main-modal").modal({
+      backdrop: 'static',
+      keyboard: false
+    });
+
+
+  // ######## MAIN ########
+  // activity selection menu initialization
+  getActivities();
+
+  // main (story selector) modal
+  storyList();
 });
