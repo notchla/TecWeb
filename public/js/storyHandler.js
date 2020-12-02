@@ -17,6 +17,7 @@ var counter;
 var story_data; //story json
 var story_templates = {};
 var current_adj = 0;
+var current_node = 0;
 
 function updateContent(data) {
   var type = data.type;
