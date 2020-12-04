@@ -90,20 +90,22 @@ function packStory(root) {
   var adj = new Map();
   // node array
   var nodes = [];
+  var nonbuildable = {value: false};
   // data to recontruct tree (pixi graphics objects)
   dfsActivity(
     root,
     adj,
-    nodes
+    nodes,
+    nonbuildable
   );
   var json = {
     adj: Array.from(adj, ([k, v]) => ({ k, v })),
     nodes: nodes,
   };
-  return json;
+  return [json, nonbuildable.value];
 }
 
-function dfsActivity(node, adj, nodes) {
+function dfsActivity(node, adj, nodes, nonbuildable) {
   for (const [_, v] of Object.entries(node.childs)) {
     for (var element of v) {
       // exclude already visited
@@ -118,11 +120,24 @@ function dfsActivity(node, adj, nodes) {
         }
         adj.get(node.nodeID)[element.outLine] = element.child.nodeID;
       }
+      // object has more output ports than lines: is not buildable
+      if(node.out.length > Object.entries(node.childs).length) {
+        nonbuildable.value = true;
+      } else {
+        nonbuildable.value = nonbuildable.value || false;
+      }
+
       if (
         Object.keys(element.child.childs).length > 0 &&
         !adj.has(element.child.nodeID)
       ) {
-        dfsActivity(element.child, adj, nodes);
+        dfsActivity(element.child, adj, nodes, nonbuildable);
+      } else if (Object.keys(element.child.childs).length == 0){
+        if(element.child.out.length > 0) {
+          nonbuildable.value = true;
+        } else {
+          nonbuildable.value = nonbuildable.value || false;
+        }
       }
     }
   }
@@ -163,7 +178,7 @@ class TreeNode {
     if (child.parents[this])
       child.parents[this].push({ out, outLine, inLine, parent });
     else child.parents[this] = [{ out, outLine, inLine, parent }];
-
+    console.log(outLine, inLine, child);
     if (this.childs[child])
       this.childs[child].push({ out, outLine, inLine, child });
     else this.childs[child] = [{ out, outLine, inLine, child }];
@@ -922,17 +937,6 @@ $(document).ready(function () {
     });
   }
 
-  function isBuildable(adj) {
-    var r = true
-    // check if there are any unused outputs
-    adj.forEach(function(el, _) {
-      if(el.v.includes(0)) {
-        r = false;
-      }
-    });
-    return r;
-  }
-
 
   var invisible =
   '<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-eye-slash" fill="currentColor" xmlns="http://www.w3.org/2000/svg">' +
@@ -1058,50 +1062,49 @@ $(document).ready(function () {
   })
 
   $("#send-story").click(function() {
-    if ($(".needs-validation")[0].checkValidity() === false) {
-      event.preventDefault();
-      event.stopPropagation();
-    } else {
-      var storyname = $("#story-name").val();
-      var published = $("#published").prop("checked");
-      var data = packStory(root);
-      var seen = [];
+    var storyname = $("#story-name").val();
+    var published = $("#published").prop("checked");
+    var stuff = packStory(root);
+    var data = stuff[0];
+    var nonbuildable = stuff[1]
+    var seen = [];
 
-      const body = JSON.stringify({
-        adj: data.adj,
-        nodes: data.nodes,
-        storyname: storyname,
-        published: published,
-      });
-      if(published && !isBuildable(data.adj)) {
-        $("#incomplete-story-modal").modal("show");
-      } else {
-        $.ajax({
-          type: "get",
-          url: "/stories/exists/" + storyname,
-          crossDomain: true,
-          success: function (data) {
-            if(data.exists === "true") {
-              $("#confirm-changes-modal").modal("show");
-              $("#confirm-send-story").click(function() {
-                sendStory(body);
-                // close modals
-                $("#confirm-changes-modal").modal("hide");
-                $("#confirm-modal").modal("hide");
-              });
-            }
-            else {
+    const body = JSON.stringify({
+      adj: data.adj,
+      nodes: data.nodes,
+      storyname: storyname,
+      published: published,
+    });
+    if(published && nonbuildable) {
+      $("#incomplete-story-modal").modal("show");
+    } else {
+      $.ajax({
+        type: "get",
+        url: "/stories/exists/" + storyname,
+        crossDomain: true,
+        success: function (data) {
+          if(data.exists === "true") {
+            $("#confirm-changes-modal").modal("show");
+            $("#confirm-send-story").prop("onclick", null).off("click");
+            $("#confirm-send-story").click(function() {
               sendStory(body);
-              // close modal
+              // close modals
+              $("#confirm-changes-modal").modal("hide");
               $("#confirm-modal").modal("hide");
-            }
-          },
-          error: function (data) {},
-        });
-      }
+            });
+          }
+          else {
+            sendStory(body);
+            // close modal
+            $("#confirm-modal").modal("hide");
+          }
+        },
+        error: function (data) {},
+      });
+
     }
-    $(".needs-validation")[0].classList.add("was-validated");
   });
+
 
   $("#save-button").click(function () {
     $("#confirm-modal").modal();
