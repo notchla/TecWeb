@@ -312,6 +312,7 @@ $(document).ready(function () {
   var TITLE_COLOR = "red";
   var TEXT_COLOR = "white";
   var BUTTON_COLOR = 0x5dbcd2;
+  var BUTTON_COLOR_2 = 0xffbcd2;
   var BLOCK_WIDTH = 200;
   var BLOCK_HEIGHT = 150;
 
@@ -322,16 +323,18 @@ $(document).ready(function () {
       } else {
         super();
       }
+      this.oldNode = oldNode;
+
       this.rect_height = 0;
-      var graphics = (this.rect = new PIXI.Graphics());
+      this.graphics = (this.rect = new PIXI.Graphics());
 
       var width = BLOCK_WIDTH;
       var height = BLOCK_HEIGHT;
-      graphics.interactive = true;
-      graphics.lineStyle(2, 0x000000, 1);
-      graphics.beginFill(BUTTON_COLOR);
-      graphics.drawRect(0, 0, width, height, 15);
-      graphics.endFill();
+      this.graphics.interactive = true;
+      this.graphics.lineStyle(2, 0x000000, 1);
+      this.graphics.beginFill(BUTTON_COLOR);
+      this.graphics.drawRect(0, 0, width, height, 15);
+      this.graphics.endFill();
       var title = new PIXI.Text(type.toUpperCase(), {
         fontFamily: FONT,
         fontWeight: 800,
@@ -342,17 +345,18 @@ $(document).ready(function () {
       title.scale.y = title.scale.x;
       // no more blurry text
       title.resolution = 2;
-      title.position.set(graphics.width / 2, graphics.height / 4);
-      graphics.addChild(title);
+      title.position.set(this.graphics.width / 2, this.graphics.height / 4);
+      this.graphics.addChild(title);
       var idlabel = new PIXI.Text(this.nodeID.toString(), {
         fontFamily: FONT,
         fontWeight: 800,
         fontSize: 10,
         fill: TEXT_COLOR,
       });
+
       idlabel.anchor.set(0.5, 0.5);
       idlabel.position.set(10, 10);
-      graphics.addChild(idlabel);
+      this.graphics.addChild(idlabel);
 
       this.input = [];
       this.out = [];
@@ -361,9 +365,9 @@ $(document).ready(function () {
       this.oldOutputLines = [];
       this.type = type;
 
-      viewport.addChild(graphics);
+      viewport.addChild(this.graphics);
 
-      graphics
+      this.graphics
         .on("mousedown", onDragStart)
         .on("touchstart", onDragStart)
         .on("mouseup", onDragEnd)
@@ -379,108 +383,22 @@ $(document).ready(function () {
           onRightClick(event);
         });
 
-      graphics.input_lines = this.input_lines;
-      graphics.output_lines = this.output_lines;
-      graphics.out = this.out;
-      graphics.input = this.input;
-      graphics.nodeID = this.nodeID;
-      graphics.classptr = this;
+      this.graphics.input_lines = this.input_lines;
+      this.graphics.output_lines = this.output_lines;
+      this.graphics.out = this.out;
+      this.graphics.input = this.input;
+      this.graphics.nodeID = this.nodeID;
+      this.graphics.classptr = this;
       Activity.original_height = this.rect.height;
 
-      if (this.type == "description") {
-        this.draw_output(BUTTON_COLOR);
-      }
-
-      // modals creation
-      var idEdit = actToId(this.type) + this.nodeID + "-edit-modal";
-      var modalBody = generateForm4Activity(this.type);
-
-      var modal =
-        '<div class="modal fade" id="' +
-        idEdit +
-        '" role="dialog">' +
-        '<div class="modal-dialog modal-dialog-centered" role="document">' +
-        '<div class="modal-content">' +
-        '<div class="modal-header">' +
-        '<h5 class="modal-title"> Edit activity </h5>' +
-        '<button type="button" class="close" data-dismiss="modal">&times;</button>' +
-        "</div>" +
-        '<div id="activity-form" class="modal-body">' +
-        modalBody +
-        "</div>" +
-        '<div class="modal-footer">' +
-        '<button type="button" class="btn btn-primary" id="' +
-        idEdit +
-        '-button">Close</button>' +
-        "</div>" +
-        "</div>" +
-        "</div>" +
-        "</div>";
-
-      $("#activity-modal-container").append(modal);
-
-      // rebuild old node
-      if (oldNode !== undefined) {
+      if(this.type != "root") {
         this.draw_input(BUTTON_COLOR);
-
-        this.content = oldNode.content;
-
-        try {
-          var short = this.content["question"].replace(/(.{8})..+/, "$1…");
-          this.text = new PIXI.Text(short, {
-            fontFamily: FONT,
-            fill: TEXT_COLOR,
-            fontSize: 14,
-          });
-          this.text.anchor.set(0.5, 0.5);
-          this.text.position.set(graphics.width / 2, graphics.height / 2);
-          graphics.addChild(this.text);
-        } catch (e) {}
-        UNpackFormData($("#" + idEdit), oldNode.content);
-
-        if (type != "description" && type != "end") {
-          // refill form with old data
-          try {
-            for (var i = 0; i < oldNode.content["answer"].length; i++) {
-              this.draw_output(BUTTON_COLOR);
-            }
-          } catch (e) {}
-        }
-        // position has to bset after all children have been added
-        this.rect.position.set(oldNode.x, oldNode.y);
-      } else {
-        // set root position to new center (not overlapping the navbar)
-        this.rect.position.set(10, $("#main-navbar").innerHeight() + 10)
       }
 
-      //add value update on modal close
-      $("#" + idEdit + "-button").click(() => {
-        this.content = packFormData($("#" + idEdit));
-        if (this.text == null) {
-          var short = this.content["question"].replace(/(.{8})..+/, "$1…");
-          this.text = new PIXI.Text(short, {
-            fontFamily: FONT,
-            fill: TEXT_COLOR,
-            fontSize: 14,
-          });
-          this.text.anchor.set(0.5, 0.5);
-          this.text.position.set(graphics.width / 2, graphics.height / 2);
-          graphics.addChild(this.text);
-        } else {
-          this.text.text = this.content["question"].replace(/(.{8})..+/, "$1…");
-        }
-        if (this.type != "description" && this.type != "end") {
-          //add outputs to the activity node according to the answers
-          for (
-            var i = this.output_lines.length;
-            i < this.content["answer"].length;
-            i++
-          ) {
-            this.draw_output(BUTTON_COLOR);
-          }
-        }
-        $("#" + idEdit).modal("hide");
-      });
+      this.isReady = false;
+      // waiting callback stack, one stack each activity
+      this.waiting = [];
+      this.answerIndex = 0;
 
       // -------- event handlers --------
       function onDragStart(event) {
@@ -573,6 +491,134 @@ $(document).ready(function () {
         this.deleteParents();
         this.rect.destroy();
       }
+    }
+
+    ready(callback) {
+      // call after node creation
+      if(!this.isReady) {
+        // do not run multiple times, put callbacks on wait
+        this.waiting.push(callback);
+        if(this.waiting.length == 1) {
+          var idEdit = actToId(this.type) + this.nodeID + "-edit-modal";
+          $.ajax({
+            type: "get",
+            url: "/templates/forms/" + this.type.split(' ').join('_'),
+            crossDomain: true,
+            success: (data) => {
+              var modalBody = data.data.form;
+              var min_outputs = data.data.min_outputs;
+              var outputs = data.data.outputs;
+
+              // modals creation
+              var modal =
+                '<div class="modal fade" id="' +
+                idEdit +
+                '" role="dialog">' +
+                '<div class="modal-dialog modal-dialog-centered" role="document">' +
+                '<div class="modal-content">' +
+                '<div class="modal-header">' +
+                '<h5 class="modal-title"> Edit activity </h5>' +
+                '<button type="button" class="close" data-dismiss="modal">&times;</button>' +
+                "</div>" +
+                '<div id="activity-form" class="modal-body">' +
+                modalBody +
+                "</div>" +
+                '<div class="modal-footer">' +
+                '<button type="button" class="btn btn-primary" id="' +
+                idEdit +
+                '-button">Close</button>' +
+                "</div>" +
+                "</div>" +
+                "</div>" +
+                "</div>";
+
+              $("#activity-modal-container").append(modal);
+
+              // set outputs
+              for (var i = 0; i < outputs - min_outputs; i++) {
+                this.draw_output(BUTTON_COLOR);
+              }
+              for (var i = 0; i < min_outputs; i++) {
+                this.draw_output(BUTTON_COLOR_2);
+              }
+
+              // rebuild old node
+              if (this.oldNode !== undefined) {
+
+                this.content = this.oldNode.content;
+
+                try {
+                  var short = this.content["question"].replace(/(.{8})..+/, "$1…");
+                  this.text = new PIXI.Text(short, {
+                    fontFamily: FONT,
+                    fill: TEXT_COLOR,
+                    fontSize: 14,
+                  });
+                  this.text.anchor.set(0.5, 0.5);
+                  this.text.position.set(this.graphics.width / 2, this.graphics.height / 2);
+                  this.graphics.addChild(this.text);
+                } catch (e) {}
+                UNpackFormData($("#" + idEdit), this.oldNode.content);
+                // refill form with old data
+                try {
+                  for (var i = 0; i < this.oldNode.content["answer"].length; i++) {
+                    this.draw_output(BUTTON_COLOR);
+                  }
+                } catch (e) {}
+                // position has to bset after all children have been added
+                this.rect.position.set(this.oldNode.x, this.oldNode.y);
+              } else {
+                // set position to new center (not overlapping the navbar)
+                this.rect.position.set(10, $("#main-navbar").innerHeight() + 10);
+              }
+
+              //add value update on modal close
+              $("#" + idEdit + "-button").click(() => {
+                this.content = packFormData($("#" + idEdit));
+                if (this.text == null) {
+                  var short = this.content["question"].replace(/(.{8})..+/, "$1…");
+                  this.text = new PIXI.Text(short, {
+                    fontFamily: FONT,
+                    fill: TEXT_COLOR,
+                    fontSize: 14,
+                  });
+                  this.text.anchor.set(0.5, 0.5);
+                  this.text.position.set(this.graphics.width / 2, this.graphics.height / 2);
+                  this.graphics.addChild(this.text);
+                } else {
+                  this.text.text = this.content["question"].replace(/(.{8})..+/, "$1…");
+                }
+                try{
+                  //add outputs to the activity node according to the answers
+                  for (
+                    var i = this.output_lines.length - 1;
+                    i < this.content["answer"].length;
+                    i++
+                  ) {
+                    this.draw_output(BUTTON_COLOR);
+                  }
+                } catch (e) {}
+                $("#" + idEdit).modal("hide");
+              });
+
+              this.isReady = true;
+              // wake up every waiting call
+              while(this.waiting.length > 0) {
+                var recall = this.waiting.pop();
+                if(recall) {
+                  recall();
+                }
+              }
+            },
+            error: function (data) {},
+          });
+        }
+      } else {
+        if(callback) {
+          callback();
+        }
+      }
+
     }
 
     draw_output(color) {
@@ -783,9 +829,9 @@ $(document).ready(function () {
       this.parents = {};
     }
 
-    addChildActivity(activityTo, answerIndex) {
+    addChildActivity(activityTo) {
       if (activityTo) {
-        var positionFrom = this.out[answerIndex].getGlobalPosition();
+        var positionFrom = this.out[this.answerIndex].getGlobalPosition();
         var positionTo = activityTo.input[0].getGlobalPosition();
 
         var line = new Line(
@@ -795,14 +841,15 @@ $(document).ready(function () {
         );
         viewport.addChild(line);
 
-        this.output_lines[answerIndex] = line;
-        activityTo.input_lines.push(this.output_lines[answerIndex]);
+        this.output_lines[this.answerIndex] = line;
+        activityTo.input_lines.push(this.output_lines[this.answerIndex]);
         this.insertChild(
           this,
-          answerIndex,
+          this.answerIndex,
           activityTo.input_lines.length - 1,
           activityTo
         );
+        this.answerIndex++;
       }
     }
   }
@@ -853,15 +900,22 @@ $(document).ready(function () {
       // rebuild old connections
       data.adj.forEach(function (el, _) {
         var from = nodes.get(el.k);
-        answerIndex = 0;
         el.v.forEach(function (val, _) {
           var to = nodes.get(val);
-          from.addChildActivity(to, answerIndex++);
+          // start parallel requests to speed up
+          to.ready();
+          from.ready(() => {
+              to.ready(() => {
+                from.addChildActivity(to);
+              });
+          });
         });
       });
       // add root entry point
       var entryPoint = nodes.get(data.adj[0].k);
-      root.addChildActivity(entryPoint, 0);
+      root.ready(() => {
+        root.addChildActivity(entryPoint, 0);
+      });
     }
   }
 
@@ -905,7 +959,6 @@ $(document).ready(function () {
     Counter.set(0);
     // add root back
     root = new Activity("root");
-    root.draw_output(BUTTON_COLOR);
   }
 
   function getActivities() {
@@ -929,7 +982,7 @@ $(document).ready(function () {
           $("#" + actToId(act.type)).click(function (event) {
             //create new activity
             var activity = new Activity(idToAct(event.target.id));
-            activity.draw_input(BUTTON_COLOR);
+            activity.ready();
           });
         });
       },
@@ -1054,6 +1107,7 @@ $(document).ready(function () {
   $("#edit-new-story").click(function() {
     $("#main-modal").modal("hide");
     resetScene();
+    root.ready();
   })
 
   $("#open-story-modal").click(function() {
