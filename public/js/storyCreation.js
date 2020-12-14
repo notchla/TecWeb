@@ -40,13 +40,15 @@ function generateForm4Activity(type) {
 }
 
 function packFormData(formData) {
-  var inputs = formData.find("input, textarea");
+  var inputs = formData.find("input, textarea, select");
   var data = {};
   inputs.each(function (_, el) {
     var id = el.id;
     if (id == "answer") {
       data[id] = el.value.split(",");
       data[id] = data[id].filter((e) => e !== "");
+    } else if (id == "select") {
+      data[id] = $(el).children("option:selected").val();
     } else {
       data[id] = el.value;
     }
@@ -63,6 +65,8 @@ function UNpackFormData(form, oldData) {
       var id = el.id;
       if (id == "answer") {
         $(el).val(oldData[id].join(","));
+      } else if (id == "select") {
+        $(el).children("option:selected").val(oldData[id]);
       } else {
         $(el).val(oldData[id]);
       }
@@ -535,13 +539,12 @@ $(document).ready(function () {
               $("#activity-modal-container").append(modal);
 
               // set outputs
-              for (var i = 0; i < outputs - min_outputs; i++) {
-                this.draw_output(BUTTON_COLOR);
-              }
               for (var i = 0; i < min_outputs; i++) {
                 this.draw_output(BUTTON_COLOR_2);
               }
-
+              for (var i = 0; i < outputs - min_outputs; i++) {
+                this.draw_output(BUTTON_COLOR);
+              }
               // rebuild old node
               if (this.oldNode !== undefined) {
 
@@ -565,7 +568,7 @@ $(document).ready(function () {
                     this.draw_output(BUTTON_COLOR);
                   }
                 } catch (e) {}
-                // position has to bset after all children have been added
+                // position has to be set after all children have been added
                 this.rect.position.set(this.oldNode.x, this.oldNode.y);
               } else {
                 // set position to new center (not overlapping the navbar)
@@ -591,7 +594,7 @@ $(document).ready(function () {
                 try{
                   //add outputs to the activity node according to the answers
                   for (
-                    var i = this.output_lines.length - 1;
+                    var i = this.output_lines.length - min_outputs;
                     i < this.content["answer"].length;
                     i++
                   ) {

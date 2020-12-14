@@ -16,6 +16,7 @@ var CounterClass = function (max) {
 var counter;
 var story_data; //story json
 var story_templates = {};
+var minigames = {};
 var current_adj = 0;
 var current_node = 0;
 
@@ -23,6 +24,12 @@ function updateContent(data) {
   var type = data.type;
   var template = story_templates[data.type];
   var context = data.content;
+  if(data.type == "minigame") {
+    context = minigames[data.content.select]
+    Handlebars.registerPartial('game', context);
+    var js = `/minigames/${data.content.select}.js`;
+    addGameScript(js);
+  }
   var html = template(context);
   document.getElementById("entry-template").innerHTML = html;
   var js = `/js/${data.type}.js`;
@@ -37,7 +44,15 @@ async function loadTemplates(data) {
       templates[element.type] = element.type;
     });
 
+    var games = [];
+    data.nodes.forEach((element) => {
+      if(element.type == "minigame") {
+        games.push(element.content.select);
+      }
+    });
+
     await getTemplate(templates);
+    await getMinigame(games);
     resolve();
   });
 }
@@ -74,6 +89,22 @@ function addCompletedScript(scriptName) {
   head.appendChild(script);
 }
 
+function addGameScript(scriptName) {
+  var old_script = document.getElementById("game_script");
+  if (old_script) {
+    old_script.parentNode.removeChild(old_script);
+  }
+  var head = document.getElementsByTagName("head")[0];
+  var script = document.createElement("script");
+  script.type = "text/javascript";
+  script.onload = function () {
+    game_checker();
+  };
+  script.src = scriptName;
+  script.id = "game_script";
+  head.appendChild(script);
+}
+
 async function getTemplate(templates) {
   return new Promise(async (res) => {
     for (const template in templates) {
@@ -89,6 +120,23 @@ async function getTemplate(templates) {
     res();
   });
 }
+
+async function getMinigame(names) {
+  return new Promise(async (res) => {
+    for (var i = 0; i < names.length; i++) {
+      await new Promise((resolve) =>
+        $.get(`/minigames/get/${names[i]}`)
+          .then(function (handlebar) {
+            minigames[names[i]] = (Handlebars.compile(handlebar));
+            resolve();
+          })
+          .catch(() => alert("error in loading"))
+      );
+    }
+    res();
+  });
+}
+
 
 function getAdjIndex() {
   return current_adj;
