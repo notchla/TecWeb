@@ -101,7 +101,7 @@ function packStory(root) {
     adj: Array.from(adj, ([k, v]) => ({ k, v })),
     nodes: nodes,
   };
-  return [json, nonbuildable.value];
+  return [json, false]; //for testing, real value is nonbuildable.value
 }
 
 function dfsActivity(node, adj, nodes, nonbuildable) {
