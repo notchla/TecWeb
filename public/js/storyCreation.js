@@ -90,14 +90,9 @@ function packStory(root) {
   var adj = new Map();
   // node array
   var nodes = [];
-  var nonbuildable = {value: false};
+  var nonbuildable = { value: false };
   // data to recontruct tree (pixi graphics objects)
-  dfsActivity(
-    root,
-    adj,
-    nodes,
-    nonbuildable
-  );
+  dfsActivity(root, adj, nodes, nonbuildable);
   var json = {
     adj: Array.from(adj, ([k, v]) => ({ k, v })),
     nodes: nodes,
@@ -109,7 +104,7 @@ function dfsActivity(node, adj, nodes, nonbuildable) {
   for (const [_, v] of Object.entries(node.childs)) {
     for (var element of v) {
       // exclude already visited
-      if (!nodes.map(n => n.id).includes(element.child.nodeID)) {
+      if (!nodes.map((n) => n.id).includes(element.child.nodeID)) {
         // exclude root (directly child)
         nodes.push(packActivity(element.child));
       }
@@ -121,7 +116,7 @@ function dfsActivity(node, adj, nodes, nonbuildable) {
         adj.get(node.nodeID)[element.outLine] = element.child.nodeID;
       }
       // object has more output ports than lines: is not buildable
-      if(node.out.length > Object.entries(node.childs).length) {
+      if (node.out.length > Object.entries(node.childs).length) {
         nonbuildable.value = true;
       } else {
         nonbuildable.value = nonbuildable.value || false;
@@ -132,8 +127,8 @@ function dfsActivity(node, adj, nodes, nonbuildable) {
         !adj.has(element.child.nodeID)
       ) {
         dfsActivity(element.child, adj, nodes, nonbuildable);
-      } else if (Object.keys(element.child.childs).length == 0){
-        if(element.child.out.length > 0) {
+      } else if (Object.keys(element.child.childs).length == 0) {
+        if (element.child.out.length > 0) {
           nonbuildable.value = true;
         } else {
           nonbuildable.value = nonbuildable.value || false;
@@ -233,10 +228,6 @@ TreeNode.prototype.toString = function () {
   return this.nodeID;
 };
 
-
-
-
-
 // GLOBAL
 // ROOT ACTIVITY
 var root = null;
@@ -273,25 +264,24 @@ $(document).ready(function () {
     })
     .wheel()
     .clampZoom({
-      minScale: .3,
-      maxScale: 1.3
+      minScale: 0.3,
+      maxScale: 1.3,
     });
 
-  $(window).scroll(function(e) {
-    $('.main-navbar').removeClass("navbar-hide");
+  $(window).scroll(function (e) {
+    $(".main-navbar").removeClass("navbar-hide");
   });
 
   viewport
-  .on("drag-start", function() {
-    $("#activity-context-menu").finish().hide(100);
-  })
-  .on("wheel", function() {
-    $("#activity-context-menu").finish().hide(100);
-  });
+    .on("drag-start", function () {
+      $("#activity-context-menu").finish().hide(100);
+    })
+    .on("wheel", function () {
+      $("#activity-context-menu").finish().hide(100);
+    });
 
   // save the initial viewed area
   viewport.initialPosition = viewport.hitArea;
-
 
   app.stage.addChild(viewport);
   app.renderer.render(viewport);
@@ -326,7 +316,7 @@ $(document).ready(function () {
       this.oldNode = oldNode;
 
       this.rect_height = 0;
-      this.graphics = (this.rect = new PIXI.Graphics());
+      this.graphics = this.rect = new PIXI.Graphics();
 
       var width = BLOCK_WIDTH;
       var height = BLOCK_HEIGHT;
@@ -391,7 +381,7 @@ $(document).ready(function () {
       this.graphics.classptr = this;
       Activity.original_height = this.rect.height;
 
-      if(this.type != "root") {
+      if (this.type != "root") {
         this.draw_input(BUTTON_COLOR);
       }
 
@@ -495,14 +485,14 @@ $(document).ready(function () {
 
     ready(callback) {
       // call after node creation
-      if(!this.isReady) {
+      if (!this.isReady) {
         // do not run multiple times, put callbacks on wait
         this.waiting.push(callback);
-        if(this.waiting.length == 1) {
+        if (this.waiting.length == 1) {
           var idEdit = actToId(this.type) + this.nodeID + "-edit-modal";
           $.ajax({
             type: "get",
-            url: "/templates/forms/" + this.type.split(' ').join('_'),
+            url: "/templates/forms/" + this.type.split(" ").join("_"),
             crossDomain: true,
             success: (data) => {
               var modalBody = data.data.form;
@@ -544,24 +534,33 @@ $(document).ready(function () {
 
               // rebuild old node
               if (this.oldNode !== undefined) {
-
                 this.content = this.oldNode.content;
 
                 try {
-                  var short = this.content["question"].replace(/(.{8})..+/, "$1…");
+                  var short = this.content["question"].replace(
+                    /(.{8})..+/,
+                    "$1…"
+                  );
                   this.text = new PIXI.Text(short, {
                     fontFamily: FONT,
                     fill: TEXT_COLOR,
                     fontSize: 14,
                   });
                   this.text.anchor.set(0.5, 0.5);
-                  this.text.position.set(this.graphics.width / 2, this.graphics.height / 2);
+                  this.text.position.set(
+                    this.graphics.width / 2,
+                    this.graphics.height / 2
+                  );
                   this.graphics.addChild(this.text);
                 } catch (e) {}
                 UNpackFormData($("#" + idEdit), this.oldNode.content);
                 // refill form with old data
                 try {
-                  for (var i = 0; i < this.oldNode.content["answer"].length; i++) {
+                  for (
+                    var i = 0;
+                    i < this.oldNode.content["answer"].length;
+                    i++
+                  ) {
                     this.draw_output(BUTTON_COLOR);
                   }
                 } catch (e) {}
@@ -569,29 +568,41 @@ $(document).ready(function () {
                 this.rect.position.set(this.oldNode.x, this.oldNode.y);
               } else {
                 // set position to new center (not overlapping the navbar)
-                this.rect.position.set(10, $("#main-navbar").innerHeight() + 10);
+                this.rect.position.set(
+                  10,
+                  $("#main-navbar").innerHeight() + 10
+                );
               }
 
               //add value update on modal close
               $("#" + idEdit + "-button").click(() => {
                 this.content = packFormData($("#" + idEdit));
                 if (this.text == null) {
-                  var short = this.content["question"].replace(/(.{8})..+/, "$1…");
+                  var short = this.content["question"].replace(
+                    /(.{8})..+/,
+                    "$1…"
+                  );
                   this.text = new PIXI.Text(short, {
                     fontFamily: FONT,
                     fill: TEXT_COLOR,
                     fontSize: 14,
                   });
                   this.text.anchor.set(0.5, 0.5);
-                  this.text.position.set(this.graphics.width / 2, this.graphics.height / 2);
+                  this.text.position.set(
+                    this.graphics.width / 2,
+                    this.graphics.height / 2
+                  );
                   this.graphics.addChild(this.text);
                 } else {
-                  this.text.text = this.content["question"].replace(/(.{8})..+/, "$1…");
+                  this.text.text = this.content["question"].replace(
+                    /(.{8})..+/,
+                    "$1…"
+                  );
                 }
-                try{
+                try {
                   //add outputs to the activity node according to the answers
                   for (
-                    var i = this.output_lines.length - 1;
+                    var i = this.output_lines.length - outputs;
                     i < this.content["answer"].length;
                     i++
                   ) {
@@ -603,9 +614,9 @@ $(document).ready(function () {
 
               this.isReady = true;
               // wake up every waiting call
-              while(this.waiting.length > 0) {
+              while (this.waiting.length > 0) {
                 var recall = this.waiting.pop();
-                if(recall) {
+                if (recall) {
                   recall();
                 }
               }
@@ -614,11 +625,10 @@ $(document).ready(function () {
           });
         }
       } else {
-        if(callback) {
+        if (callback) {
           callback();
         }
       }
-
     }
 
     draw_output(color) {
@@ -885,7 +895,7 @@ $(document).ready(function () {
 
   function rebuildTree(root, data) {
     nodes = new Map();
-    if(data.nodes) {
+    if (data.nodes) {
       data.nodes.forEach(function (el, _) {
         var oldNode = {
           content: el.content,
@@ -905,9 +915,9 @@ $(document).ready(function () {
           // start parallel requests to speed up
           to.ready();
           from.ready(() => {
-              to.ready(() => {
-                from.addChildActivity(to);
-              });
+            to.ready(() => {
+              from.addChildActivity(to);
+            });
           });
         });
       });
@@ -928,7 +938,7 @@ $(document).ready(function () {
         console.log(data);
         // set storyname form data
         $("#story-name").val(data.title);
-        $("#published").prop('checked', data.published);
+        $("#published").prop("checked", data.published);
         rebuildTree(root, data);
         $("#indicator-overlay").fadeOut(300, function () {
           $("#indicator-overlay").removeClass("in");
@@ -944,7 +954,7 @@ $(document).ready(function () {
     // iteratively empty the pixi stage children, then add root
     // state.children[0] is main stage, stage.children[0].children are the rendered elements in the main stage
     var mainStage = app.stage.children[0];
-    while(mainStage.children[0]) {
+    while (mainStage.children[0]) {
       mainStage.removeChild(mainStage.children[0]);
     }
     // reset viewport zoom and position
@@ -953,7 +963,7 @@ $(document).ready(function () {
     viewport.setZoom(1);
     // reset the forms
     $("#story-name").val("");
-    $("#published").prop('checked', false);
+    $("#published").prop("checked", false);
     $("#activity-modal-container").empty();
     // reset the counter
     Counter.set(0);
@@ -990,21 +1000,19 @@ $(document).ready(function () {
     });
   }
 
-
   var invisible =
-  '<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-eye-slash" fill="currentColor" xmlns="http://www.w3.org/2000/svg">' +
+    '<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-eye-slash" fill="currentColor" xmlns="http://www.w3.org/2000/svg">' +
     '<path d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7.028 7.028 0 0 0-2.79.588l.77.771A5.944 5.944 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.134 13.134 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755-.165.165-.337.328-.517.486l.708.709z"/>' +
     '<path d="M11.297 9.176a3.5 3.5 0 0 0-4.474-4.474l.823.823a2.5 2.5 0 0 1 2.829 2.829l.822.822zm-2.943 1.299l.822.822a3.5 3.5 0 0 1-4.474-4.474l.823.823a2.5 2.5 0 0 0 2.829 2.829z"/>' +
     '<path d="M3.35 5.47c-.18.16-.353.322-.518.487A13.134 13.134 0 0 0 1.172 8l.195.288c.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c.716 0 1.39-.133 2.02-.36l.77.772A7.029 7.029 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709z"/>' +
     '<path fill-rule="evenodd" d="M13.646 14.354l-12-12 .708-.708 12 12-.708.708z"/>' +
-  '</svg>';
+    "</svg>";
 
   var visible =
-  '<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-eye" fill="currentColor" xmlns="http://www.w3.org/2000/svg">' +
+    '<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-eye" fill="currentColor" xmlns="http://www.w3.org/2000/svg">' +
     '<path fill-rule="evenodd" d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.134 13.134 0 0 0 1.66 2.043C4.12 11.332 5.88 12.5 8 12.5c2.12 0 3.879-1.168 5.168-2.457A13.134 13.134 0 0 0 14.828 8a13.133 13.133 0 0 0-1.66-2.043C11.879 4.668 10.119 3.5 8 3.5c-2.12 0-3.879 1.168-5.168 2.457A13.133 13.133 0 0 0 1.172 8z"/>' +
     '<path fill-rule="evenodd" d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>' +
-  '</svg>'
-
+    "</svg>";
 
   function storyList() {
     $("#indicator").show();
@@ -1019,26 +1027,26 @@ $(document).ready(function () {
         data.stories.forEach(function (story) {
           if (story.title) {
             var storyEntry =
-            '<div id=' +
+              "<div id=" +
               story.title +
               '-open" class="list-group-item list-group-item-action flex-column align-items-start">' +
               '<span class="h5 mx-auto"> ' +
               story.title +
-              ' </span>';
-              // published icon
-              storyEntry += '<div class="mr-5 float-left">';
-              if(story.published) {
-                storyEntry +=  visible;
-              } else {
-                storyEntry += invisible;
-              }
-              storyEntry +='</div>';
+              " </span>";
+            // published icon
+            storyEntry += '<div class="mr-5 float-left">';
+            if (story.published) {
+              storyEntry += visible;
+            } else {
+              storyEntry += invisible;
+            }
+            storyEntry += "</div>";
 
-              storyEntry +=
-              '<button id=' +
+            storyEntry +=
+              "<button id=" +
               story.title +
               '-delete" type="button" class="btn btn-danger float-right"> Delete </button>' +
-              '</div>'
+              "</div>";
             $("#list-stories").append(storyEntry);
             //TODO delete button prompts to remove selected story
           }
@@ -1047,30 +1055,29 @@ $(document).ready(function () {
       error: function (data) {},
     });
 
+    // ######## CALLBACKS ########
+    // custom menu event handler
+    $("#activity-context-menu span").click(function () {
+      // This is the triggered action name
+      switch ($(this).attr("data-action")) {
+        // A case for each action. Your actions here
+        case "edit":
+          contextActivity.edit();
+          break;
+        case "delete":
+          contextActivity.delete();
+          break;
+      }
 
-  // ######## CALLBACKS ########
-  // custom menu event handler
-  $("#activity-context-menu span").click(function () {
-    // This is the triggered action name
-    switch ($(this).attr("data-action")) {
-      // A case for each action. Your actions here
-      case "edit":
-        contextActivity.edit();
-        break;
-      case "delete":
-        contextActivity.delete();
-        break;
-    }
-
-    // Hide it AFTER the action was triggered
-    $("#activity-context-menu").hide(100);
-  });
+      // Hide it AFTER the action was triggered
+      $("#activity-context-menu").hide(100);
+    });
   }
 
   $("#list-stories").click(function (e) {
     //hide selection modal
     $("#main-modal").modal("toggle");
-    if(e.target.id.includes("-open")) {
+    if (e.target.id.includes("-open")) {
       // show choosen story
       // show spinner
       $("#indicator-overlay").modal("show");
@@ -1081,46 +1088,45 @@ $(document).ready(function () {
       resetScene();
       //load story objects
       loadStory(e.target.id.replace('"', "").replace("-open", ""));
-    } else if(e.target.id.includes("-delete")) {
+    } else if (e.target.id.includes("-delete")) {
       //prompt delete
-      var storyname = e.target.id.replace('"', "").replace("-delete", "")
+      var storyname = e.target.id.replace('"', "").replace("-delete", "");
       $("#delete-modal-title").text("Delete story " + storyname);
       $("#confirm-delete-modal").modal("show");
-      $("#confirm-delete-story").click(function() {
+      $("#confirm-delete-story").click(function () {
         $.ajax({
           type: "get",
           url: "/stories/delete/" + storyname,
           crossDomain: true,
-          success: function (data) {
-          },
+          success: function (data) {},
           error: function (data) {},
         });
         $("#confirm-delete-modal").modal("hide");
         // reload updated stories and show modal
         storyList();
         $("#main-modal").modal("show");
-      })
+      });
     }
   });
 
   // new empty story
-  $("#edit-new-story").click(function() {
+  $("#edit-new-story").click(function () {
     $("#main-modal").modal("hide");
     resetScene();
     root.ready();
-  })
+  });
 
-  $("#open-story-modal").click(function() {
+  $("#open-story-modal").click(function () {
     storyList();
     $("#main-modal").modal("show");
-  })
+  });
 
-  $("#send-story").click(function() {
+  $("#send-story").click(function () {
     var storyname = $("#story-name").val();
     var published = $("#published").prop("checked");
     var stuff = packStory(root);
     var data = stuff[0];
-    var nonbuildable = stuff[1]
+    var nonbuildable = stuff[1];
     var seen = [];
 
     const body = JSON.stringify({
@@ -1129,7 +1135,7 @@ $(document).ready(function () {
       storyname: storyname,
       published: published,
     });
-    if(published && nonbuildable) {
+    if (published && nonbuildable) {
       $("#incomplete-story-modal").modal("show");
     } else {
       $.ajax({
@@ -1137,17 +1143,16 @@ $(document).ready(function () {
         url: "/stories/exists/" + storyname,
         crossDomain: true,
         success: function (data) {
-          if(data.exists === "true") {
+          if (data.exists === "true") {
             $("#confirm-changes-modal").modal("show");
             $("#confirm-send-story").prop("onclick", null).off("click");
-            $("#confirm-send-story").click(function() {
+            $("#confirm-send-story").click(function () {
               sendStory(body);
               // close modals
               $("#confirm-changes-modal").modal("hide");
               $("#confirm-modal").modal("hide");
             });
-          }
-          else {
+          } else {
             sendStory(body);
             // close modal
             $("#confirm-modal").modal("hide");
@@ -1155,10 +1160,8 @@ $(document).ready(function () {
         },
         error: function (data) {},
       });
-
     }
   });
-
 
   $("#save-button").click(function () {
     $("#confirm-modal").modal();
@@ -1167,23 +1170,25 @@ $(document).ready(function () {
   // ######## SETTINGS ########
 
   // disable navbar selection
-  $('#main-navbar').attr('unselectable','on')
-  .css({
-    '-moz-user-select':'-moz-none',
-    '-moz-user-select':'none',
-    '-o-user-select':'none',
-    '-khtml-user-select':'none',
-    '-webkit-user-select':'none',
-    '-ms-user-select':'none',
-    'user-select':'none'
-  })
-  .bind('selectstart', function(){ return false; });
-
-    $("#main-modal").modal({
-      backdrop: 'static',
-      keyboard: false
+  $("#main-navbar")
+    .attr("unselectable", "on")
+    .css({
+      "-moz-user-select": "-moz-none",
+      "-moz-user-select": "none",
+      "-o-user-select": "none",
+      "-khtml-user-select": "none",
+      "-webkit-user-select": "none",
+      "-ms-user-select": "none",
+      "user-select": "none",
+    })
+    .bind("selectstart", function () {
+      return false;
     });
 
+  $("#main-modal").modal({
+    backdrop: "static",
+    keyboard: false,
+  });
 
   // ######## MAIN ########
   // activity selection menu initialization
