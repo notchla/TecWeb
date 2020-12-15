@@ -12,8 +12,13 @@ function activity_checker() {
       const nodeIndex = getNodeIndex(adj.v[index]);
       current_node = nodeIndex;
       updateContent(story_data.nodes[nodeIndex]);
-    } else {
-      alert("error loading next activity");
+    } else { //error todo test
+      const adjIndex = getAdjIndex();
+      const adj = story_data.adj[adjIndex];
+      setAdjIndex(adj.v[0]);
+      const nodeIndex = getNodeIndex(adj.v[0]);
+      current_node = nodeIndex;
+      updateContent(story_data.nodes[nodeIndex]);
     }
   }
   // $("#response button").click(function (event) {

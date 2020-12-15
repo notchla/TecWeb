@@ -4,7 +4,7 @@ middleware controllo username solo su path lorenzo
 CREATORE
 inserimento risposta sbagliata gallo FATTO
 controllo build storia gallo FATTO ma BUGS
-cambiare comportamento getActivities e dare supporto per default, numero pallino di output gallo FATTO?
+cambiare comportamento getActivities e dare supporto per default, numero pallino di output gallo FATTO
 controllare pixi scroll lorenzo FATTO
 
 VISUALIZZATORE

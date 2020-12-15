@@ -119,7 +119,7 @@ app.get("/templates/getnames", handlers.getActivities);
 
 app.get("/templates/forms/:type", handlers.getActivityForm);
 
-
+app.get("/minigames/get/:gamename", handlers.loadGame);
 
 
 
