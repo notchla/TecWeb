@@ -155,6 +155,11 @@ function startServer(port) {
       const session = socket.request.session;
       handlers.saveActiveUser(session.userName, session.sessionID, "", 0);
     });
+
+    socket.on("disconnect", () => {
+      console.log("deleted ", socket.request.session);
+      handlers.deleteActiveUser(socket.request.session.sessionID);
+    });
   });
 }
 

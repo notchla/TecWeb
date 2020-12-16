@@ -75,6 +75,6 @@ module.exports = {
     );
   },
   deleteActiveUser: async (options = {}) => {
-    ActiveUser.deleteOne(options);
+    await ActiveUser.deleteOne(options);
   },
 };
