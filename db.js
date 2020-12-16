@@ -4,6 +4,8 @@ const { connectionString } = require("./config").mongo;
 const User = require("./models/user");
 const Story = require("./models/story");
 const NewStory = require("./models/NewStory");
+const ActiveUser = require("./models/ActiveUser");
+const username = require("./lib/middleware/username");
 
 if (!connectionString) {
   console.error("MongoDB connection string missing!");
@@ -64,5 +66,15 @@ module.exports = {
   },
   deleteStory: async (options = {}) => {
     NewStory.deleteOne(options, function (err) {});
+  },
+  saveActiveUser: async (username, id, story, activity) => {
+    await ActiveUser.updateOne(
+      { id },
+      { username, story, activity },
+      { upsert: true }
+    );
+  },
+  deleteActiveUser: async (options = {}) => {
+    ActiveUser.deleteOne(options);
   },
 };

@@ -135,10 +135,26 @@ app.use(handlers.notFound); // need to be after all others routing handlers
 app.use(handlers.serverError); //called when a function throws a new Error() and nothing intercept it
 
 function startServer(port) {
-  return app.listen(port, () => {
+  const server = app.listen(port, () => {
     console.log(
       `Express started in ${app.get("env")} mode at http://localhost:${port}`
     );
+  });
+  const io = require("socket.io")(server, {
+    path: "/socket",
+  });
+  io.use(function (socket, next) {
+    sessionMiddleware(socket.request, socket.request.res || {}, next);
+  });
+
+  io.on("connection", (socket) => {
+    console.log("a user connected");
+    socket.on("hi", (data) => {
+      console.log(data);
+      console.log(socket.request.session);
+      const session = socket.request.session;
+      handlers.saveActiveUser(session.userName, session.sessionID, "", 0);
+    });
   });
 }
 
@@ -152,20 +168,6 @@ function startServer(port) {
 
 if (require.main === module) {
   const server = startServer(process.env.PORT || 8000);
-  const io = require("socket.io")(server, {
-    path: "/socket",
-  });
-  io.use(function (socket, next) {
-    sessionMiddleware(socket.request, socket.request.res || {}, next);
-  });
-
-  io.on("connection", (socket) => {
-    console.log("a user connected");
-    socket.on("hi", (data) => {
-      console.log(data);
-      console.log(socket.request.session);
-    });
-  });
 } else {
   module.exports = startServer;
 }
