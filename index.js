@@ -6,6 +6,14 @@ var express = require("express");
 
 var app = express();
 
+const cors = require("cors");
+
+// const http = require("http").createServer(app);
+
+// const io = require("socket.io")(http, {
+//   path: "/socket",
+// });
+
 const handlers = require("./lib/handlers");
 
 var expressHandlebars = require("express-handlebars");
@@ -72,14 +80,15 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(cookieParser(credentials.cookieSecret));
 //cookie middleware MUST be before session
-app.use(
-  expressSession({
-    resave: false,
-    saveUninitialized: false,
-    secret: credentials.cookieSecret,
-    store: new RedisStore({ client: redisClient }),
-  })
-);
+
+var sessionMiddleware = expressSession({
+  resave: false,
+  saveUninitialized: false,
+  secret: credentials.cookieSecret,
+  store: new RedisStore({ client: redisClient }),
+});
+
+app.use(sessionMiddleware);
 
 app.use(express.static(__dirname + "/public")); //static middleware
 
@@ -89,13 +98,14 @@ app.use(usernameSession); //check for username in session
 
 app.use(sessionIDMiddleware);
 
+app.use(cors({ origin: "http://localhost:8000" })); //DEVELOPMENT !!
+
 //load home with qr code
 app.get("/", handlers.home);
 
 app.post("/registeruser", handlers.registerUser);
 
 app.get("/createstory", (req, res) => res.render("storycreate"));
-
 
 //load the story called storyname
 app.get("/stories/get/:storyname", handlers.loadStory);
@@ -111,7 +121,6 @@ app.get("/stories/getnames/", handlers.getStoryList);
 
 app.get("/stories/delete/:title", handlers.deleteStory);
 
-
 //return the activity template
 app.get("/templates/get/:templatename", handlers.loadTemplate);
 
@@ -121,22 +130,42 @@ app.get("/templates/forms/:type", handlers.getActivityForm);
 
 app.get("/minigames/get/:gamename", handlers.loadGame);
 
-
-
 app.use(handlers.notFound); // need to be after all others routing handlers
 
 app.use(handlers.serverError); //called when a function throws a new Error() and nothing intercept it
 
 function startServer(port) {
-  app.listen(port, () => {
+  return app.listen(port, () => {
     console.log(
       `Express started in ${app.get("env")} mode at http://localhost:${port}`
     );
   });
 }
 
+// io.on("connection", (socket) => {
+//   console.log("a user connected");
+// });
+
+// http.listen(8001, () => {
+//   console.log("socket started");
+// });
+
 if (require.main === module) {
-  startServer(process.env.PORT || 8000);
+  const server = startServer(process.env.PORT || 8000);
+  const io = require("socket.io")(server, {
+    path: "/socket",
+  });
+  io.use(function (socket, next) {
+    sessionMiddleware(socket.request, socket.request.res || {}, next);
+  });
+
+  io.on("connection", (socket) => {
+    console.log("a user connected");
+    socket.on("hi", (data) => {
+      console.log(data);
+      console.log(socket.request.session);
+    });
+  });
 } else {
   module.exports = startServer;
 }
