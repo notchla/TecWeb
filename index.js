@@ -44,6 +44,8 @@ const fs = require("fs");
 
 const morgan = require("morgan");
 
+const socketHandler = require("./socketHanlder");
+
 require("./db");
 
 switch (app.get("env")) {
@@ -149,17 +151,7 @@ function startServer(port) {
 
   io.on("connection", (socket) => {
     console.log("a user connected");
-    socket.on("hi", (data) => {
-      console.log(data);
-      console.log(socket.request.session);
-      const session = socket.request.session;
-      handlers.saveActiveUser(session.userName, session.sessionID, "", 0);
-    });
-
-    socket.on("disconnect", () => {
-      console.log("deleted ", socket.request.session);
-      handlers.deleteActiveUser(socket.request.session.sessionID);
-    });
+    socketHandler(socket);
   });
 }
 

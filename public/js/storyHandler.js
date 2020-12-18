@@ -24,9 +24,9 @@ function updateContent(data) {
   var type = data.type;
   var template = story_templates[data.type];
   var context = data.content;
-  if(data.type == "minigame") {
-    context = minigames[data.content.select]
-    Handlebars.registerPartial('game', context);
+  if (data.type == "minigame") {
+    context = minigames[data.content.select];
+    Handlebars.registerPartial("game", context);
     var js = `/minigames/${data.content.select}.js`;
     addGameScript(js);
   }
@@ -46,7 +46,7 @@ async function loadTemplates(data) {
 
     var games = [];
     data.nodes.forEach((element) => {
-      if(element.type == "minigame") {
+      if (element.type == "minigame") {
         games.push(element.content.select);
       }
     });
@@ -127,7 +127,7 @@ async function getMinigame(names) {
       await new Promise((resolve) =>
         $.get(`/minigames/get/${names[i]}`)
           .then(function (handlebar) {
-            minigames[names[i]] = (Handlebars.compile(handlebar));
+            minigames[names[i]] = Handlebars.compile(handlebar);
             resolve();
           })
           .catch(() => alert("error in loading"))
@@ -136,7 +136,6 @@ async function getMinigame(names) {
     res();
   });
 }
-
 
 function getAdjIndex() {
   return current_adj;
@@ -151,3 +150,12 @@ function setAdjIndex(index) {
 function getNodeIndex(id) {
   return story_data.nodes.findIndex((node) => node.id == id);
 }
+
+console.log("socket");
+//socket handling
+const socket = io("http://localhost:8000", {
+  transports: ["websocket"],
+  path: "/socket", // needed for cors in dev
+});
+
+socket.emit("registerUser", {});
