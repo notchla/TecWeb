@@ -6,12 +6,11 @@ const register = (socket) => {
     userSockets.push(socket);
     console.log(socket.request.session);
     const session = socket.request.session;
-    session.socketType = "user";
     // handlers.saveActiveUser(session.userName, session.sessionID, "", 0);
   });
 
   socket.on("disconnect", () => {
-    const index = userSockets.findIndex(
+    var index = userSockets.findIndex(
       (sock) =>
         sock.request.session.sessionID === socket.request.session.sessionID
     );
@@ -34,6 +33,17 @@ const register = (socket) => {
       return;
     }
     // handlers.deleteActiveUser(socket.request.session.sessionID);
+  });
+  socket.on("transition", (data) => {
+    console.log(data);
+    const index = userSockets.findIndex(
+      (sock) =>
+        sock.request.session.sessionID === socket.request.session.sessionID
+    );
+
+    if (index > -1) {
+      userSockets[index].userProgress = data;
+    }
   });
 };
 

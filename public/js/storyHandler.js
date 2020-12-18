@@ -34,6 +34,12 @@ function updateContent(data) {
   document.getElementById("entry-template").innerHTML = html;
   var js = `/js/${data.type}.js`;
   addCompletedScript(js);
+
+  var name = window.location.href.split("/");
+  name = name[name.length - 1];
+  activityID = story_data.nodes[current_node].id;
+  //socket
+  socket.emit("transition", { name, activityID, time: new Date().getTime() });
 }
 
 //load all the templates used in the story
