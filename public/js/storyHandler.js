@@ -35,7 +35,7 @@ function updateContent(data) {
   var js = `/js/${data.type}.js`;
   addCompletedScript(js);
 
-  var name = window.location.href.split("/");
+  var name = window.location.href.split("/");//storyname
   name = name[name.length - 1];
   activityID = story_data.nodes[current_node].id;
   //socket

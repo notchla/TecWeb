@@ -132,6 +132,8 @@ app.get("/templates/forms/:type", handlers.getActivityForm);
 
 app.get("/minigames/get/:gamename", handlers.loadGame);
 
+app.get("/evaluator", handlers.evaluator);
+
 app.use(handlers.notFound); // need to be after all others routing handlers
 
 app.use(handlers.serverError); //called when a function throws a new Error() and nothing intercept it
