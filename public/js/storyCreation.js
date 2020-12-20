@@ -36,17 +36,17 @@ function cssForm(id) {
       '</div>' +
       '<div id="css-form" class="collapse" aria-labelledby="css" data-parent="#css-accordion">' +
         '<div class="card-body">' +
-          '<label for="color-picker-' + id + '" class="col-form-label"> Background color </label>' +
+          '<label class="col-form-label"> Background color </label>' +
           '<div id="color-picker-' + id + '" class="input-group" title="Color">' +
-            '<input id="color" type="text" class="form-control input-lg"/>' +
+            '<input type="text" class="form-control input-lg color"/>' +
             '<span class="input-group-append">' +
               '<span class="input-group-text colorpicker-input-addon"><i></i></span>' +
             '</span>' +
           '</div>' +
-          '<label for="font" class="col-form-label"> Font </label>' +
-          '<input id="font" type="text" class="form-control input-lg" value=""/>' +
-          '<label for="font-style" class="col-form-label"> Font style </label>' +
-          '<input id="font-style" type="text" class="form-control input-lg" value=""/>' +
+          '<label class="col-form-label"> Font </label>' +
+          '<input type="text" class="form-control input-lg font" value=""/>' +
+          '<label class="col-form-label"> Font style </label>' +
+          '<input type="text" class="form-control input-lg font-style" value=""/>' +
         '</div>' +
       '</div>' +
     '</div>';
@@ -54,14 +54,16 @@ function cssForm(id) {
 }
 
 function packFormData(formData) {
+  // collect all story content by classnames
   var inputs = formData.find("input, textarea, select");
   var data = {};
   inputs.each(function (_, el) {
-    var id = el.id;
-    if (id == "answer") {
+    var classes = el.className.split(" ");
+    var id = classes[classes.length - 1];
+    if (id.includes("answer")) {
       data[id] = el.value.split(",");
       data[id] = data[id].filter((e) => e !== "");
-    } else if (id == "select") {
+    } else if (id.includes("select")) {
       data[id] = $(el).children("option:selected").val();
     } else {
       data[id] = el.value;
@@ -72,20 +74,22 @@ function packFormData(formData) {
 
 function UNpackFormData(form, oldData, nodeID) {
   // opposite of packFormData, sets input values from the content object array
-  var inputs = form.find("input, textarea");
+  var inputs = form.find("input, textarea", "select");
   var data = {};
   inputs.each(function (_, el) {
     try {
-      var id = el.id;
-      if (id == "answer") {
+      var classes = el.className.split(" ");
+      var id = classes[classes.length - 1];
+      if (id.includes("answer")) {
         $(el).val(oldData[id].join(","));
-      } else if (id == "select") {
+      } else if (id.includes("select")) {
         $(el).children("option:selected").val(oldData[id]);
-      } else if (id == "color") {
+      } else if (id.includes("color")) {
         if(oldData[id]){
           $('#color-picker-' + nodeID).colorpicker({"color": oldData[id]});
           $(el).val(oldData[id]);
         } else {
+          // defaults
           $('#color-picker-' + nodeID).colorpicker({"color": "#C8C8C8FF"});
           $(el).val("#C8C8C8FF");
         }
@@ -174,10 +178,6 @@ function packActivity(activity) {
     x: activity.rect.x,
     y: activity.rect.y,
   };
-  if (ret.type == "root") {
-    // handle root as description
-    ret.type = "description"
-  }
   return ret;
 }
 
@@ -204,7 +204,6 @@ class TreeNode {
     if (child.parents[this])
       child.parents[this].push({ out, outLine, inLine, parent });
     else child.parents[this] = [{ out, outLine, inLine, parent }];
-    console.log(outLine, inLine, child);
     if (this.childs[child])
       this.childs[child].push({ out, outLine, inLine, child });
     else this.childs[child] = [{ out, outLine, inLine, child }];
@@ -1015,9 +1014,9 @@ $(document).ready(function () {
     $("#story-name").val("");
     $("#published").prop("checked", false);
     $('#color-picker-0').colorpicker({"color": "#C8C8C8FF"});
-    $("#confirm-modal .modal-body #css-form #color").val("");
-    $("#confirm-modal .modal-body #css-form #font").val("");
-    $("#confirm-modal .modal-body #css-form #font-style").val("");
+    $("#confirm-modal .modal-body #css-form .color").val("");
+    $("#confirm-modal .modal-body #css-form .font").val("");
+    $("#confirm-modal .modal-body #css-form .font-style").val("");
 
     $("#activity-modal-container").empty();
     // reset the counter
@@ -1181,9 +1180,9 @@ $(document).ready(function () {
   $("#send-story").click(function () {
     var storyname = $("#story-name").val();
     var published = $("#published").prop("checked");
-    var color = $("#confirm-modal .modal-body #css-form #color").val();
-    var font = $("#confirm-modal .modal-body #css-form #font").val();
-    var style = $("#confirm-modal .modal-body #css-form #font-style").val();
+    var color = $("#confirm-modal .modal-body #css-form .color").val();
+    var font = $("#confirm-modal .modal-body #css-form .font").val();
+    var style = $("#confirm-modal .modal-body #css-form .font-style").val();
     var stuff = packStory(root);
     var data = stuff[0];
     var nonbuildable = stuff[1];

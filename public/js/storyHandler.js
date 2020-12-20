@@ -24,7 +24,11 @@ var baseCSS = {}
 
 function updateContent(data) {
   var type = data.type;
-  var template = story_templates[data.type];
+  if(type == "root") {
+    // handle root as description
+    type = "description";
+  }
+  var template = story_templates[type];
   var context = data.content;
   if (data.type == "minigame") {
     context = minigames[data.content.select];
@@ -34,7 +38,7 @@ function updateContent(data) {
   }
   var html = template(context);
   document.getElementById("entry-template").innerHTML = html;
-  var js = `/js/${data.type}.js`;
+  var js = `/js/${type}.js`;
   addCompletedScript(js);
   try {
     // add css
@@ -53,7 +57,10 @@ async function loadTemplates(data) {
     var templates = {};
     var games = [];
     data.nodes.forEach((element) => {
-      templates[element.type] = element.type;
+      if(element.type != "root") {
+        // handle root as description
+        templates[element.type] = element.type;
+      }
       if (element.type == "minigame") {
         games.push(element.content.select);
       }
@@ -84,15 +91,13 @@ $(document).ready(function () {
 });
 
 function addBaseCSS(data) {
-  try {
-    baseCSS = data.css;
+  baseCSS = {
+    color: "",
+    font: "",
+    style: ""
   }
-  catch (e) {
-    baseCSS = {
-      color: "",
-      font: "",
-      style: ""
-    }
+  if(data.css) {
+    baseCSS = data.css;
   }
   // rollback defaults
   if(baseCSS.color === "") {
