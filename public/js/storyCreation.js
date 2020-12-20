@@ -22,6 +22,37 @@ function idToAct(id) {
   return id.replace("-", " ");
 }
 
+function cssForm(id) {
+  // CSS form
+  var cssForm =
+    '<div id="css-accordion">' +
+      '<div class="card">' +
+        '<div class="card-header" id="headingOne">' +
+        '<h5 class="mb-0">' +
+          '<button class="btn btn-link collapsed" data-toggle="collapse" data-target="#css-form" aria-controls="css-form">' +
+          'Custom CSS' +
+          '</button>' +
+        '</h5>' +
+      '</div>' +
+      '<div id="css-form" class="collapse" aria-labelledby="css" data-parent="#css-accordion">' +
+        '<div class="card-body">' +
+          '<label for="color-picker-' + id + '" class="col-form-label"> Background color </label>' +
+          '<div id="color-picker-' + id + '" class="input-group" title="Color">' +
+            '<input id="color" type="text" class="form-control input-lg"/>' +
+            '<span class="input-group-append">' +
+              '<span class="input-group-text colorpicker-input-addon"><i></i></span>' +
+            '</span>' +
+          '</div>' +
+          '<label for="font" class="col-form-label"> Font </label>' +
+          '<input id="font" type="text" class="form-control input-lg" value=""/>' +
+          '<label for="font-style" class="col-form-label"> Font style </label>' +
+          '<input id="font-style" type="text" class="form-control input-lg" value=""/>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+    return cssForm;
+}
+
 function generateForm4Activity(type) {
   var ret = "<p> root </p>";
   if (type != "root") {
@@ -56,7 +87,7 @@ function packFormData(formData) {
   return data;
 }
 
-function UNpackFormData(form, oldData) {
+function UNpackFormData(form, oldData, nodeID) {
   // opposite of packFormData, sets input values from the content object array
   var inputs = form.find("input, textarea");
   var data = {};
@@ -67,6 +98,14 @@ function UNpackFormData(form, oldData) {
         $(el).val(oldData[id].join(","));
       } else if (id == "select") {
         $(el).children("option:selected").val(oldData[id]);
+      } else if (id == "color") {
+        if(oldData[id]){
+          $('#color-picker-' + nodeID).colorpicker({"color": oldData[id]});
+          $(el).val(oldData[id]);
+        } else {
+          $('#color-picker-' + nodeID).colorpicker({"color": "#C8C8C8FF"});
+          $(el).val("#C8C8C8FF");
+        }
       } else {
         $(el).val(oldData[id]);
       }
@@ -480,10 +519,12 @@ $(document).ready(function () {
 
     delete() {
       if (this.type != "root") {
-        this.type = null;
-        this.deleteChilds();
-        this.deleteParents();
-        this.rect.destroy();
+        try{
+          this.type = null;
+          this.deleteChilds();
+          this.deleteParents();
+          this.rect.destroy();
+        } catch(e) {}
       }
     }
 
@@ -503,7 +544,12 @@ $(document).ready(function () {
               var min_outputs = data.data.min_outputs;
               var outputs = data.data.outputs;
 
-              // modals creation
+              // modal creation
+
+              var cssCustomForm = cssForm(this.nodeID);
+              if(this.type == "root") {
+                cssCustomForm = "";
+              }
               var modal =
                 '<div class="modal fade" id="' +
                 idEdit +
@@ -516,6 +562,9 @@ $(document).ready(function () {
                 "</div>" +
                 '<div id="activity-form" class="modal-body">' +
                 modalBody +
+                '<br>'+
+                '<label> Activity specific custom css </label>' +
+                cssCustomForm +
                 "</div>" +
                 '<div class="modal-footer">' +
                 '<button type="button" class="btn btn-primary" id="' +
@@ -556,7 +605,7 @@ $(document).ready(function () {
                   );
                   this.graphics.addChild(this.text);
                 } catch (e) {}
-                UNpackFormData($("#" + idEdit), this.oldNode.content);
+                UNpackFormData($("#" + idEdit), this.oldNode.content, this.nodeID);
                 // refill form with old data
                 try {
                   for (
@@ -575,33 +624,41 @@ $(document).ready(function () {
                   10,
                   $("#main-navbar").innerHeight() + 10
                 );
+                // after adding to modal
+                $('#color-picker-' + this.nodeID).colorpicker({"color": "#C8C8C8FF"});
               }
 
-              //add value update on modal close
               $("#" + idEdit + "-button").click(() => {
+                $("#" + idEdit).modal("hide");
+              });
+
+              //add value update on modal close
+              $('#' + idEdit).on('hidden.bs.modal', () => {
                 this.content = packFormData($("#" + idEdit));
-                if (this.text == null) {
-                  var short = this.content["question"].replace(
-                    /(.{8})..+/,
-                    "$1…"
-                  );
-                  this.text = new PIXI.Text(short, {
-                    fontFamily: FONT,
-                    fill: TEXT_COLOR,
-                    fontSize: 14,
-                  });
-                  this.text.anchor.set(0.5, 0.5);
-                  this.text.position.set(
-                    this.graphics.width / 2,
-                    this.graphics.height / 2
-                  );
-                  this.graphics.addChild(this.text);
-                } else {
-                  this.text.text = this.content["question"].replace(
-                    /(.{8})..+/,
-                    "$1…"
-                  );
-                }
+                try {
+                  if (this.text == null) {
+                    var short = this.content["question"].replace(
+                      /(.{8})..+/,
+                      "$1…"
+                    );
+                    this.text = new PIXI.Text(short, {
+                      fontFamily: FONT,
+                      fill: TEXT_COLOR,
+                      fontSize: 14,
+                    });
+                    this.text.anchor.set(0.5, 0.5);
+                    this.text.position.set(
+                      this.graphics.width / 2,
+                      this.graphics.height / 2
+                    );
+                    this.graphics.addChild(this.text);
+                  } else {
+                    this.text.text = this.content["question"].replace(
+                      /(.{8})..+/,
+                      "$1…"
+                    );
+                  }
+                } catch(e) {}
                 try {
                   //add outputs to the activity node according to the answers
                   for (
@@ -942,6 +999,12 @@ $(document).ready(function () {
         // set storyname form data
         $("#story-name").val(data.title);
         $("#published").prop("checked", data.published);
+        try {
+          $('#color-pricker-0').colorpicker({"color": data.css.color});
+          $("#confirm-modal .modal-body #css-form #color").val(data.css.color);
+          $("#confirm-modal .modal-body #css-form #font").val(data.css.font);
+          $("#confirm-modal .modal-body #css-form #font-style").val(data.css.style);
+        } catch(e) {}
         rebuildTree(root, data);
         $("#indicator-overlay").fadeOut(300, function () {
           $("#indicator-overlay").removeClass("in");
@@ -967,6 +1030,11 @@ $(document).ready(function () {
     // reset the forms
     $("#story-name").val("");
     $("#published").prop("checked", false);
+    $('#color-picker-0').colorpicker({"color": "#C8C8C8FF"});
+    $("#confirm-modal .modal-body #css-form #color").val("");
+    $("#confirm-modal .modal-body #css-form #font").val("");
+    $("#confirm-modal .modal-body #css-form #font-style").val("");
+
     $("#activity-modal-container").empty();
     // reset the counter
     Counter.set(0);
@@ -1116,6 +1184,8 @@ $(document).ready(function () {
   $("#edit-new-story").click(function () {
     $("#main-modal").modal("hide");
     resetScene();
+    // set default color
+    $('#color-picker-0').colorpicker({"color": "#C8C8C8FF"});
     root.ready();
   });
 
@@ -1127,6 +1197,9 @@ $(document).ready(function () {
   $("#send-story").click(function () {
     var storyname = $("#story-name").val();
     var published = $("#published").prop("checked");
+    var color = $("#confirm-modal .modal-body #css-form #color").val();
+    var font = $("#confirm-modal .modal-body #css-form #font").val();
+    var style = $("#confirm-modal .modal-body #css-form #font-style").val();
     var stuff = packStory(root);
     var data = stuff[0];
     var nonbuildable = stuff[1];
@@ -1136,6 +1209,11 @@ $(document).ready(function () {
       adj: data.adj,
       nodes: data.nodes,
       storyname: storyname,
+      css: {
+        color: color,
+        font: font,
+        style: style
+      },
       published: published,
     });
     if (published && nonbuildable) {
@@ -1171,6 +1249,8 @@ $(document).ready(function () {
   });
 
   // ######## SETTINGS ########
+  $("#confirm-modal .modal-body .form-group").append("<label> Story-wide custom css </label>");
+  $("#confirm-modal .modal-body .form-group").append(cssForm(0));
 
   // disable navbar selection
   $("#main-navbar")

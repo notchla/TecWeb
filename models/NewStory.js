@@ -5,6 +5,11 @@ const storySchema = mongoose.Schema({
   pages: Number,
   adj: [],
   nodes: [],
+  css: { type: {
+    color: {type: String },
+    font: {type: String },
+    style: {type: String }
+  }},
   published: Boolean
 });
 

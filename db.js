@@ -57,10 +57,10 @@ module.exports = {
   },
   getStories: async (options = {}, fields = "") =>
     NewStory.find(options, fields),
-  saveStory: async (storyname, adj, nodes, published) => {
+  saveStory: async (storyname, adj, nodes, css, published) => {
     await NewStory.updateOne(
       { title: storyname },
-      { pages: nodes.length + 1, adj, nodes, published },
+      { pages: nodes.length + 1, adj, nodes, css, published },
       { upsert: true }
     );
   },
