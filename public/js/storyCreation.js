@@ -29,7 +29,7 @@ function cssForm(id) {
       '<div class="card">' +
         '<div class="card-header" id="headingOne">' +
         '<h5 class="mb-0">' +
-          '<button class="btn btn-link collapsed" data-toggle="collapse" data-target="#css-form" aria-controls="css-form">' +
+          '<button class="btn collapsed" data-toggle="collapse" data-target="#css-form" aria-controls="css-form">' +
           'Custom CSS' +
           '</button>' +
         '</h5>' +
@@ -51,23 +51,6 @@ function cssForm(id) {
       '</div>' +
     '</div>';
     return cssForm;
-}
-
-function generateForm4Activity(type) {
-  var ret = "<p> root </p>";
-  if (type != "root") {
-    $.ajax({
-      type: "get",
-      async: false,
-      url: "/templates/forms/" + type,
-      crossDomain: true,
-      success: function (data) {
-        ret = data.form;
-      },
-      error: function (data) {},
-    });
-  }
-  return ret;
 }
 
 function packFormData(formData) {
@@ -133,6 +116,7 @@ function packStory(root) {
   var adj = new Map();
   // node array
   var nodes = [];
+  nodes.push(packActivity(root));
   var nonbuildable = { value: false };
   // data to recontruct tree (pixi graphics objects)
   dfsActivity(root, adj, nodes, nonbuildable);
@@ -151,13 +135,13 @@ function dfsActivity(node, adj, nodes, nonbuildable) {
         // exclude root (directly child)
         nodes.push(packActivity(element.child));
       }
-      if (node.nodeID != 1) {
+      // if (node.nodeID != 1) {
         if (!adj.has(node.nodeID)) {
           // new entry in the adjacency list, as an array with the size of the answers
           adj.set(node.nodeID, Array(node.out.length).fill(0));
         }
         adj.get(node.nodeID)[element.outLine] = element.child.nodeID;
-      }
+      // }
       // object has more output ports than lines: is not buildable
       if (node.out.length > Object.entries(node.childs).length) {
         nonbuildable.value = true;
@@ -190,6 +174,10 @@ function packActivity(activity) {
     x: activity.rect.x,
     y: activity.rect.y,
   };
+  if (ret.type == "root") {
+    // handle root as description
+    ret.type = "description"
+  }
   return ret;
 }
 
@@ -546,7 +534,7 @@ $(document).ready(function () {
 
               // modal creation
 
-              var cssCustomForm = cssForm(this.nodeID);
+              var cssCustomForm = '<label> Activity specific custom css </label>' + cssForm(this.nodeID);
               if(this.type == "root") {
                 cssCustomForm = "";
               }
@@ -563,7 +551,6 @@ $(document).ready(function () {
                 '<div id="activity-form" class="modal-body">' +
                 modalBody +
                 '<br>'+
-                '<label> Activity specific custom css </label>' +
                 cssCustomForm +
                 "</div>" +
                 '<div class="modal-footer">' +
@@ -953,7 +940,7 @@ $(document).ready(function () {
     }
   }
 
-  function rebuildTree(root, data) {
+  function rebuildTree(data) {
     nodes = new Map();
     if (data.nodes) {
       data.nodes.forEach(function (el, _) {
@@ -982,10 +969,7 @@ $(document).ready(function () {
         });
       });
       // add root entry point
-      var entryPoint = nodes.get(data.adj[0].k);
-      root.ready(() => {
-        root.addChildActivity(entryPoint, 0);
-      });
+      root = nodes.get(data.adj[0].k);
     }
   }
 
@@ -1005,7 +989,7 @@ $(document).ready(function () {
           $("#confirm-modal .modal-body #css-form #font").val(data.css.font);
           $("#confirm-modal .modal-body #css-form #font-style").val(data.css.style);
         } catch(e) {}
-        rebuildTree(root, data);
+        rebuildTree(data);
         $("#indicator-overlay").fadeOut(300, function () {
           $("#indicator-overlay").removeClass("in");
           $(".modal-backdrop").remove();
@@ -1038,8 +1022,6 @@ $(document).ready(function () {
     $("#activity-modal-container").empty();
     // reset the counter
     Counter.set(0);
-    // add root back
-    root = new Activity("root");
   }
 
   function getActivities() {
@@ -1186,6 +1168,8 @@ $(document).ready(function () {
     resetScene();
     // set default color
     $('#color-picker-0').colorpicker({"color": "#C8C8C8FF"});
+    // add root back
+    root = new Activity("root");
     root.ready();
   });
 
