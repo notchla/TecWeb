@@ -1183,10 +1183,12 @@ $(document).ready(function () {
         data.stories.forEach(function (story) {
           if (story.title) {
             var storyEntry =
-              "<div id=" +
+              '<div id="' +
               story.title +
               '-open" class="list-group-item list-group-item-action flex-column align-items-start">' +
-              '<span class="h5 mx-auto"> ' +
+              '<span  id="' +
+              story.title +
+              '-name" class="h5 mx-auto"> ' +
               story.title +
               " </span>";
             // published icon
@@ -1232,8 +1234,8 @@ $(document).ready(function () {
 
   $("#list-stories").click(function (e) {
     //hide selection modal
-    $("#main-modal").modal("toggle");
-    if (e.target.id.includes("-open")) {
+    if (e.target.id.includes("-open") || e.target.id.includes("-name")) {
+      $("#main-modal").modal("toggle");
       // show choosen story
       // show spinner
       $("#indicator-overlay").modal("show");
@@ -1243,7 +1245,12 @@ $(document).ready(function () {
       // empty scene
       resetScene();
       //load story objects
-      loadStory(e.target.id.replace('"', "").replace("-open", ""));
+      if (e.target.id.includes("-open")) {
+        loadStory(e.target.id.replace('"', "").replace("-open", ""));
+      }
+      if(e.target.id.includes("-name")) {
+        loadStory(e.target.id.replace('"', "").replace("-name", ""));
+      }
     } else if (e.target.id.includes("-delete")) {
       //prompt delete
       var storyname = e.target.id.replace('"', "").replace("-delete", "");
