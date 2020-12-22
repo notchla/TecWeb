@@ -14,6 +14,7 @@ var CounterClass = function (max) {
 };
 
 var counter;
+var total_score = 0;
 var story_data; //story json
 var story_templates = {};
 var minigames = {};
@@ -38,7 +39,8 @@ function updateContent(data) {
   }
   var html = template(context);
   document.getElementById("entry-template").innerHTML = html;
-  var js = `/js/${type}.js`;
+  var js = `/js/helpers/${type}.js`;
+
   addCompletedScript(js);
   var css = {
     color: "",

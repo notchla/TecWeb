@@ -77,8 +77,9 @@ app.engine(
 
 app.set("view engine", "handlebars");
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+// set upload limit to hold stories with images
+app.use(bodyParser.json({limit: "50mb"}));
+app.use(bodyParser.urlencoded({limit: "50mb", extended: true, parameterLimit:50000}));
 
 app.use(cookieParser(credentials.cookieSecret));
 //cookie middleware MUST be before session
@@ -89,6 +90,7 @@ var sessionMiddleware = expressSession({
   secret: credentials.cookieSecret,
   store: new RedisStore({ client: redisClient }),
 });
+
 
 app.use(sessionMiddleware);
 

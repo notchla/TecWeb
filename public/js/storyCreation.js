@@ -37,21 +37,28 @@ function cssForm(id) {
 
       '<div id="color-form" class="collapse" aria-labelledby="css" data-parent="#css-accordion">' +
         '<div class="card-body">' +
-          '<label class="col-form-label"> Main color </label>' +
-          '<div id="color-picker-' + id + '" class="input-group" title="Main color">' +
-            '<input type="text" class="form-control input-lg color"/>' +
-            '<span class="input-group-append">' +
-              '<span class="input-group-text colorpicker-input-addon"><i></i></span>' +
-            '</span>' +
-          '</div>' +
-          '<label class="col-form-label"> Background color </label>' +
-          '<div id="bg-color-picker-' + id + '" class="input-group" title="Background color">' +
-            '<input type="text" class="form-control input-lg bgcolor"/>' +
-            '<span class="input-group-append">' +
-              '<span class="input-group-text colorpicker-input-addon"><i></i></span>' +
-            '</span>' +
+        '<div class="form-row">' +
+            '<div class="form-group col-md-6">' +
+            '<label class="col-form-label"> Main color </label>' +
+            '<div id="color-picker-' + id + '" class="input-group" title="Main color">' +
+              '<input type="text" class="form-control input-lg color"/>' +
+              '<span class="input-group-append">' +
+                '<span class="input-group-text colorpicker-input-addon"><i></i></span>' +
+              '</span>' +
+            '</div>' +
+            '</div>' +
+            '<div class="form-group col-md-6">' +
+            '<label class="col-form-label"> Background color </label>' +
+            '<div id="bg-color-picker-' + id + '" class="input-group" title="Background color">' +
+              '<input type="text" class="form-control input-lg bgcolor"/>' +
+              '<span class="input-group-append">' +
+                '<span class="input-group-text colorpicker-input-addon"><i></i></span>' +
+              '</span>' +
+            '</div>' +
+            '</div>' +
           '</div>' +
         '</div>' +
+      '</div>' +
       '</div>' +
 
       '<div class="card">' +
@@ -67,10 +74,17 @@ function cssForm(id) {
         '<div class="card-body">' +
           '<label class="col-form-label"> Font </label>' +
           '<input type="text" class="form-control input-lg font" value=""/>' +
+          '<div class="form-row">' +
+          '<br>' +
+          '<div class="form-group col-md-4">' +
           '<label class="col-form-label"> Font style </label>' +
           '<input type="text" class="form-control input-lg style" value=""/>' +
+          '</div>' +
+          '<div class="form-group col-md-4">' +
           '<label class="col-form-label"> Font size </label>' +
           '<input type="text" class="form-control input-lg size" value=""/>' +
+          '</div>' +
+          '<div class="form-group col-md-4">' +
           '<label class="col-form-label"> Font color </label>' +
           '<div id="font-color-picker-' + id + '" class="input-group" title="Font color">' +
             '<input type="text" class="form-control input-lg fontcolor"/>' +
@@ -78,26 +92,29 @@ function cssForm(id) {
               '<span class="input-group-text colorpicker-input-addon"><i></i></span>' +
             '</span>' +
           '</div>' +
+          '</div>'+
         '</div>' +
       '</div>' +
+    '</div>' +
     '</div>';
     return cssForm;
 }
 
-function resizeBase64Img(base64, w, h, prop) {
+function resizeBase64Img(base64, newHeight) {
     return new Promise((resolve, reject)=>{
         var canvas = document.createElement("canvas");
-        var newWidth = w * prop;
-        var newHeight = h * prop;
-        canvas.style.width = newWidth.toString()+"px";
-        canvas.style.height = newHeight.toString()+"px";
         let context = canvas.getContext("2d");
         let img = document.createElement("img");
         img.src = base64;
         img.onload = function () {
+          if(img.height > newHeight) {
+            var newWidth = newHeight/img.height * img.width;
+            context.canvas.width = newWidth;
+            context.canvas.height = newHeight;
             context.scale(newWidth/img.width,  newHeight/img.height);
-            context.drawImage(img, 0, 0);
-            resolve(canvas.toDataURL());
+          }
+          context.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL());
         }
     });
 }
@@ -109,14 +126,9 @@ function upload(type, id) {
     if(file) {
       var reader = new FileReader();
       reader.onloadend = function () {
-        // var i = new Image();
-        // i.onload = function(){
-        //   resizeBase64Img(reader.result, i.height, i.width, 128 / i.height).then((result) => {
-        //     resolve(result);
-        //   });
-        // };
-        // i.src = reader.result;
-        resolve(reader.result);
+        resizeBase64Img(reader.result, 128).then((result) => {
+          resolve(result);
+        });
       };
       reader.readAsDataURL(file);
     }
@@ -130,11 +142,14 @@ function packFormData(data, formData) {
     var classes = el.className.split(" ");
     var id = classes[classes.length - 1];
     if (id.includes("answer")) {
+      // comma separed answer list
       data[id] = el.value.split(",");
       data[id] = data[id].filter((e) => e !== "");
     } else if (id.includes("select")) {
+      // multiple option select
       data[id] = $(el).children("option:selected").val();
     } else if(!id.includes("image")){
+      // everything else
       data[id] = el.value;
     }
   });
@@ -160,7 +175,7 @@ function UNpackFormData(form, oldData, nodeID) {
         } else {
           // defaults
           $('#bg-color-picker-' + nodeID).colorpicker({"color": "#DADADAFF"});
-          $(el).val("#DADADAFF");
+          $(el).val("");
         }
       }else if (id.includes("fontcolor")) {
         if(oldData[id]){
@@ -169,7 +184,7 @@ function UNpackFormData(form, oldData, nodeID) {
         } else {
           // defaults
           $('#font-color-picker-' + nodeID).colorpicker({"color": "#000000FF"});
-          $(el).val("#000000FF");
+          $(el).val("");
         }
       } else if (id.includes("color")) {
         if(oldData[id]){
@@ -178,7 +193,7 @@ function UNpackFormData(form, oldData, nodeID) {
         } else {
           // defaults
           $('#color-picker-' + nodeID).colorpicker({"color": "#C8C8C8FF"});
-          $(el).val("#C8C8C8FF");
+          $(el).val("");
         }
       } else {
         $(el).val(oldData[id]);
@@ -193,12 +208,14 @@ function sendStory(body) {
   console.log(body);
   fetch("/stories/registerstory", { method: "post", body, headers })
     .then((resp) => {
+      // close modal
+      $("#confirm-modal").modal("hide");
       if (resp.status < 200 || resp.status >= 300)
         throw new Error(`request failed with status ${resp.status}`);
       return;
     })
     .catch((err) => {
-      alert(err);
+      console.log(err);
     });
 }
 
@@ -620,6 +637,7 @@ $(document).ready(function () {
               var min_outputs = data.data.min_outputs;
               var outputs = data.data.outputs;
               var has_file = data.data.has_file;
+              var has_score = data.data.has_score;
 
               // modal creation
 
@@ -627,6 +645,30 @@ $(document).ready(function () {
               if(this.type == "root") {
                 cssCustomForm = "";
               }
+
+              if(has_file) {
+                  modalBody += '<label class="col-form-label"> Enter image </label> ' +
+                  '<div class="d-flex flex-row">' +
+                    '<input type="file" class="form-control image"></input>' +
+                    '<div class="img-container float-right"></div>' +
+                  '</div>' +
+                  '<label class="col-form-label"> Enter alternative image text </label> ' +
+                  '<input class="form-control alttext"></input>';
+              }
+
+              if(has_score) {
+                modalBody += '<div class="form-row">' +
+                    '<div class="form-group col-md-6">' +
+                      '<label class="col-form-label"> Enter activity won score </label> ' +
+                      '<input class="form-control wonscore"></input>' +
+                    '</div>' +
+                    '<div class="form-group col-md-6">' +
+                      '<label class="col-form-label"> Enter activity lost score </label>' +
+                      '<input class="form-control lostscore"></input>' +
+                    '</div>' +
+                  '</div>';
+              }
+
               var modal =
                 '<div class="modal fade" id="' +
                 idEdit +
@@ -638,7 +680,9 @@ $(document).ready(function () {
                 '<button type="button" class="close" data-dismiss="modal">&times;</button>' +
                 "</div>" +
                 '<div id="activity-form" class="modal-body">' +
+                '<div class="form-group">' +
                 modalBody +
+                '</div>' +
                 '<br>'+
                 cssCustomForm +
                 "</div>" +
@@ -658,6 +702,13 @@ $(document).ready(function () {
                 $("#activity-modal-container #" + idEdit + " .image").on("change", () => {
                   upload(this.type, this.nodeID).then((result) => {
                     this.content["image"] = result;
+                    // update thumbnail
+                    try{
+                      var img = '<img src="' + this.content.image + '" style="max-height: 40px; max-width: auto;"' +
+                              'class="rounded">';
+                      $("#activity-modal-container #" + idEdit + " .img-container").empty();
+                      $("#activity-modal-container #" + idEdit + " .img-container").append(img);
+                    } catch(e) {}
                   });
                 });
               }
@@ -672,7 +723,15 @@ $(document).ready(function () {
               // rebuild old node
               if (this.oldNode !== undefined) {
                 this.content = this.oldNode.content;
-
+                if(has_file) {
+                  // update thumbnail
+                  try{
+                    var img = '<img src="' + this.content.image + '" style="max-height: 40px; max-width: auto;"' +
+                            'class="rounded">';
+                    $("#activity-modal-container #" + idEdit + " .img-container").empty();
+                    $("#activity-modal-container #" + idEdit + " .img-container").append(img);
+                  } catch(e) {}
+                }
                 try {
                   var short = this.content["question"].substring(0,17) + "...";
                   this.text = new PIXI.Text(short, {
@@ -1331,14 +1390,11 @@ $(document).ready(function () {
             $("#confirm-send-story").prop("onclick", null).off("click");
             $("#confirm-send-story").click(function () {
               sendStory(body);
-              // close modals
+              // close modal
               $("#confirm-changes-modal").modal("hide");
-              $("#confirm-modal").modal("hide");
             });
           } else {
             sendStory(body);
-            // close modal
-            $("#confirm-modal").modal("hide");
           }
         },
         error: function (data) {},

@@ -3,7 +3,7 @@ function activity_checker() {
   $("#game-close-score").click(function () {
     var index = 0;
     var points = parseInt($("#game-scores").text(),10);
-    if (points > parseInt(story_data.nodes[current_node].content.question, 10)) {
+    if (points > parseInt(story_data.nodes[current_node].content.minscore, 10)) {
       // won
       index = 1;
     }
