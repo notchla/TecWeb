@@ -84,10 +84,48 @@ function cssForm(id) {
     return cssForm;
 }
 
-function packFormData(formData) {
+function resizeBase64Img(base64, w, h, prop) {
+    return new Promise((resolve, reject)=>{
+        var canvas = document.createElement("canvas");
+        var newWidth = w * prop;
+        var newHeight = h * prop;
+        canvas.style.width = newWidth.toString()+"px";
+        canvas.style.height = newHeight.toString()+"px";
+        let context = canvas.getContext("2d");
+        let img = document.createElement("img");
+        img.src = base64;
+        img.onload = function () {
+            context.scale(newWidth/img.width,  newHeight/img.height);
+            context.drawImage(img, 0, 0);
+            resolve(canvas.toDataURL());
+        }
+    });
+}
+
+function upload(type, id) {
+  return new Promise((resolve, reject) => {
+    var idEdit = actToId(type) + id + "-edit-modal"
+    var file = $("#activity-modal-container #" + idEdit + " .image")[0].files[0];
+    if(file) {
+      var reader = new FileReader();
+      reader.onloadend = function () {
+        // var i = new Image();
+        // i.onload = function(){
+        //   resizeBase64Img(reader.result, i.height, i.width, 128 / i.height).then((result) => {
+        //     resolve(result);
+        //   });
+        // };
+        // i.src = reader.result;
+        resolve(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  })
+}
+
+function packFormData(data, formData) {
   // collect all story content by classnames
   var inputs = formData.find("input, textarea, select");
-  var data = {};
   inputs.each(function (_, el) {
     var classes = el.className.split(" ");
     var id = classes[classes.length - 1];
@@ -96,7 +134,7 @@ function packFormData(formData) {
       data[id] = data[id].filter((e) => e !== "");
     } else if (id.includes("select")) {
       data[id] = $(el).children("option:selected").val();
-    } else {
+    } else if(!id.includes("image")){
       data[id] = el.value;
     }
   });
@@ -217,6 +255,7 @@ function dfsActivity(node, adj, nodes, nonbuildable) {
     }
   }
 }
+
 
 function packActivity(activity) {
   // pixiNodeIndex represents the index of the pixiNodes array relative to this activity
@@ -468,6 +507,7 @@ $(document).ready(function () {
       // waiting callback stack, one stack each activity
       this.waiting = [];
       this.answerIndex = 0;
+      this.content = {};
 
       // -------- event handlers --------
       function onDragStart(event) {
@@ -579,6 +619,7 @@ $(document).ready(function () {
               var modalBody = data.data.form;
               var min_outputs = data.data.min_outputs;
               var outputs = data.data.outputs;
+              var has_file = data.data.has_file;
 
               // modal creation
 
@@ -611,6 +652,15 @@ $(document).ready(function () {
                 "</div>";
 
               $("#activity-modal-container").append(modal);
+
+              // add image to content
+              if(has_file) {
+                $("#activity-modal-container #" + idEdit + " .image").on("change", () => {
+                  upload(this.type, this.nodeID).then((result) => {
+                    this.content["image"] = result;
+                  });
+                });
+              }
 
               // set outputs
               for (var i = 0; i < min_outputs; i++) {
@@ -668,7 +718,7 @@ $(document).ready(function () {
 
               //add value update on modal close
               $('#' + idEdit).on('hidden.bs.modal', () => {
-                this.content = packFormData($("#" + idEdit));
+                this.content = packFormData(this.content, $("#" + idEdit));
                 try {
                   if (this.text == null) {
                     var short = this.content["question"].substring(0,17) + "...";

@@ -73,10 +73,12 @@ async function loadTemplates(data) {
     var templates = {};
     var games = [];
     data.nodes.forEach((element) => {
-      if(element.type != "root") {
+      var type = element.type;
+      if(element.type == "root") {
         // handle root as description
-        templates[element.type] = element.type;
+        type = "desctiption";
       }
+      templates[type] = type;
       if (element.type == "minigame") {
         games.push(element.content.select);
       }
