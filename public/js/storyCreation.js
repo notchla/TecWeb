@@ -27,36 +27,105 @@ function cssForm(id) {
   var cssForm =
     '<div id="css-accordion">' +
       '<div class="card">' +
-        '<div class="card-header" id="headingOne">' +
-        '<h5 class="mb-0">' +
-          '<button class="btn collapsed" data-toggle="collapse" data-target="#css-form" aria-controls="css-form">' +
-          'Custom CSS' +
-          '</button>' +
-        '</h5>' +
-      '</div>' +
-      '<div id="css-form" class="collapse" aria-labelledby="css" data-parent="#css-accordion">' +
+        '<div class="card-header">' +
+          '<h5 class="mb-0">' +
+            '<button class="btn collapsed" data-toggle="collapse" data-target="#color-form">' +
+            'Color settings' +
+            '</button>' +
+          '</h5>' +
+        '</div>' +
+
+      '<div id="color-form" class="collapse" aria-labelledby="css" data-parent="#css-accordion">' +
         '<div class="card-body">' +
-          '<label class="col-form-label"> Background color </label>' +
-          '<div id="color-picker-' + id + '" class="input-group" title="Color">' +
+          '<label class="col-form-label"> Main color </label>' +
+          '<div id="color-picker-' + id + '" class="input-group" title="Main color">' +
             '<input type="text" class="form-control input-lg color"/>' +
             '<span class="input-group-append">' +
               '<span class="input-group-text colorpicker-input-addon"><i></i></span>' +
             '</span>' +
           '</div>' +
+          '<label class="col-form-label"> Background color </label>' +
+          '<div id="bg-color-picker-' + id + '" class="input-group" title="Background color">' +
+            '<input type="text" class="form-control input-lg bgcolor"/>' +
+            '<span class="input-group-append">' +
+              '<span class="input-group-text colorpicker-input-addon"><i></i></span>' +
+            '</span>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+
+      '<div class="card">' +
+        '<div class="card-header">' +
+          '<h5 class="mb-0">' +
+            '<button class="btn collapsed" data-toggle="collapse" data-target="#font-form">' +
+            'Font settings' +
+            '</button>' +
+          '</h5>' +
+        '</div>' +
+
+      '<div id="font-form" class="collapse" aria-labelledby="css" data-parent="#css-accordion">' +
+        '<div class="card-body">' +
           '<label class="col-form-label"> Font </label>' +
           '<input type="text" class="form-control input-lg font" value=""/>' +
           '<label class="col-form-label"> Font style </label>' +
-          '<input type="text" class="form-control input-lg font-style" value=""/>' +
+          '<input type="text" class="form-control input-lg style" value=""/>' +
+          '<label class="col-form-label"> Font size </label>' +
+          '<input type="text" class="form-control input-lg size" value=""/>' +
+          '<label class="col-form-label"> Font color </label>' +
+          '<div id="font-color-picker-' + id + '" class="input-group" title="Font color">' +
+            '<input type="text" class="form-control input-lg fontcolor"/>' +
+            '<span class="input-group-append">' +
+              '<span class="input-group-text colorpicker-input-addon"><i></i></span>' +
+            '</span>' +
+          '</div>' +
         '</div>' +
       '</div>' +
     '</div>';
     return cssForm;
 }
 
-function packFormData(formData) {
+function resizeBase64Img(base64, w, h, prop) {
+    return new Promise((resolve, reject)=>{
+        var canvas = document.createElement("canvas");
+        var newWidth = w * prop;
+        var newHeight = h * prop;
+        canvas.style.width = newWidth.toString()+"px";
+        canvas.style.height = newHeight.toString()+"px";
+        let context = canvas.getContext("2d");
+        let img = document.createElement("img");
+        img.src = base64;
+        img.onload = function () {
+            context.scale(newWidth/img.width,  newHeight/img.height);
+            context.drawImage(img, 0, 0);
+            resolve(canvas.toDataURL());
+        }
+    });
+}
+
+function upload(type, id) {
+  return new Promise((resolve, reject) => {
+    var idEdit = actToId(type) + id + "-edit-modal"
+    var file = $("#activity-modal-container #" + idEdit + " .image")[0].files[0];
+    if(file) {
+      var reader = new FileReader();
+      reader.onloadend = function () {
+        // var i = new Image();
+        // i.onload = function(){
+        //   resizeBase64Img(reader.result, i.height, i.width, 128 / i.height).then((result) => {
+        //     resolve(result);
+        //   });
+        // };
+        // i.src = reader.result;
+        resolve(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  })
+}
+
+function packFormData(data, formData) {
   // collect all story content by classnames
   var inputs = formData.find("input, textarea, select");
-  var data = {};
   inputs.each(function (_, el) {
     var classes = el.className.split(" ");
     var id = classes[classes.length - 1];
@@ -65,7 +134,7 @@ function packFormData(formData) {
       data[id] = data[id].filter((e) => e !== "");
     } else if (id.includes("select")) {
       data[id] = $(el).children("option:selected").val();
-    } else {
+    } else if(!id.includes("image")){
       data[id] = el.value;
     }
   });
@@ -84,6 +153,24 @@ function UNpackFormData(form, oldData, nodeID) {
         $(el).val(oldData[id].join(","));
       } else if (id.includes("select")) {
         $(el).children("option:selected").val(oldData[id]);
+      } else if (id.includes("bgcolor")) {
+        if(oldData[id]){
+          $('#bg-color-picker-' + nodeID).colorpicker({"color": oldData[id]});
+          $(el).val(oldData[id]);
+        } else {
+          // defaults
+          $('#bg-color-picker-' + nodeID).colorpicker({"color": "#DADADAFF"});
+          $(el).val("#DADADAFF");
+        }
+      }else if (id.includes("fontcolor")) {
+        if(oldData[id]){
+          $('#font-color-picker-' + nodeID).colorpicker({"color": oldData[id]});
+          $(el).val(oldData[id]);
+        } else {
+          // defaults
+          $('#font-color-picker-' + nodeID).colorpicker({"color": "#000000FF"});
+          $(el).val("#000000FF");
+        }
       } else if (id.includes("color")) {
         if(oldData[id]){
           $('#color-picker-' + nodeID).colorpicker({"color": oldData[id]});
@@ -168,6 +255,7 @@ function dfsActivity(node, adj, nodes, nonbuildable) {
     }
   }
 }
+
 
 function packActivity(activity) {
   // pixiNodeIndex represents the index of the pixiNodes array relative to this activity
@@ -419,6 +507,7 @@ $(document).ready(function () {
       // waiting callback stack, one stack each activity
       this.waiting = [];
       this.answerIndex = 0;
+      this.content = {};
 
       // -------- event handlers --------
       function onDragStart(event) {
@@ -530,6 +619,7 @@ $(document).ready(function () {
               var modalBody = data.data.form;
               var min_outputs = data.data.min_outputs;
               var outputs = data.data.outputs;
+              var has_file = data.data.has_file;
 
               // modal creation
 
@@ -563,6 +653,15 @@ $(document).ready(function () {
 
               $("#activity-modal-container").append(modal);
 
+              // add image to content
+              if(has_file) {
+                $("#activity-modal-container #" + idEdit + " .image").on("change", () => {
+                  upload(this.type, this.nodeID).then((result) => {
+                    this.content["image"] = result;
+                  });
+                });
+              }
+
               // set outputs
               for (var i = 0; i < min_outputs; i++) {
                 this.draw_output(BUTTON_COLOR_2);
@@ -575,10 +674,7 @@ $(document).ready(function () {
                 this.content = this.oldNode.content;
 
                 try {
-                  var short = this.content["question"].replace(
-                    /(.{8})..+/,
-                    "$1…"
-                  );
+                  var short = this.content["question"].substring(0,17) + "...";
                   this.text = new PIXI.Text(short, {
                     fontFamily: FONT,
                     fill: TEXT_COLOR,
@@ -612,6 +708,8 @@ $(document).ready(function () {
                 );
                 // after adding to modal
                 $('#color-picker-' + this.nodeID).colorpicker({"color": "#C8C8C8FF"});
+                $('#bg-color-picker-' + this.nodeID).colorpicker({"color": "#DADADAFF"});
+                $('#font-color-picker-' + this.nodeID).colorpicker({"color": "#000000FF"});
               }
 
               $("#" + idEdit + "-button").click(() => {
@@ -620,13 +718,10 @@ $(document).ready(function () {
 
               //add value update on modal close
               $('#' + idEdit).on('hidden.bs.modal', () => {
-                this.content = packFormData($("#" + idEdit));
+                this.content = packFormData(this.content, $("#" + idEdit));
                 try {
                   if (this.text == null) {
-                    var short = this.content["question"].replace(
-                      /(.{8})..+/,
-                      "$1…"
-                    );
+                    var short = this.content["question"].substring(0,17) + "...";
                     this.text = new PIXI.Text(short, {
                       fontFamily: FONT,
                       fill: TEXT_COLOR,
@@ -639,10 +734,7 @@ $(document).ready(function () {
                     );
                     this.graphics.addChild(this.text);
                   } else {
-                    this.text.text = this.content["question"].replace(
-                      /(.{8})..+/,
-                      "$1…"
-                    );
+                    this.text.text = this.content["question"].substring(0,17) + "...";
                   }
                 } catch(e) {}
                 try {
@@ -978,15 +1070,20 @@ $(document).ready(function () {
       url: "/stories/json/" + name,
       crossDomain: true,
       success: function (data) {
-        console.log(data);
         // set storyname form data
         $("#story-name").val(data.title);
         $("#published").prop("checked", data.published);
         try {
           $('#color-pricker-0').colorpicker({"color": data.css.color});
-          $("#confirm-modal .modal-body #css-form #color").val(data.css.color);
-          $("#confirm-modal .modal-body #css-form #font").val(data.css.font);
-          $("#confirm-modal .modal-body #css-form #font-style").val(data.css.style);
+          $("#confirm-modal .modal-body #color-form .color").val(data.css.color);
+          $('#bg-color-pricker-0').colorpicker({"color": data.css.bgcolor});
+          $("#confirm-modal .modal-body #color-form .bgcolor").val(data.css.bgcolor);
+          $('#font-color-pricker-0').colorpicker({"color": data.css.fontcolor});
+          $("#confirm-modal .modal-body #color-form .fontcolor").val(data.css.fontcolor);
+
+          $("#confirm-modal .modal-body #font-form .font").val(data.css.font);
+          $("#confirm-modal .modal-body #font-form .font-style").val(data.css.style);
+          $("#confirm-modal .modal-body #font-form .font-size").val(data.css.size);
         } catch(e) {}
         rebuildTree(data);
         $("#indicator-overlay").fadeOut(300, function () {
@@ -1013,10 +1110,17 @@ $(document).ready(function () {
     // reset the forms
     $("#story-name").val("");
     $("#published").prop("checked", false);
+
     $('#color-picker-0').colorpicker({"color": "#C8C8C8FF"});
-    $("#confirm-modal .modal-body #css-form .color").val("");
-    $("#confirm-modal .modal-body #css-form .font").val("");
-    $("#confirm-modal .modal-body #css-form .font-style").val("");
+    $("#confirm-modal .modal-body #color-form .color").val("");
+    $('#bg-color-picker-0').colorpicker({"color": "#DADADAFF"});
+    $("#confirm-modal .modal-body #color-form .bgcolor").val("");
+    $('#font-color-picker-0').colorpicker({"color": "#000000FF"});
+    $("#confirm-modal .modal-body #color-form .fontcolor").val("");
+
+    $("#confirm-modal .modal-body #font-form .font").val("");
+    $("#confirm-modal .modal-body #font-form .font-style").val("");
+    $("#confirm-modal .modal-body #font-form .font-size").val("");
 
     $("#activity-modal-container").empty();
     // reset the counter
@@ -1079,10 +1183,12 @@ $(document).ready(function () {
         data.stories.forEach(function (story) {
           if (story.title) {
             var storyEntry =
-              "<div id=" +
+              '<div id="' +
               story.title +
               '-open" class="list-group-item list-group-item-action flex-column align-items-start">' +
-              '<span class="h5 mx-auto"> ' +
+              '<span  id="' +
+              story.title +
+              '-name" class="h5 mx-auto"> ' +
               story.title +
               " </span>";
             // published icon
@@ -1128,8 +1234,8 @@ $(document).ready(function () {
 
   $("#list-stories").click(function (e) {
     //hide selection modal
-    $("#main-modal").modal("toggle");
-    if (e.target.id.includes("-open")) {
+    if (e.target.id.includes("-open") || e.target.id.includes("-name")) {
+      $("#main-modal").modal("toggle");
       // show choosen story
       // show spinner
       $("#indicator-overlay").modal("show");
@@ -1139,7 +1245,12 @@ $(document).ready(function () {
       // empty scene
       resetScene();
       //load story objects
-      loadStory(e.target.id.replace('"', "").replace("-open", ""));
+      if (e.target.id.includes("-open")) {
+        loadStory(e.target.id.replace('"', "").replace("-open", ""));
+      }
+      if(e.target.id.includes("-name")) {
+        loadStory(e.target.id.replace('"', "").replace("-name", ""));
+      }
     } else if (e.target.id.includes("-delete")) {
       //prompt delete
       var storyname = e.target.id.replace('"', "").replace("-delete", "");
@@ -1167,6 +1278,8 @@ $(document).ready(function () {
     resetScene();
     // set default color
     $('#color-picker-0').colorpicker({"color": "#C8C8C8FF"});
+    $('#bg-color-picker-0').colorpicker({"color": "#DADADAFF"});
+    $('#font-color-picker-0').colorpicker({"color": "#000000FF"});
     // add root back
     root = new Activity("root");
     root.ready();
@@ -1180,9 +1293,12 @@ $(document).ready(function () {
   $("#send-story").click(function () {
     var storyname = $("#story-name").val();
     var published = $("#published").prop("checked");
-    var color = $("#confirm-modal .modal-body #css-form .color").val();
-    var font = $("#confirm-modal .modal-body #css-form .font").val();
-    var style = $("#confirm-modal .modal-body #css-form .font-style").val();
+    var color = $("#confirm-modal .modal-body #color-form .color").val();
+    var bgcolor = $("#confirm-modal .modal-body #color-form .bgcolor").val();
+    var fontcolor = $("#confirm-modal .modal-body #font-form .fontcolor").val();
+    var font = $("#confirm-modal .modal-body #font-form .font").val();
+    var style = $("#confirm-modal .modal-body #font-form .font-style").val();
+    var size = $("#confirm-modal .modal-body #font-form .font-size").val();
     var stuff = packStory(root);
     var data = stuff[0];
     var nonbuildable = stuff[1];
@@ -1194,8 +1310,11 @@ $(document).ready(function () {
       storyname: storyname,
       css: {
         color: color,
+        bgcolor: bgcolor,
+        fontcolor: fontcolor,
         font: font,
-        style: style
+        style: style,
+        size: size
       },
       published: published,
     });

@@ -40,10 +40,26 @@ function updateContent(data) {
   document.getElementById("entry-template").innerHTML = html;
   var js = `/js/${type}.js`;
   addCompletedScript(js);
+  var css = {
+    color: "",
+    bgcolor: "",
+    fontcolor: "",
+    font: "",
+    style: "",
+    size: ""
+  }
   try {
     // add css
-    applyCSS({color: context.color,font: context.font,  style: context.style});
+    css.color = context.color;
+    css.bgcolor = context.bgcolor;
+    css.fontcolor = context.fontcolor;
+    css.font = context.font;
+    css.style = context.style;
+    css.size = context.size;
   } catch (e) {}
+
+  applyCSS(css);
+
   var name = window.location.href.split("/");//storyname
   name = name[name.length - 1];
   activityID = story_data.nodes[current_node].id;
@@ -57,10 +73,12 @@ async function loadTemplates(data) {
     var templates = {};
     var games = [];
     data.nodes.forEach((element) => {
-      if(element.type != "root") {
+      var type = element.type;
+      if(element.type == "root") {
         // handle root as description
-        templates[element.type] = element.type;
+        type = "desctiption";
       }
+      templates[type] = type;
       if (element.type == "minigame") {
         games.push(element.content.select);
       }
@@ -93,21 +111,33 @@ $(document).ready(function () {
 function addBaseCSS(data) {
   baseCSS = {
     color: "",
+    bgcolor: "",
+    fontcolor: "",
     font: "",
-    style: ""
+    style: "",
+    size: ""
   }
   if(data.css) {
     baseCSS = data.css;
   }
   // rollback defaults
-  if(baseCSS.color === "") {
+  if(baseCSS.color === "" || !baseCSS.color) {
     baseCSS.color =  '#C8C8C8FF';
   }
-  if(baseCSS.font === "") {
+  if(baseCSS.bgcolor === "" || !baseCSS.bgcolor) {
+    baseCSS.bgcolor =  '#DADADAFF';
+  }
+  if(baseCSS.fontcolor === "" || !baseCSS.fontcolor) {
+    baseCSS.fontcolor =  '#000000FF';
+  }
+  if(baseCSS.font === "" || !baseCSS.font) {
     baseCSS.font =  '"Times New Roman", Times, serif';
   }
-  if(baseCSS.style === "") {
+  if(baseCSS.style === "" || !baseCSS.style) {
     baseCSS.style = "normal";
+  }
+  if(baseCSS.size === "" || !baseCSS.size) {
+    baseCSS.size = "26px";
   }
 }
 
@@ -161,17 +191,31 @@ async function getTemplate(templates) {
 
 function applyCSS(css) {
   // always apply story wide css first, use css cascade property to do the work
+
   $("#myModal").css("background-color", baseCSS.color);
+  $(".modal-content").css("background-color", baseCSS.bgcolor);
+
+  $("#myModal").css("color", baseCSS.fontcolor);
   $("#myModal").css("font-family", baseCSS.font);
   $("#myModal").css("font-style", baseCSS.style);
+
   if(css.color !== "") {
     $("#myModal").css("background-color", css.color);
+  }
+  if(css.bgcolor !== "") {
+    $(".modal-content").css("background-color", css.bgcolor);
+  }
+  if(css.fontcolor !== "") {
+    $("#myModal").css("color", css.fontcolor);
   }
   if(css.font !== "") {
     $("#myModal").css("font-family", css.font);
   }
   if(css.style !== "") {
     $("#myModal").css("font-style", css.style);
+  }
+  if(css.size !== "") {
+    $("#myModal").css("font-size", css.size);
   }
 }
 
