@@ -10,7 +10,8 @@ const storySchema = mongoose.Schema({
     bgcolor: {type: String },
     fontcolor: {type: String },
     font: {type: String },
-    style: {type: String }
+    style: {type: String },
+    size: {type: String }
   }},
   published: Boolean
 });

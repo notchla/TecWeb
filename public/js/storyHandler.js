@@ -45,7 +45,8 @@ function updateContent(data) {
     bgcolor: "",
     fontcolor: "",
     font: "",
-    style: ""
+    style: "",
+    size: ""
   }
   try {
     // add css
@@ -54,6 +55,7 @@ function updateContent(data) {
     css.fontcolor = context.fontcolor;
     css.font = context.font;
     css.style = context.style;
+    css.size = context.size;
   } catch (e) {}
 
   applyCSS(css);
@@ -110,7 +112,8 @@ function addBaseCSS(data) {
     bgcolor: "",
     fontcolor: "",
     font: "",
-    style: ""
+    style: "",
+    size: ""
   }
   if(data.css) {
     baseCSS = data.css;
@@ -130,6 +133,9 @@ function addBaseCSS(data) {
   }
   if(baseCSS.style === "" || !baseCSS.style) {
     baseCSS.style = "normal";
+  }
+  if(baseCSS.size === "" || !baseCSS.size) {
+    baseCSS.size = "26px";
   }
 }
 
@@ -205,6 +211,9 @@ function applyCSS(css) {
   }
   if(css.style !== "") {
     $("#myModal").css("font-style", css.style);
+  }
+  if(css.size !== "") {
+    $("#myModal").css("font-size", css.size);
   }
 }
 

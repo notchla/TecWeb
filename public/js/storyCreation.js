@@ -68,7 +68,9 @@ function cssForm(id) {
           '<label class="col-form-label"> Font </label>' +
           '<input type="text" class="form-control input-lg font" value=""/>' +
           '<label class="col-form-label"> Font style </label>' +
-          '<input type="text" class="form-control input-lg font-style" value=""/>' +
+          '<input type="text" class="form-control input-lg style" value=""/>' +
+          '<label class="col-form-label"> Font size </label>' +
+          '<input type="text" class="form-control input-lg size" value=""/>' +
           '<label class="col-form-label"> Font color </label>' +
           '<div id="font-color-picker-' + id + '" class="input-group" title="Font color">' +
             '<input type="text" class="form-control input-lg fontcolor"/>' +
@@ -622,10 +624,7 @@ $(document).ready(function () {
                 this.content = this.oldNode.content;
 
                 try {
-                  var short = this.content["question"].replace(
-                    /(.{8})..+/,
-                    "$1…"
-                  );
+                  var short = this.content["question"].substring(0,17) + "...";
                   this.text = new PIXI.Text(short, {
                     fontFamily: FONT,
                     fill: TEXT_COLOR,
@@ -672,10 +671,7 @@ $(document).ready(function () {
                 this.content = packFormData($("#" + idEdit));
                 try {
                   if (this.text == null) {
-                    var short = this.content["question"].replace(
-                      /(.{8})..+/,
-                      "$1…"
-                    );
+                    var short = this.content["question"].substring(0,17) + "...";
                     this.text = new PIXI.Text(short, {
                       fontFamily: FONT,
                       fill: TEXT_COLOR,
@@ -688,10 +684,7 @@ $(document).ready(function () {
                     );
                     this.graphics.addChild(this.text);
                   } else {
-                    this.text.text = this.content["question"].replace(
-                      /(.{8})..+/,
-                      "$1…"
-                    );
+                    this.text.text = this.content["question"].substring(0,17) + "...";
                   }
                 } catch(e) {}
                 try {
@@ -1040,6 +1033,7 @@ $(document).ready(function () {
 
           $("#confirm-modal .modal-body #font-form .font").val(data.css.font);
           $("#confirm-modal .modal-body #font-form .font-style").val(data.css.style);
+          $("#confirm-modal .modal-body #font-form .font-size").val(data.css.size);
         } catch(e) {}
         rebuildTree(data);
         $("#indicator-overlay").fadeOut(300, function () {
@@ -1076,6 +1070,7 @@ $(document).ready(function () {
 
     $("#confirm-modal .modal-body #font-form .font").val("");
     $("#confirm-modal .modal-body #font-form .font-style").val("");
+    $("#confirm-modal .modal-body #font-form .font-size").val("");
 
     $("#activity-modal-container").empty();
     // reset the counter
@@ -1246,6 +1241,7 @@ $(document).ready(function () {
     var fontcolor = $("#confirm-modal .modal-body #font-form .fontcolor").val();
     var font = $("#confirm-modal .modal-body #font-form .font").val();
     var style = $("#confirm-modal .modal-body #font-form .font-style").val();
+    var size = $("#confirm-modal .modal-body #font-form .font-size").val();
     var stuff = packStory(root);
     var data = stuff[0];
     var nonbuildable = stuff[1];
@@ -1260,7 +1256,8 @@ $(document).ready(function () {
         bgcolor: bgcolor,
         fontcolor: fontcolor,
         font: font,
-        style: style
+        style: style,
+        size: size
       },
       published: published,
     });
