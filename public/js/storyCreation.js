@@ -27,26 +27,55 @@ function cssForm(id) {
   var cssForm =
     '<div id="css-accordion">' +
       '<div class="card">' +
-        '<div class="card-header" id="headingOne">' +
-        '<h5 class="mb-0">' +
-          '<button class="btn collapsed" data-toggle="collapse" data-target="#css-form" aria-controls="css-form">' +
-          'Custom CSS' +
-          '</button>' +
-        '</h5>' +
-      '</div>' +
-      '<div id="css-form" class="collapse" aria-labelledby="css" data-parent="#css-accordion">' +
+        '<div class="card-header">' +
+          '<h5 class="mb-0">' +
+            '<button class="btn collapsed" data-toggle="collapse" data-target="#color-form">' +
+            'Color settings' +
+            '</button>' +
+          '</h5>' +
+        '</div>' +
+
+      '<div id="color-form" class="collapse" aria-labelledby="css" data-parent="#css-accordion">' +
         '<div class="card-body">' +
-          '<label class="col-form-label"> Background color </label>' +
-          '<div id="color-picker-' + id + '" class="input-group" title="Color">' +
+          '<label class="col-form-label"> Main color </label>' +
+          '<div id="color-picker-' + id + '" class="input-group" title="Main color">' +
             '<input type="text" class="form-control input-lg color"/>' +
             '<span class="input-group-append">' +
               '<span class="input-group-text colorpicker-input-addon"><i></i></span>' +
             '</span>' +
           '</div>' +
+          '<label class="col-form-label"> Background color </label>' +
+          '<div id="bg-color-picker-' + id + '" class="input-group" title="Background color">' +
+            '<input type="text" class="form-control input-lg bgcolor"/>' +
+            '<span class="input-group-append">' +
+              '<span class="input-group-text colorpicker-input-addon"><i></i></span>' +
+            '</span>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+
+      '<div class="card">' +
+        '<div class="card-header">' +
+          '<h5 class="mb-0">' +
+            '<button class="btn collapsed" data-toggle="collapse" data-target="#font-form">' +
+            'Font settings' +
+            '</button>' +
+          '</h5>' +
+        '</div>' +
+
+      '<div id="font-form" class="collapse" aria-labelledby="css" data-parent="#css-accordion">' +
+        '<div class="card-body">' +
           '<label class="col-form-label"> Font </label>' +
           '<input type="text" class="form-control input-lg font" value=""/>' +
           '<label class="col-form-label"> Font style </label>' +
           '<input type="text" class="form-control input-lg font-style" value=""/>' +
+          '<label class="col-form-label"> Font color </label>' +
+          '<div id="font-color-picker-' + id + '" class="input-group" title="Font color">' +
+            '<input type="text" class="form-control input-lg fontcolor"/>' +
+            '<span class="input-group-append">' +
+              '<span class="input-group-text colorpicker-input-addon"><i></i></span>' +
+            '</span>' +
+          '</div>' +
         '</div>' +
       '</div>' +
     '</div>';
@@ -84,6 +113,24 @@ function UNpackFormData(form, oldData, nodeID) {
         $(el).val(oldData[id].join(","));
       } else if (id.includes("select")) {
         $(el).children("option:selected").val(oldData[id]);
+      } else if (id.includes("bgcolor")) {
+        if(oldData[id]){
+          $('#bg-color-picker-' + nodeID).colorpicker({"color": oldData[id]});
+          $(el).val(oldData[id]);
+        } else {
+          // defaults
+          $('#bg-color-picker-' + nodeID).colorpicker({"color": "#DADADAFF"});
+          $(el).val("#DADADAFF");
+        }
+      }else if (id.includes("fontcolor")) {
+        if(oldData[id]){
+          $('#font-color-picker-' + nodeID).colorpicker({"color": oldData[id]});
+          $(el).val(oldData[id]);
+        } else {
+          // defaults
+          $('#font-color-picker-' + nodeID).colorpicker({"color": "#000000FF"});
+          $(el).val("#000000FF");
+        }
       } else if (id.includes("color")) {
         if(oldData[id]){
           $('#color-picker-' + nodeID).colorpicker({"color": oldData[id]});
@@ -612,6 +659,8 @@ $(document).ready(function () {
                 );
                 // after adding to modal
                 $('#color-picker-' + this.nodeID).colorpicker({"color": "#C8C8C8FF"});
+                $('#bg-color-picker-' + this.nodeID).colorpicker({"color": "#DADADAFF"});
+                $('#font-color-picker-' + this.nodeID).colorpicker({"color": "#000000FF"});
               }
 
               $("#" + idEdit + "-button").click(() => {
@@ -978,15 +1027,19 @@ $(document).ready(function () {
       url: "/stories/json/" + name,
       crossDomain: true,
       success: function (data) {
-        console.log(data);
         // set storyname form data
         $("#story-name").val(data.title);
         $("#published").prop("checked", data.published);
         try {
           $('#color-pricker-0').colorpicker({"color": data.css.color});
-          $("#confirm-modal .modal-body #css-form #color").val(data.css.color);
-          $("#confirm-modal .modal-body #css-form #font").val(data.css.font);
-          $("#confirm-modal .modal-body #css-form #font-style").val(data.css.style);
+          $("#confirm-modal .modal-body #color-form .color").val(data.css.color);
+          $('#bg-color-pricker-0').colorpicker({"color": data.css.bgcolor});
+          $("#confirm-modal .modal-body #color-form .bgcolor").val(data.css.bgcolor);
+          $('#font-color-pricker-0').colorpicker({"color": data.css.fontcolor});
+          $("#confirm-modal .modal-body #color-form .fontcolor").val(data.css.fontcolor);
+
+          $("#confirm-modal .modal-body #font-form .font").val(data.css.font);
+          $("#confirm-modal .modal-body #font-form .font-style").val(data.css.style);
         } catch(e) {}
         rebuildTree(data);
         $("#indicator-overlay").fadeOut(300, function () {
@@ -1013,10 +1066,16 @@ $(document).ready(function () {
     // reset the forms
     $("#story-name").val("");
     $("#published").prop("checked", false);
+
     $('#color-picker-0').colorpicker({"color": "#C8C8C8FF"});
-    $("#confirm-modal .modal-body #css-form .color").val("");
-    $("#confirm-modal .modal-body #css-form .font").val("");
-    $("#confirm-modal .modal-body #css-form .font-style").val("");
+    $("#confirm-modal .modal-body #color-form .color").val("");
+    $('#bg-color-picker-0').colorpicker({"color": "#DADADAFF"});
+    $("#confirm-modal .modal-body #color-form .bgcolor").val("");
+    $('#font-color-picker-0').colorpicker({"color": "#000000FF"});
+    $("#confirm-modal .modal-body #color-form .fontcolor").val("");
+
+    $("#confirm-modal .modal-body #font-form .font").val("");
+    $("#confirm-modal .modal-body #font-form .font-style").val("");
 
     $("#activity-modal-container").empty();
     // reset the counter
@@ -1167,6 +1226,8 @@ $(document).ready(function () {
     resetScene();
     // set default color
     $('#color-picker-0').colorpicker({"color": "#C8C8C8FF"});
+    $('#bg-color-picker-0').colorpicker({"color": "#DADADAFF"});
+    $('#font-color-picker-0').colorpicker({"color": "#000000FF"});
     // add root back
     root = new Activity("root");
     root.ready();
@@ -1180,9 +1241,11 @@ $(document).ready(function () {
   $("#send-story").click(function () {
     var storyname = $("#story-name").val();
     var published = $("#published").prop("checked");
-    var color = $("#confirm-modal .modal-body #css-form .color").val();
-    var font = $("#confirm-modal .modal-body #css-form .font").val();
-    var style = $("#confirm-modal .modal-body #css-form .font-style").val();
+    var color = $("#confirm-modal .modal-body #color-form .color").val();
+    var bgcolor = $("#confirm-modal .modal-body #color-form .bgcolor").val();
+    var fontcolor = $("#confirm-modal .modal-body #font-form .fontcolor").val();
+    var font = $("#confirm-modal .modal-body #font-form .font").val();
+    var style = $("#confirm-modal .modal-body #font-form .font-style").val();
     var stuff = packStory(root);
     var data = stuff[0];
     var nonbuildable = stuff[1];
@@ -1194,6 +1257,8 @@ $(document).ready(function () {
       storyname: storyname,
       css: {
         color: color,
+        bgcolor: bgcolor,
+        fontcolor: fontcolor,
         font: font,
         style: style
       },

@@ -7,6 +7,8 @@ const storySchema = mongoose.Schema({
   nodes: [],
   css: { type: {
     color: {type: String },
+    bgcolor: {type: String },
+    fontcolor: {type: String },
     font: {type: String },
     style: {type: String }
   }},
