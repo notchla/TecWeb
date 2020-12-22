@@ -28,9 +28,12 @@
       if (text.trim() === "") {
         return;
       }
+
+      socket.emit("message", { text }); //send message to server
+
       $(".message_input").val("");
       $messages = $(".messages");
-      message_side = message_side === "left" ? "right" : "left";
+      message_side = "right";
       message = new Message({
         text: text,
         message_side: message_side,
@@ -42,6 +45,7 @@
       );
     };
     $(".send_message").click(function (e) {
+      console.log(getMessageText());
       return sendMessage(getMessageText());
     });
     $(".message_input").keyup(function (e) {
@@ -61,7 +65,6 @@
 
 $(document).ready(function () {
   $(document).on("click", "#close", function (e) {
-    console.log("here");
     var panel = $("#slider");
     if (!panel.hasClass("panel-collapsed")) {
       $(".chat_window").css({ height: "auto" });
