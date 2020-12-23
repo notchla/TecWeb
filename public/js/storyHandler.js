@@ -194,18 +194,18 @@ async function getTemplate(templates) {
 function applyCSS(css) {
   // always apply story wide css first, use css cascade property to do the work
 
-  $("#myModal").css("background-color", baseCSS.color);
-  $(".modal-content").css("background-color", baseCSS.bgcolor);
+  $("#myModal").css("background-color", baseCSS.bgcolor);
+  $(".modal-content").css("background-color", baseCSS.color);
 
   $("#myModal").css("color", baseCSS.fontcolor);
   $("#myModal").css("font-family", baseCSS.font);
   $("#myModal").css("font-style", baseCSS.style);
 
-  if(css.color !== "") {
-    $("#myModal").css("background-color", css.color);
-  }
   if(css.bgcolor !== "") {
-    $(".modal-content").css("background-color", css.bgcolor);
+    $("#myModal").css("background-color", css.bgcolor);
+  }
+  if(css.color !== "") {
+    $(".modal-content").css("background-color", css.color);
   }
   if(css.fontcolor !== "") {
     $("#myModal").css("color", css.fontcolor);

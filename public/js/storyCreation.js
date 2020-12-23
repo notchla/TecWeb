@@ -174,7 +174,7 @@ function UNpackFormData(form, oldData, nodeID) {
           $(el).val(oldData[id]);
         } else {
           // defaults
-          $('#bg-color-picker-' + nodeID).colorpicker({"color": "#DADADAFF"});
+          $('#bg-color-picker-' + nodeID).colorpicker({"color": ""});
           $(el).val("");
         }
       }else if (id.includes("fontcolor")) {
@@ -183,7 +183,7 @@ function UNpackFormData(form, oldData, nodeID) {
           $(el).val(oldData[id]);
         } else {
           // defaults
-          $('#font-color-picker-' + nodeID).colorpicker({"color": "#000000FF"});
+          $('#font-color-picker-' + nodeID).colorpicker({"color": ""});
           $(el).val("");
         }
       } else if (id.includes("color")) {
@@ -192,7 +192,7 @@ function UNpackFormData(form, oldData, nodeID) {
           $(el).val(oldData[id]);
         } else {
           // defaults
-          $('#color-picker-' + nodeID).colorpicker({"color": "#C8C8C8FF"});
+          $('#color-picker-' + nodeID).colorpicker({"color": ""});
           $(el).val("");
         }
       } else {
@@ -766,9 +766,9 @@ $(document).ready(function () {
                   $("#main-navbar").innerHeight() + 10
                 );
                 // after adding to modal
-                $('#color-picker-' + this.nodeID).colorpicker({"color": "#C8C8C8FF"});
-                $('#bg-color-picker-' + this.nodeID).colorpicker({"color": "#DADADAFF"});
-                $('#font-color-picker-' + this.nodeID).colorpicker({"color": "#000000FF"});
+                $('#color-picker-' + this.nodeID).colorpicker({"color": ""});
+                $('#bg-color-picker-' + this.nodeID).colorpicker({"color": ""});
+                $('#font-color-picker-' + this.nodeID).colorpicker({"color": ""});
               }
 
               $("#" + idEdit + "-button").click(() => {
@@ -1171,11 +1171,11 @@ $(document).ready(function () {
     $("#published").prop("checked", false);
 
     $('#color-picker-0').colorpicker({"color": "#C8C8C8FF"});
-    $("#confirm-modal .modal-body #color-form .color").val("");
+    $("#confirm-modal .modal-body #color-form .color").val("#C8C8C8FF");
     $('#bg-color-picker-0').colorpicker({"color": "#DADADAFF"});
-    $("#confirm-modal .modal-body #color-form .bgcolor").val("");
+    $("#confirm-modal .modal-body #color-form .bgcolor").val("#DADADAFF");
     $('#font-color-picker-0').colorpicker({"color": "#000000FF"});
-    $("#confirm-modal .modal-body #color-form .fontcolor").val("");
+    $("#confirm-modal .modal-body #color-form .fontcolor").val("#000000FF");
 
     $("#confirm-modal .modal-body #font-form .font").val("");
     $("#confirm-modal .modal-body #font-form .font-style").val("");
@@ -1336,9 +1336,9 @@ $(document).ready(function () {
     $("#main-modal").modal("hide");
     resetScene();
     // set default color
-    $('#color-picker-0').colorpicker({"color": "#C8C8C8FF"});
-    $('#bg-color-picker-0').colorpicker({"color": "#DADADAFF"});
-    $('#font-color-picker-0').colorpicker({"color": "#000000FF"});
+    $('#color-picker-0').colorpicker({"color": ""});
+    $('#bg-color-picker-0').colorpicker({"color": ""});
+    $('#font-color-picker-0').colorpicker({"color": ""});
     // add root back
     root = new Activity("root");
     root.ready();
