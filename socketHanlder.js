@@ -7,7 +7,6 @@ const register = (socket) => {
   socket.on("registerUser", (data) => {
     userSockets.push(socket);
     console.log("register user", socket.request.session);
-    const session = socket.request.session;
     socket.type = "user";
     // handlers.saveActiveUser(session.userName, session.sessionID, "", 0);
   });
