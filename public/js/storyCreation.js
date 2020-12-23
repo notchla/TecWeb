@@ -100,7 +100,7 @@ function cssForm(id) {
     return cssForm;
 }
 
-function resizeBase64Img(base64, newHeight) {
+function resizeImage(base64, newHeight) {
     return new Promise((resolve, reject)=>{
         var canvas = document.createElement("canvas");
         let context = canvas.getContext("2d");
@@ -117,22 +117,6 @@ function resizeBase64Img(base64, newHeight) {
           resolve(canvas.toDataURL());
         }
     });
-}
-
-function upload(type, id) {
-  return new Promise((resolve, reject) => {
-    var idEdit = actToId(type) + id + "-edit-modal"
-    var file = $("#activity-modal-container #" + idEdit + " .image")[0].files[0];
-    if(file) {
-      var reader = new FileReader();
-      reader.onloadend = function () {
-        resizeBase64Img(reader.result, 128).then((result) => {
-          resolve(result);
-        });
-      };
-      reader.readAsDataURL(file);
-    }
-  })
 }
 
 function packFormData(data, formData) {
@@ -203,36 +187,30 @@ function UNpackFormData(form, oldData, nodeID) {
   return data;
 }
 
-function sendStory(body) {
-  const headers = { "Content-Type": "application/json" };
-  console.log(body);
-  fetch("/stories/registerstory", { method: "post", body, headers })
-    .then((resp) => {
-      // close modal
-      $("#confirm-modal").modal("hide");
-      if (resp.status < 200 || resp.status >= 300)
-        throw new Error(`request failed with status ${resp.status}`);
-      return;
-    })
-    .catch((err) => {
-      console.log(err);
-    });
-}
-
 function packStory(root) {
   //adjacency lists
   var adj = new Map();
   // node array
   var nodes = [];
+  // ad root breforehand
   nodes.push(packActivity(root));
-  var nonbuildable = { value: false };
+
+  var nonbuildable = {value : false};
   // data to recontruct tree (pixi graphics objects)
   dfsActivity(root, adj, nodes, nonbuildable);
+
+  for (let [_, v] of adj) {
+    if(v.includes(0)) {
+      nonbuildable.value = true;
+      break;
+    }
+  }
+
   var json = {
     adj: Array.from(adj, ([k, v]) => ({ k, v })),
     nodes: nodes,
   };
-  return [json, false]; //for testing, real value is nonbuildable.value
+  return [json, nonbuildable.value];
 }
 
 function dfsActivity(node, adj, nodes, nonbuildable) {
@@ -240,34 +218,27 @@ function dfsActivity(node, adj, nodes, nonbuildable) {
     for (var element of v) {
       // exclude already visited
       if (!nodes.map((n) => n.id).includes(element.child.nodeID)) {
-        // exclude root (directly child)
+        // exclude root, already added
         nodes.push(packActivity(element.child));
       }
-      // if (node.nodeID != 1) {
-        if (!adj.has(node.nodeID)) {
-          // new entry in the adjacency list, as an array with the size of the answers
-          adj.set(node.nodeID, Array(node.out.length).fill(0));
-        }
-        adj.get(node.nodeID)[element.outLine] = element.child.nodeID;
-      // }
-      // object has more output ports than lines: is not buildable
-      if (node.out.length > Object.entries(node.childs).length) {
-        nonbuildable.value = true;
-      } else {
-        nonbuildable.value = nonbuildable.value || false;
+      if (!adj.has(node.nodeID)) {
+        // new entry in the adjacency list, as an array with the size of the answers
+        adj.set(node.nodeID, Array(node.out.length).fill(0));
       }
 
-      if (
-        Object.keys(element.child.childs).length > 0 &&
-        !adj.has(element.child.nodeID)
-      ) {
-        dfsActivity(element.child, adj, nodes, nonbuildable);
-      } else if (Object.keys(element.child.childs).length == 0) {
+      adj.get(node.nodeID)[element.outLine] = element.child.nodeID;
+
+      if (Object.keys(element.child.childs).length == 0) {
         if (element.child.out.length > 0) {
           nonbuildable.value = true;
         } else {
           nonbuildable.value = nonbuildable.value || false;
         }
+      } else if (
+        Object.keys(element.child.childs).length > 0 &&
+        !adj.has(element.child.nodeID)
+      ) {
+        dfsActivity(element.child, adj, nodes, nonbuildable);
       }
     }
   }
@@ -523,7 +494,6 @@ $(document).ready(function () {
       this.isReady = false;
       // waiting callback stack, one stack each activity
       this.waiting = [];
-      this.answerIndex = 0;
       this.content = {};
 
       // -------- event handlers --------
@@ -642,14 +612,14 @@ $(document).ready(function () {
               // modal creation
 
               var cssCustomForm = '<label> Activity specific custom css </label>' + cssForm(this.nodeID);
-              if(this.type == "root") {
+              if(this.type == "root" || this.type == "end") {
                 cssCustomForm = "";
               }
 
               if(has_file) {
                   modalBody += '<label class="col-form-label"> Enter image </label> ' +
                   '<div class="d-flex flex-row">' +
-                    '<input type="file" class="form-control image"></input>' +
+                    '<input type="file" class="p-1 form-control image"></input>' +
                     '<div class="img-container float-right"></div>' +
                   '</div>' +
                   '<label class="col-form-label"> Enter alternative image text </label> ' +
@@ -700,14 +670,27 @@ $(document).ready(function () {
               // add image to content
               if(has_file) {
                 $("#activity-modal-container #" + idEdit + " .image").on("change", () => {
-                  upload(this.type, this.nodeID).then((result) => {
+                  (new Promise((resolve, reject) => {
+                    var file = $("#activity-modal-container #" + idEdit + " .image")[0].files[0];
+                    if(file) {
+                      var reader = new FileReader();
+                      reader.onloadend = function () {
+                        resizeImage(reader.result, 128).then((result) => {
+                          resolve(result);
+                        });
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  })).then((result) => {
                     this.content["image"] = result;
                     // update thumbnail
                     try{
-                      var img = '<img src="' + this.content.image + '" style="max-height: 40px; max-width: auto;"' +
-                              'class="rounded">';
-                      $("#activity-modal-container #" + idEdit + " .img-container").empty();
-                      $("#activity-modal-container #" + idEdit + " .img-container").append(img);
+                      if(this.content.image.length > 0) {
+                        var img = '<img src="' + this.content.image + '" style="max-height: 40px; max-width: auto;"' +
+                                'class="rounded">';
+                        $("#activity-modal-container #" + idEdit + " .img-container").empty();
+                        $("#activity-modal-container #" + idEdit + " .img-container").append(img);
+                      }
                     } catch(e) {}
                   });
                 });
@@ -722,55 +705,61 @@ $(document).ready(function () {
               }
               // rebuild old node
               if (this.oldNode !== undefined) {
-                this.content = this.oldNode.content;
-                if(has_file) {
-                  // update thumbnail
-                  try{
-                    var img = '<img src="' + this.content.image + '" style="max-height: 40px; max-width: auto;"' +
-                            'class="rounded">';
-                    $("#activity-modal-container #" + idEdit + " .img-container").empty();
-                    $("#activity-modal-container #" + idEdit + " .img-container").append(img);
-                  } catch(e) {}
-                }
-                try {
-                  var short = this.content["question"].substring(0,17) + "...";
-                  this.text = new PIXI.Text(short, {
-                    fontFamily: FONT,
-                    fill: TEXT_COLOR,
-                    fontSize: 14,
-                  });
-                  this.text.anchor.set(0.5, 0.5);
-                  this.text.position.set(
-                    this.graphics.width / 2,
-                    this.graphics.height / 2
-                  );
-                  this.graphics.addChild(this.text);
-                } catch (e) {}
-                UNpackFormData($("#" + idEdit), this.oldNode.content, this.nodeID);
-                // refill form with old data
-                try {
-                  for (
-                    var i = 0;
-                    i < this.oldNode.content["answer"].length;
-                    i++
-                  ) {
-                    this.draw_output(BUTTON_COLOR);
+                if (this.oldNode.content !== undefined) {
+                  this.content = this.oldNode.content;
+                  if(has_file) {
+                    // update thumbnail
+                    try{
+                      if(this.content.image.length > 0) {
+                        var img = '<img src="' + this.content.image + '" style="max-height: 40px; max-width: auto;"' +
+                                'class="rounded">';
+                        $("#activity-modal-container #" + idEdit + " .img-container").empty();
+                        $("#activity-modal-container #" + idEdit + " .img-container").append(img);
+                      }
+                    } catch(e) {}
                   }
-                } catch (e) {}
+                  try {
+                    var short = this.content["question"].substring(0,17) + "...";
+                    this.text = new PIXI.Text(short, {
+                      fontFamily: FONT,
+                      fill: TEXT_COLOR,
+                      fontSize: 14,
+                    });
+                    this.text.anchor.set(0.5, 0.5);
+                    this.text.position.set(
+                      this.graphics.width / 2,
+                      this.graphics.height / 2
+                    );
+                    this.graphics.addChild(this.text);
+                  } catch (e) {}
+                  UNpackFormData($("#" + idEdit), this.content, this.nodeID);
+                  // refill form with old data
+                  try {
+                    for (
+                      var i = 0;
+                      i < this.content["answer"].length;
+                      i++
+                    ) {
+                      this.draw_output(BUTTON_COLOR);
+                    }
+                  } catch (e) {}
+                } else {
+                  $('#color-picker-' + this.nodeID).colorpicker({"color": ""});
+                  $('#bg-color-picker-' + this.nodeID).colorpicker({"color": ""});
+                  $('#font-color-picker-' + this.nodeID).colorpicker({"color": ""});
+                }
+
                 // position has to be set after all children have been added
                 this.rect.position.set(this.oldNode.x, this.oldNode.y);
               } else {
-                // set position to new center (not overlapping the navbar)
+                // fallback position to new center (not overlapping the navbar)
                 this.rect.position.set(
                   10,
                   $("#main-navbar").innerHeight() + 10
                 );
-                // after adding to modal
-                $('#color-picker-' + this.nodeID).colorpicker({"color": ""});
-                $('#bg-color-picker-' + this.nodeID).colorpicker({"color": ""});
-                $('#font-color-picker-' + this.nodeID).colorpicker({"color": ""});
               }
 
+              // after adding to modal
               $("#" + idEdit + "-button").click(() => {
                 $("#" + idEdit).modal("hide");
               });
@@ -1036,9 +1025,9 @@ $(document).ready(function () {
       this.parents = {};
     }
 
-    addChildActivity(activityTo) {
+    addChildActivity(activityTo, answerIndex) {
       if (activityTo) {
-        var positionFrom = this.out[this.answerIndex].getGlobalPosition();
+        var positionFrom = this.out[answerIndex].getGlobalPosition();
         var positionTo = activityTo.input[0].getGlobalPosition();
 
         var line = new Line(
@@ -1048,15 +1037,14 @@ $(document).ready(function () {
         );
         viewport.addChild(line);
 
-        this.output_lines[this.answerIndex] = line;
-        activityTo.input_lines.push(this.output_lines[this.answerIndex]);
+        this.output_lines[answerIndex] = line;
+        activityTo.input_lines.push(this.output_lines[answerIndex]);
         this.insertChild(
           this,
-          this.answerIndex,
+          answerIndex,
           activityTo.input_lines.length - 1,
           activityTo
         );
-        this.answerIndex++;
       }
     }
   }
@@ -1107,13 +1095,13 @@ $(document).ready(function () {
       // rebuild old connections
       data.adj.forEach(function (el, _) {
         var from = nodes.get(el.k);
-        el.v.forEach(function (val, _) {
+        el.v.forEach(function (val, answerIndex) {
           var to = nodes.get(val);
           // start parallel requests to speed up
           to.ready();
           from.ready(() => {
             to.ready(() => {
-              from.addChildActivity(to);
+              from.addChildActivity(to, answerIndex);
             });
           });
         });
@@ -1213,6 +1201,22 @@ $(document).ready(function () {
       },
       error: function (data) {},
     });
+  }
+
+  function sendStory(body) {
+    const headers = { "Content-Type": "application/json" };
+    console.log(body);
+    fetch("/stories/registerstory", { method: "post", body, headers })
+      .then((resp) => {
+        // close modal
+        $("#confirm-modal").modal("hide");
+        if (resp.status < 200 || resp.status >= 300)
+          throw new Error(`request failed with status ${resp.status}`);
+        return;
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   }
 
   var invisible =
