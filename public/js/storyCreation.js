@@ -125,14 +125,14 @@ function packFormData(data, formData) {
   inputs.each(function (_, el) {
     var classes = el.className.split(" ");
     var id = classes[classes.length - 1];
-    if (id.includes("answer")) {
-      // comma separed answer list
-      data[id] = el.value.split(",");
-      data[id] = data[id].filter((e) => e !== "");
+    if(id.includes("answer")) {
+      if(el.value.length > 0) {
+        data[id].push(el.value);
+      }
     } else if (id.includes("select")) {
       // multiple option select
       data[id] = $(el).children("option:selected").val();
-    } else if(!id.includes("image")){
+    } else if(!id.includes("image") && !id.includes("answer")){
       // everything else
       data[id] = el.value;
     }
@@ -144,46 +144,51 @@ function UNpackFormData(form, oldData, nodeID) {
   // opposite of packFormData, sets input values from the content object array
   var inputs = form.find("input, textarea", "select");
   var data = {};
-  inputs.each(function (_, el) {
-    try {
-      var classes = el.className.split(" ");
-      var id = classes[classes.length - 1];
-      if (id.includes("answer")) {
-        $(el).val(oldData[id].join(","));
-      } else if (id.includes("select")) {
-        $(el).children("option:selected").val(oldData[id]);
-      } else if (id.includes("bgcolor")) {
-        if(oldData[id]){
-          $('#bg-color-picker-' + nodeID).colorpicker({"color": oldData[id]});
+  try {
+    if(oldData.answer) {
+      var modalId = form.attr('id');
+      oldData.answer.forEach((el, _) => {
+        $('#' +  modalId + ' .answer-group')
+        .append('<div class="input-group"><input type="text" value="' + el + '" class="mt-1 form-control answer"/></div>');
+      });
+    }
+    inputs.each(function (_, el) {
+        var classes = el.className.split(" ");
+        var id = classes[classes.length - 1];
+        if (id.includes("select")) {
+          $(el).children("option:selected").val(oldData[id]);
+        } else if (id.includes("bgcolor")) {
+          if(oldData[id]){
+            $('#bg-color-picker-' + nodeID).colorpicker({"color": oldData[id]});
+            $(el).val(oldData[id]);
+          } else {
+            // defaults
+            $('#bg-color-picker-' + nodeID).colorpicker({"color": ""});
+            $(el).val("");
+          }
+        } else if (id.includes("fontcolor")) {
+          if(oldData[id]){
+            $('#font-color-picker-' + nodeID).colorpicker({"color": oldData[id]});
+            $(el).val(oldData[id]);
+          } else {
+            // defaults
+            $('#font-color-picker-' + nodeID).colorpicker({"color": ""});
+            $(el).val("");
+          }
+        } else if (id.includes("color")) {
+          if(oldData[id]){
+            $('#color-picker-' + nodeID).colorpicker({"color": oldData[id]});
+            $(el).val(oldData[id]);
+          } else {
+            // defaults
+            $('#color-picker-' + nodeID).colorpicker({"color": ""});
+            $(el).val("");
+          }
+        } else if(!id.includes("answer")) {
           $(el).val(oldData[id]);
-        } else {
-          // defaults
-          $('#bg-color-picker-' + nodeID).colorpicker({"color": ""});
-          $(el).val("");
         }
-      }else if (id.includes("fontcolor")) {
-        if(oldData[id]){
-          $('#font-color-picker-' + nodeID).colorpicker({"color": oldData[id]});
-          $(el).val(oldData[id]);
-        } else {
-          // defaults
-          $('#font-color-picker-' + nodeID).colorpicker({"color": ""});
-          $(el).val("");
-        }
-      } else if (id.includes("color")) {
-        if(oldData[id]){
-          $('#color-picker-' + nodeID).colorpicker({"color": oldData[id]});
-          $(el).val(oldData[id]);
-        } else {
-          // defaults
-          $('#color-picker-' + nodeID).colorpicker({"color": ""});
-          $(el).val("");
-        }
-      } else {
-        $(el).val(oldData[id]);
-      }
-    } catch (e) {}
-  });
+    });
+  } catch (e) {}
   return data;
 }
 
@@ -606,6 +611,7 @@ $(document).ready(function () {
               var modalBody = data.data.form;
               var min_outputs = data.data.min_outputs;
               var outputs = data.data.outputs;
+              var has_answers = data.data.has_answers;
               var has_file = data.data.has_file;
               var has_score = data.data.has_score;
 
@@ -614,6 +620,20 @@ $(document).ready(function () {
               var cssCustomForm = '<label> Activity specific custom css </label>' + cssForm(this.nodeID);
               if(this.type == "root" || this.type == "end") {
                 cssCustomForm = "";
+              }
+
+              if(has_answers) {
+                modalBody +=
+                  '<br>' +
+                  '<div class="answer">' +
+                    '<div class="m-0">' +
+                      '<label class="col-form-label"> Answers </label>' +
+                      '<button type="button" class="mt-1 float-right btn btn-secondary add-answer"> Add new answer </button>' +
+                    '</div>' +
+                    '<div class="answer-group m-0">' +
+                    '</div>' +
+                  '</div>' +
+                  '<br>';
               }
 
               if(has_file) {
@@ -666,6 +686,12 @@ $(document).ready(function () {
                 "</div>";
 
               $("#activity-modal-container").append(modal);
+              if(has_answers) {
+                // add answer only to the current activity
+                $('#' + idEdit + ' .add-answer').click(() => {
+                  $('#' + idEdit + ' .answer-group').append('<div class="input-group"><input type="text" class="mt-1 form-control answer"/></div>');
+                });
+              }
 
               // add image to content
               if(has_file) {
@@ -737,7 +763,7 @@ $(document).ready(function () {
                   try {
                     for (
                       var i = 0;
-                      i < this.content["answer"].length;
+                      i < this.content.answer.length;
                       i++
                     ) {
                       this.draw_output(BUTTON_COLOR);
@@ -765,7 +791,15 @@ $(document).ready(function () {
               });
 
               //add value update on modal close
-              $('#' + idEdit).on('hidden.bs.modal', () => {
+              $("#" + idEdit).on("hidden.bs.modal", () => {
+                if(has_answers) {
+                  this.content["answer"] = [];
+                  $("#" + idEdit + " .answer-group").find("input").each((_, el) => {
+                    if(el.value.length == 0) {
+                      el.remove()
+                    }
+                  });
+                }
                 this.content = packFormData(this.content, $("#" + idEdit));
                 try {
                   if (this.text == null) {
@@ -789,7 +823,7 @@ $(document).ready(function () {
                   //add outputs to the activity node according to the answers
                   for (
                     var i = this.output_lines.length - min_outputs;
-                    i < this.content["answer"].length;
+                    i < this.content.answer.length;
                     i++
                   ) {
                     this.draw_output(BUTTON_COLOR);
@@ -968,6 +1002,27 @@ $(document).ready(function () {
         }
       }
 
+      function onMouseOver(event, answers) {
+        if(answers) {
+          var index = event.currentTarget.line_index;
+          var answer = answers[index - 1];
+          if(answer) {
+            var globalPosition = viewport.toWorld(obj.getGlobalPosition())
+            var tooltip = $("#answer-tooltip").append('<button>' + answer + ' </button>');
+            $("#answer-tooltip button").css({
+              top: globalPosition.y + "px",
+              left: globalPosition.x + "px",
+              position: "absolute"
+            });
+          }
+        }
+      }
+
+      function onMouseOut(event) {
+        // reove tooltip
+        $("#answer-tooltip").empty();
+      }
+
       obj
         .on("mousedown", onDragStart)
         .on("touchstart", onDragStart)
@@ -976,6 +1031,11 @@ $(document).ready(function () {
         .on("touchend", onDragEnd)
         .on("touchendoutside", onDragEnd)
         .on("mousemove", onDragMove)
+        .on("mouseover", (event) => {
+          // lambda to preserve class context (lost on constructor funcion call)
+          onMouseOver(event, this.content.answer);
+        })
+        .on("pointerout", onMouseOut)
         .on("touchmove", onDragMove).line_index = this.out.length - 1;
       obj.output_lines = this.output_lines;
       obj.nodeID = this.nodeID;
@@ -1096,14 +1156,16 @@ $(document).ready(function () {
       data.adj.forEach(function (el, _) {
         var from = nodes.get(el.k);
         el.v.forEach(function (val, answerIndex) {
-          var to = nodes.get(val);
-          // start parallel requests to speed up
-          to.ready();
-          from.ready(() => {
-            to.ready(() => {
-              from.addChildActivity(to, answerIndex);
+          if(val != 0) {
+            var to = nodes.get(val);
+            // start parallel requests to speed up
+            to.ready();
+            from.ready(() => {
+              to.ready(() => {
+                from.addChildActivity(to, answerIndex);
+              });
             });
-          });
+          }
         });
       });
       // add root entry point
