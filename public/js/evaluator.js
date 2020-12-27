@@ -3,7 +3,7 @@ function adduser(name, activityID, time, sessionID, username) {
   $("#users")
     .append(`<a href="#" class="list-group-item list-group-item-action border-0" id ="${sessionID}">
     <div class="d-flex align-items-start">
-      <div class="flex-grow-1 ml-3 userInfo">
+      <div class="ml-3 userInfo">
         <div class="d-flex w-100 justify-content-between">
           <h4> ${username} </h4>
           <small class="timer mt-1"> ${time} </small>
@@ -45,7 +45,7 @@ function msToTime(s) {
   s = (s - secs) / 60;
   var mins = s % 60;
   var hrs = (s - mins) / 60;
-  return hrs + " h " + mins + " mins " + secs + " secs";
+  return hrs + " h " + mins + " m " + secs + " s";
 }
 
 const userdata = {};
@@ -100,6 +100,16 @@ socket.on("delete", (data) => {
 });
 
 $(document).ready(function () {
+  $('.chat-messages').css('height', $(window).height() - $('.sticky-footer').height()*1.4 - $('.sticky-top').height()*1.4);
+
+  $('.sticky-footer').css('width', $(window).width() - $('#sidebar').width());
+  console.log($(window).width() - $('#sidebar').width());
+
+
+  $('#sidebarCollapse').on('click', function () {
+      $('#sidebar').toggleClass('active');
+  });
+
   // execute timers every 5 seconds
   var d;
   var now = 0;

@@ -64,6 +64,7 @@
 }.call(this));
 
 $(document).ready(function () {
+  $("#slider").slideUp();
   $(document).on("click", "#close", function (e) {
     var panel = $("#slider");
     if (!panel.hasClass("panel-collapsed")) {
