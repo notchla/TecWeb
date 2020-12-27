@@ -1,7 +1,7 @@
 {{#section "scripts"}}
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
-    <script type='text/javascript' src="/js/includes/html5-qrcode.min.js"> //reader </script>
+    <script type='text/javascript' src="/js/includes/instascan.min.js"> //reader </script>
     <script type='text/javascript' src="/js/includes/qrcode.min.js"> //writer </script>
     <script type='text/javascript' src="/js/scanQR.js"> </script>
 
@@ -11,14 +11,17 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.7.6/handlebars.min.js" integrity="sha512-zT3zHcFYbQwjHdKjCu6OMmETx8fJA9S7E6W7kBeFxultf75OPTYUJigEKX58qgyQMi1m1EgenfjMXlRZG8BXaw==" crossorigin="anonymous"></script>
 
 {{/section }}
+{{!-- mobile-first setting. Correct rendering and font size on mobile --}}
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-<div class="menuContainer">
+<div>
   <nav class="navbar navbar-light bg-light">
     <span class="navbar-brand mb-0 h1 mx-auto"> Home Page</span>
   </nav>
+
   <div class="card card-body text-center mx-auto d-block">
-    <div id="scennerLocation">
-      <div onclick="startQRReader()" type="button">
+    <div id="scenner-location">
+      <div onclick="startQRReader()" type="button" class="btn btn-lg">
         <img src="/images/scanner_logo.png" alt="Press to start QR code scanner." width="30%"> <br>
         <span> Scan a story QR to access the experience. </span>
       </div>

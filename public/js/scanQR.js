@@ -1,45 +1,46 @@
 function startQRReader() {
-  Html5Qrcode.getCameras().then(devices => {
-    if (devices && devices.length) {
-      var cameraId = devices[0].id;
-      const html5QrCode = new Html5Qrcode("scennerLocation");
-      html5QrCode.start(
-      cameraId,
-      {
-        fps: 10,
-        qrbox: 250
+  var height = $("#scenner-location").css.height;
+  $("#scenner-location").empty();
+  $("#scenner-location").append('<video style="width: auto; height: ' + height + ';" id="preview"></video>');
+
+  let scanner = new Instascan.Scanner({
+    continuous: true,
+    video: document.getElementById('preview'),
+    mirror: false,
+    captureImage: false,
+    backgroundScan: true,
+    refractoryPeriod: 5000,
+    scanPeriod: 12 // capture at 10 fps
+  });
+
+  scanner.addListener('scan', function (content) {
+    $.ajax({
+      type: "get",
+      url: "/stories/exists/" + content,
+      crossDomain: true,
+      success: function(data) {
+        if(data.exists == "true") {
+          scanner.stop();
+          window.location = window.location + "stories/get/" + content;
+        } else {
+          alert("story does not exist. Try again.");
+        }
       },
-      qrCodeMessage => {
-        console.log(qrCodeMessage);
-        $.ajax({
-          type: "get",
-          url: "/stories/exists/" + qrCodeMessage,
-          crossDomain: true,
-          success: function(data) {
-            console.log("data");
-            console.log(data);
-            if(data.exists == "true") {
-              html5QrCode.stop();
-              window.location = "http://localhost:3000/stories/" + qrCodeMessage;
-            } else {
-              alert("story does not exist. Try again.");
-            }
-          },
-          error: function(data) {
-            console.log("error");
-            console.log(data);
-            html5QrCode.stop();
-          }
-      })
-      },
-      errorMessage => {
-        // parse error
-      })
-      .catch(err => {
-      // Start failed, handle it. For example,
-      console.log("Unable to start scanning");
-      });
+      error: function(data) {
+        console.log("error");
+        console.log(data);
+        html5QrCode.stop();
+      }
+    });
+  });
+
+  Instascan.Camera.getCameras().then(function (cameras) {
+    if (cameras.length > 0) {
+      scanner.start(cameras[0]);
+    } else {
+      console.error('No cameras found.');
     }
-  }).catch(err => {
+  }).catch(function (e) {
+    console.error(e);
   });
 }
