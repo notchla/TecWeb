@@ -1,39 +1,37 @@
 function adduser(name, activityID, time, sessionID, username) {
   console.log($("users"));
   $("#users")
-    .append(`<a href="#" class="list-group-item list-group-item-action border-0" id ="${sessionID}">
-    <div class="d-flex align-items-start">
+    .append(`<a href="#" style="height:100px;" class="my-1 px-2 list-group-item list-group-item-action border-0" id ="${sessionID}">
       <div class="ml-3 userInfo">
-        <div class="d-flex w-100 justify-content-between">
+        <div class="d-flex justify-content-between">
           <h4> ${username} </h4>
-          <small class="timer mt-1"> ${time} </small>
+          <small class="timer mr-1 mt-1"> ${time} </small>
         </div>
         <div class="ml-2 row">
-          <p class="ml-0 mr-auto" style="font-weight: lighter; color:#666666;">
+          <p class="ml-0 mb-0 mr-auto" style="font-weight: lighter; color:#666666;">
           In story <span style="font-weight: bold;""> ${name} </span> on activity ${activityID}
           </p>
-          <div class="ml-auto mr-3 badge-container"></div>
+          <div class="ml-auto mr-1 mt-3 badge-container"></div>
         </div>
       </div>
-    </div>
   </a>`);
 }
 
 function updateUser(user, name, activityID, time, username) {
   // console.log(user.)
   var info = user.getElementsByClassName("userInfo");
-  $(info).after(`<div class="flex-grow-1 ml-3 userInfo">
+  $(info).after(`<div class="ml-3 userInfo">
     <div class="d-flex w-100 justify-content-between">
       <h4> ${username} </h4>
       <small class="timer mt-1"> ${time} </small>
     </div>
     <div class="ml-2 row">
-      <p class="ml-0 mr-auto" style="font-weight: lighter; color:#666666;">
+      <p class="ml-0 mb-0 mr-auto" style="font-weight: lighter; color:#666666;">
       In story <span style="font-weight: bold;""> ${name} </span> on activity ${activityID}
       </p>
-      <div class="ml-auto mr-3 badge-container"></div>
+      <div class="ml-auto mr-1 mt-3 badge-container"></div>
     </div>
-</div>`);
+  </div>`);
 
   $(info)[0].remove();
 }
@@ -64,29 +62,31 @@ socket.on("populate", (data) => {
   var d = new Date();
   var now = d.getTime();
   data.forEach((user) => {
-    console.log("user", user);
-    var a = document.getElementById(user.sessionID);
+    if(user) {
+      console.log("user", user);
+      var a = document.getElementById(user.sessionID);
 
-    if (a) {
-      console.log("already exists");
-      console.log(a.getElementsByClassName("userInfo"));
-      updateUser(
-        a,
-        user.name,
-        user.activityID,
-        msToTime(now - user.time),
-        user.username ? user.username : "anonymous"
-      );
-    } else {
-      adduser(
-        user.name,
-        user.activityID,
-        msToTime(now - user.time),
-        user.sessionID,
-        user.username ? user.username : "anonymous"
-      );
+      if (a) {
+        console.log("already exists");
+        console.log(a.getElementsByClassName("userInfo"));
+        updateUser(
+          a,
+          user.name,
+          user.activityID,
+          msToTime(now - user.time),
+          user.username ? user.username : "anonymous"
+        );
+      } else {
+        adduser(
+          user.name,
+          user.activityID,
+          msToTime(now - user.time),
+          user.sessionID,
+          user.username ? user.username : "anonymous"
+        );
+      }
+      userdata[user.sessionID] = user;
     }
-    userdata[user.sessionID] = user;
   });
   console.log("userdata", userdata);
 });
@@ -100,10 +100,17 @@ socket.on("delete", (data) => {
 });
 
 $(document).ready(function () {
-  $('.chat-messages').css('height', $(window).height() - $('.sticky-footer').height()*1.4 - $('.sticky-top').height()*1.4);
+  $('.chat-messages').css('height', $(window).height() - $('.sticky-footer').outerHeight() - $('.sticky-top').outerHeight());
+
+  $('#users').css('height', $(window).height() - $('.sidenav-header').outerHeight());
 
   $('.sticky-footer').css('width', $(window).width() - $('#sidebar').width());
-  console.log($(window).width() - $('#sidebar').width());
+
+  $(window).on('resize', function(){
+    $('.chat-messages').css('height', $(window).height() - $('.sticky-footer').outerHeight() - $('.sticky-top').outerHeight());
+    $('#users').css('height', $(window).height() - $('.sidenav-header').outerHeight());
+    $('.sticky-footer').css('width', $(window).width() - $('#sidebar').width());
+  });
 
 
   $('#sidebarCollapse').on('click', function () {
@@ -120,17 +127,15 @@ $(document).ready(function () {
       // update time indicators
       var elapsed = now - user.time;
       var timer = $("#" + user.sessionID + " .timer").text(msToTime(elapsed));
-      if((elapsed > 5 * 60 * 1000) && (!userdata.notified)) {
+      if((elapsed > 1 * 60 * 1000) && (!userdata.notified)) {
         // stuck for long time, add badge
         userdata.notified = true;
-        $("#" + user.sessionID + " .badge-container").prepend('<div class="badge bg-warning">' +
-          '! ! !' +
-        '</div>');
-      } else if ((elapsed < 5 * 60 * 1000)) {
+        $("#" + user.sessionID + " .badge-container").prepend('<div class="badge bg-warning"> ! ! ! </div>');
+      } else if ((elapsed < 1 * 60 * 1000)) {
         // remove badge, proceeded to next activity
         userdata.notified = false;
         $("#" + user.sessionID + " .badge").remove();
       }
     }
-  }, 5);
+  }, 1000);
 });
