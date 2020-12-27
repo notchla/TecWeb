@@ -27,9 +27,7 @@ function startQRReader() {
         }
       },
       error: function(data) {
-        console.log("error");
-        console.log(data);
-        html5QrCode.stop();
+        scanner.stop();
       }
     });
   });

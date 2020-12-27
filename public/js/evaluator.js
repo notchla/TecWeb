@@ -114,6 +114,11 @@ $(document).ready(function () {
 
 
   $('#sidebarCollapse').on('click', function () {
+    if($('#sidebar').hasClass('active')) {
+      $('.chat-messages').css('overflow', 'auto');
+    } else {
+      $('.chat-messages').css('overflow', 'hidden');
+    }
       $('#sidebar').toggleClass('active');
   });
 
