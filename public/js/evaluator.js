@@ -128,7 +128,10 @@ socket.on("setMessages", (data) => {
     }
   });
   // scroll to bottom
-  $(".chat-messages").animate({scrollTop: $(".chat-messages").prop("scrollHeight")}, 700);
+  $(".chat-messages").animate(
+    { scrollTop: $(".chat-messages").prop("scrollHeight") },
+    700
+  );
 });
 
 function show_messages(username, sessionID) {
@@ -171,7 +174,7 @@ socket.on("deliver", (data) => {
   } else {
     var a = document.getElementById(data.session);
     if (a) {
-      var badge = $(".notify-container .badge");
+      var badge = $(`#${data.session} .notify-container .badge`);
       if (badge.length) {
         var number = parseInt(badge[0].innerText);
         badge[0].innerText = number + 1;
@@ -186,7 +189,10 @@ socket.on("deliver", (data) => {
     }
   }
   // scroll to bottom
-  $(".chat-messages").animate({scrollTop: $(".chat-messages").prop("scrollHeight")}, 700);
+  $(".chat-messages").animate(
+    { scrollTop: $(".chat-messages").prop("scrollHeight") },
+    700
+  );
 });
 
 function getMessageText() {
