@@ -280,20 +280,22 @@ $(document).ready(function () {
     d = new Date();
     now = d.getTime();
     for (const [_, user] of Object.entries(userdata)) {
+      console.log("user time", user.time);
       // update time indicators
       var elapsed = now - user.time;
-      var timer = $("#" + user.sessionID + " .timer").text(msToTime(elapsed));
-      if (elapsed > 4 * 60 * 1000 && !userdata.notified) {
+      console.log("elapsed", elapsed);
+      $("#" + user.sessionID + " .timer").text(msToTime(elapsed));
+      if (elapsed > 3 * 60 * 1000 && !user.notified) {
         // stuck for long time, add badge
-        userdata.notified = true;
+        user.notified = true;
         $("#" + user.sessionID + " .warning-container").prepend(
           '<div class="badge bg-warning"> ! ! ! </div>'
         );
-      } else if (elapsed < 4 * 60 * 1000) {
+      } else if (elapsed < 3 * 60 * 1000) {
         // remove badge, proceeded to next activity
-        userdata.notified = false;
+        user.notified = false;
         $("#" + user.sessionID + " .warning-container").empty();
       }
     }
-  }, 1000);
+  }, 5000);
 });
