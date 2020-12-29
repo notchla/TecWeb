@@ -5,19 +5,16 @@
       top: 0;
       width: 100%; /* Full width */
       height: 100%; /* Full height */
-      background-color: rgba(0,0,0,0.1); /* Black w/ opacity */
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
 #myModal.modal > .modal-content {
-      background-color: #fefefe;
-      border: 1px solid #888;
-      width: 80%;
-      height: 60%;
+      border: 1px solid black;
+      width: 85%;
+      height: 70%;
       text-align: center;
-      display: flex;
       align-items: center;
       justify-content: center;
 }

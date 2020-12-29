@@ -100,7 +100,7 @@ function cssForm(id) {
     return cssForm;
 }
 
-function resizeBase64Img(base64, newHeight) {
+function resizeImage(base64, newHeight) {
     return new Promise((resolve, reject)=>{
         var canvas = document.createElement("canvas");
         let context = canvas.getContext("2d");
@@ -119,36 +119,20 @@ function resizeBase64Img(base64, newHeight) {
     });
 }
 
-function upload(type, id) {
-  return new Promise((resolve, reject) => {
-    var idEdit = actToId(type) + id + "-edit-modal"
-    var file = $("#activity-modal-container #" + idEdit + " .image")[0].files[0];
-    if(file) {
-      var reader = new FileReader();
-      reader.onloadend = function () {
-        resizeBase64Img(reader.result, 128).then((result) => {
-          resolve(result);
-        });
-      };
-      reader.readAsDataURL(file);
-    }
-  })
-}
-
 function packFormData(data, formData) {
   // collect all story content by classnames
   var inputs = formData.find("input, textarea, select");
   inputs.each(function (_, el) {
     var classes = el.className.split(" ");
     var id = classes[classes.length - 1];
-    if (id.includes("answer")) {
-      // comma separed answer list
-      data[id] = el.value.split(",");
-      data[id] = data[id].filter((e) => e !== "");
+    if(id.includes("answer")) {
+      if(el.value.length > 0) {
+        data[id].push(el.value);
+      }
     } else if (id.includes("select")) {
       // multiple option select
       data[id] = $(el).children("option:selected").val();
-    } else if(!id.includes("image")){
+    } else if(!id.includes("image") && !id.includes("answer")){
       // everything else
       data[id] = el.value;
     }
@@ -160,63 +144,52 @@ function UNpackFormData(form, oldData, nodeID) {
   // opposite of packFormData, sets input values from the content object array
   var inputs = form.find("input, textarea", "select");
   var data = {};
-  inputs.each(function (_, el) {
-    try {
-      var classes = el.className.split(" ");
-      var id = classes[classes.length - 1];
-      if (id.includes("answer")) {
-        $(el).val(oldData[id].join(","));
-      } else if (id.includes("select")) {
-        $(el).children("option:selected").val(oldData[id]);
-      } else if (id.includes("bgcolor")) {
-        if(oldData[id]){
-          $('#bg-color-picker-' + nodeID).colorpicker({"color": oldData[id]});
+  try {
+    if(oldData.answer) {
+      var modalId = form.attr('id');
+      oldData.answer.forEach((el, _) => {
+        $('#' +  modalId + ' .answer-group')
+        .append('<div class="input-group"><input type="text" value="' + el + '" class="mt-1 form-control answer"/></div>');
+      });
+    }
+    inputs.each(function (_, el) {
+        var classes = el.className.split(" ");
+        var id = classes[classes.length - 1];
+        if (id.includes("select")) {
+          $(el).children("option:selected").val(oldData[id]);
+        } else if (id.includes("bgcolor")) {
+          if(oldData[id]){
+            $('#bg-color-picker-' + nodeID).colorpicker({"color": oldData[id]});
+            $(el).val(oldData[id]);
+          } else {
+            // defaults
+            $('#bg-color-picker-' + nodeID).colorpicker({"color": ""});
+            $(el).val("");
+          }
+        } else if (id.includes("fontcolor")) {
+          if(oldData[id]){
+            $('#font-color-picker-' + nodeID).colorpicker({"color": oldData[id]});
+            $(el).val(oldData[id]);
+          } else {
+            // defaults
+            $('#font-color-picker-' + nodeID).colorpicker({"color": ""});
+            $(el).val("");
+          }
+        } else if (id.includes("color")) {
+          if(oldData[id]){
+            $('#color-picker-' + nodeID).colorpicker({"color": oldData[id]});
+            $(el).val(oldData[id]);
+          } else {
+            // defaults
+            $('#color-picker-' + nodeID).colorpicker({"color": ""});
+            $(el).val("");
+          }
+        } else if(!id.includes("answer")) {
           $(el).val(oldData[id]);
-        } else {
-          // defaults
-          $('#bg-color-picker-' + nodeID).colorpicker({"color": "#DADADAFF"});
-          $(el).val("");
         }
-      }else if (id.includes("fontcolor")) {
-        if(oldData[id]){
-          $('#font-color-picker-' + nodeID).colorpicker({"color": oldData[id]});
-          $(el).val(oldData[id]);
-        } else {
-          // defaults
-          $('#font-color-picker-' + nodeID).colorpicker({"color": "#000000FF"});
-          $(el).val("");
-        }
-      } else if (id.includes("color")) {
-        if(oldData[id]){
-          $('#color-picker-' + nodeID).colorpicker({"color": oldData[id]});
-          $(el).val(oldData[id]);
-        } else {
-          // defaults
-          $('#color-picker-' + nodeID).colorpicker({"color": "#C8C8C8FF"});
-          $(el).val("");
-        }
-      } else {
-        $(el).val(oldData[id]);
-      }
-    } catch (e) {}
-  });
-  return data;
-}
-
-function sendStory(body) {
-  const headers = { "Content-Type": "application/json" };
-  console.log(body);
-  fetch("/stories/registerstory", { method: "post", body, headers })
-    .then((resp) => {
-      // close modal
-      $("#confirm-modal").modal("hide");
-      if (resp.status < 200 || resp.status >= 300)
-        throw new Error(`request failed with status ${resp.status}`);
-      return;
-    })
-    .catch((err) => {
-      console.log(err);
     });
+  } catch (e) {}
+  return data;
 }
 
 function packStory(root) {
@@ -224,15 +197,25 @@ function packStory(root) {
   var adj = new Map();
   // node array
   var nodes = [];
+  // ad root breforehand
   nodes.push(packActivity(root));
-  var nonbuildable = { value: false };
+
+  var nonbuildable = {value : false};
   // data to recontruct tree (pixi graphics objects)
   dfsActivity(root, adj, nodes, nonbuildable);
+
+  for (let [_, v] of adj) {
+    if(v.includes(0)) {
+      nonbuildable.value = true;
+      break;
+    }
+  }
+
   var json = {
     adj: Array.from(adj, ([k, v]) => ({ k, v })),
     nodes: nodes,
   };
-  return [json, false]; //for testing, real value is nonbuildable.value
+  return [json, nonbuildable.value];
 }
 
 function dfsActivity(node, adj, nodes, nonbuildable) {
@@ -240,34 +223,27 @@ function dfsActivity(node, adj, nodes, nonbuildable) {
     for (var element of v) {
       // exclude already visited
       if (!nodes.map((n) => n.id).includes(element.child.nodeID)) {
-        // exclude root (directly child)
+        // exclude root, already added
         nodes.push(packActivity(element.child));
       }
-      // if (node.nodeID != 1) {
-        if (!adj.has(node.nodeID)) {
-          // new entry in the adjacency list, as an array with the size of the answers
-          adj.set(node.nodeID, Array(node.out.length).fill(0));
-        }
-        adj.get(node.nodeID)[element.outLine] = element.child.nodeID;
-      // }
-      // object has more output ports than lines: is not buildable
-      if (node.out.length > Object.entries(node.childs).length) {
-        nonbuildable.value = true;
-      } else {
-        nonbuildable.value = nonbuildable.value || false;
+      if (!adj.has(node.nodeID)) {
+        // new entry in the adjacency list, as an array with the size of the answers
+        adj.set(node.nodeID, Array(node.out.length).fill(0));
       }
 
-      if (
-        Object.keys(element.child.childs).length > 0 &&
-        !adj.has(element.child.nodeID)
-      ) {
-        dfsActivity(element.child, adj, nodes, nonbuildable);
-      } else if (Object.keys(element.child.childs).length == 0) {
+      adj.get(node.nodeID)[element.outLine] = element.child.nodeID;
+
+      if (Object.keys(element.child.childs).length == 0) {
         if (element.child.out.length > 0) {
           nonbuildable.value = true;
         } else {
           nonbuildable.value = nonbuildable.value || false;
         }
+      } else if (
+        Object.keys(element.child.childs).length > 0 &&
+        !adj.has(element.child.nodeID)
+      ) {
+        dfsActivity(element.child, adj, nodes, nonbuildable);
       }
     }
   }
@@ -523,7 +499,6 @@ $(document).ready(function () {
       this.isReady = false;
       // waiting callback stack, one stack each activity
       this.waiting = [];
-      this.answerIndex = 0;
       this.content = {};
 
       // -------- event handlers --------
@@ -636,20 +611,35 @@ $(document).ready(function () {
               var modalBody = data.data.form;
               var min_outputs = data.data.min_outputs;
               var outputs = data.data.outputs;
+              var has_answers = data.data.has_answers;
               var has_file = data.data.has_file;
               var has_score = data.data.has_score;
 
               // modal creation
 
               var cssCustomForm = '<label> Activity specific custom css </label>' + cssForm(this.nodeID);
-              if(this.type == "root") {
+              if(this.type == "root" || this.type == "end") {
                 cssCustomForm = "";
+              }
+
+              if(has_answers) {
+                modalBody +=
+                  '<br>' +
+                  '<div class="answer">' +
+                    '<div class="m-0">' +
+                      '<label class="col-form-label"> Answers </label>' +
+                      '<button type="button" class="mt-1 float-right btn btn-secondary add-answer"> Add new answer </button>' +
+                    '</div>' +
+                    '<div class="answer-group m-0">' +
+                    '</div>' +
+                  '</div>' +
+                  '<br>';
               }
 
               if(has_file) {
                   modalBody += '<label class="col-form-label"> Enter image </label> ' +
                   '<div class="d-flex flex-row">' +
-                    '<input type="file" class="form-control image"></input>' +
+                    '<input type="file" class="p-1 form-control image"></input>' +
                     '<div class="img-container float-right"></div>' +
                   '</div>' +
                   '<label class="col-form-label"> Enter alternative image text </label> ' +
@@ -696,18 +686,37 @@ $(document).ready(function () {
                 "</div>";
 
               $("#activity-modal-container").append(modal);
+              if(has_answers) {
+                // add answer only to the current activity
+                $('#' + idEdit + ' .add-answer').click(() => {
+                  $('#' + idEdit + ' .answer-group').append('<div class="input-group"><input type="text" class="mt-1 form-control answer"/></div>');
+                });
+              }
 
               // add image to content
               if(has_file) {
                 $("#activity-modal-container #" + idEdit + " .image").on("change", () => {
-                  upload(this.type, this.nodeID).then((result) => {
+                  (new Promise((resolve, reject) => {
+                    var file = $("#activity-modal-container #" + idEdit + " .image")[0].files[0];
+                    if(file) {
+                      var reader = new FileReader();
+                      reader.onloadend = function () {
+                        resizeImage(reader.result, 128).then((result) => {
+                          resolve(result);
+                        });
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  })).then((result) => {
                     this.content["image"] = result;
                     // update thumbnail
                     try{
-                      var img = '<img src="' + this.content.image + '" style="max-height: 40px; max-width: auto;"' +
-                              'class="rounded">';
-                      $("#activity-modal-container #" + idEdit + " .img-container").empty();
-                      $("#activity-modal-container #" + idEdit + " .img-container").append(img);
+                      if(this.content.image.length > 0) {
+                        var img = '<img src="' + this.content.image + '" style="max-height: 40px; max-width: auto;"' +
+                                'class="rounded">';
+                        $("#activity-modal-container #" + idEdit + " .img-container").empty();
+                        $("#activity-modal-container #" + idEdit + " .img-container").append(img);
+                      }
                     } catch(e) {}
                   });
                 });
@@ -722,61 +731,75 @@ $(document).ready(function () {
               }
               // rebuild old node
               if (this.oldNode !== undefined) {
-                this.content = this.oldNode.content;
-                if(has_file) {
-                  // update thumbnail
-                  try{
-                    var img = '<img src="' + this.content.image + '" style="max-height: 40px; max-width: auto;"' +
-                            'class="rounded">';
-                    $("#activity-modal-container #" + idEdit + " .img-container").empty();
-                    $("#activity-modal-container #" + idEdit + " .img-container").append(img);
-                  } catch(e) {}
-                }
-                try {
-                  var short = this.content["question"].substring(0,17) + "...";
-                  this.text = new PIXI.Text(short, {
-                    fontFamily: FONT,
-                    fill: TEXT_COLOR,
-                    fontSize: 14,
-                  });
-                  this.text.anchor.set(0.5, 0.5);
-                  this.text.position.set(
-                    this.graphics.width / 2,
-                    this.graphics.height / 2
-                  );
-                  this.graphics.addChild(this.text);
-                } catch (e) {}
-                UNpackFormData($("#" + idEdit), this.oldNode.content, this.nodeID);
-                // refill form with old data
-                try {
-                  for (
-                    var i = 0;
-                    i < this.oldNode.content["answer"].length;
-                    i++
-                  ) {
-                    this.draw_output(BUTTON_COLOR);
+                if (this.oldNode.content !== undefined) {
+                  this.content = this.oldNode.content;
+                  if(has_file) {
+                    // update thumbnail
+                    try{
+                      if(this.content.image.length > 0) {
+                        var img = '<img src="' + this.content.image + '" style="max-height: 40px; max-width: auto;"' +
+                                'class="rounded">';
+                        $("#activity-modal-container #" + idEdit + " .img-container").empty();
+                        $("#activity-modal-container #" + idEdit + " .img-container").append(img);
+                      }
+                    } catch(e) {}
                   }
-                } catch (e) {}
+                  try {
+                    var short = this.content["question"].substring(0,17) + "...";
+                    this.text = new PIXI.Text(short, {
+                      fontFamily: FONT,
+                      fill: TEXT_COLOR,
+                      fontSize: 14,
+                    });
+                    this.text.anchor.set(0.5, 0.5);
+                    this.text.position.set(
+                      this.graphics.width / 2,
+                      this.graphics.height / 2
+                    );
+                    this.graphics.addChild(this.text);
+                  } catch (e) {}
+                  UNpackFormData($("#" + idEdit), this.content, this.nodeID);
+                  // refill form with old data
+                  try {
+                    for (
+                      var i = 0;
+                      i < this.content.answer.length;
+                      i++
+                    ) {
+                      this.draw_output(BUTTON_COLOR);
+                    }
+                  } catch (e) {}
+                } else {
+                  $('#color-picker-' + this.nodeID).colorpicker({"color": ""});
+                  $('#bg-color-picker-' + this.nodeID).colorpicker({"color": ""});
+                  $('#font-color-picker-' + this.nodeID).colorpicker({"color": ""});
+                }
+
                 // position has to be set after all children have been added
                 this.rect.position.set(this.oldNode.x, this.oldNode.y);
               } else {
-                // set position to new center (not overlapping the navbar)
+                // fallback position to new center (not overlapping the navbar)
                 this.rect.position.set(
                   10,
                   $("#main-navbar").innerHeight() + 10
                 );
-                // after adding to modal
-                $('#color-picker-' + this.nodeID).colorpicker({"color": "#C8C8C8FF"});
-                $('#bg-color-picker-' + this.nodeID).colorpicker({"color": "#DADADAFF"});
-                $('#font-color-picker-' + this.nodeID).colorpicker({"color": "#000000FF"});
               }
 
+              // after adding to modal
               $("#" + idEdit + "-button").click(() => {
                 $("#" + idEdit).modal("hide");
               });
 
               //add value update on modal close
-              $('#' + idEdit).on('hidden.bs.modal', () => {
+              $("#" + idEdit).on("hidden.bs.modal", () => {
+                if(has_answers) {
+                  this.content["answer"] = [];
+                  $("#" + idEdit + " .answer-group").find("input").each((_, el) => {
+                    if(el.value.length == 0) {
+                      el.remove()
+                    }
+                  });
+                }
                 this.content = packFormData(this.content, $("#" + idEdit));
                 try {
                   if (this.text == null) {
@@ -800,7 +823,7 @@ $(document).ready(function () {
                   //add outputs to the activity node according to the answers
                   for (
                     var i = this.output_lines.length - min_outputs;
-                    i < this.content["answer"].length;
+                    i < this.content.answer.length;
                     i++
                   ) {
                     this.draw_output(BUTTON_COLOR);
@@ -979,6 +1002,27 @@ $(document).ready(function () {
         }
       }
 
+      function onMouseOver(event, answers) {
+        if(answers) {
+          var index = event.currentTarget.line_index;
+          var answer = answers[index - 1];
+          if(answer) {
+            var globalPosition = viewport.toWorld(obj.getGlobalPosition())
+            var tooltip = $("#answer-tooltip").append('<button>' + answer + ' </button>');
+            $("#answer-tooltip button").css({
+              top: globalPosition.y + "px",
+              left: globalPosition.x + "px",
+              position: "absolute"
+            });
+          }
+        }
+      }
+
+      function onMouseOut(event) {
+        // reove tooltip
+        $("#answer-tooltip").empty();
+      }
+
       obj
         .on("mousedown", onDragStart)
         .on("touchstart", onDragStart)
@@ -987,6 +1031,11 @@ $(document).ready(function () {
         .on("touchend", onDragEnd)
         .on("touchendoutside", onDragEnd)
         .on("mousemove", onDragMove)
+        .on("mouseover", (event) => {
+          // lambda to preserve class context (lost on constructor funcion call)
+          onMouseOver(event, this.content.answer);
+        })
+        .on("pointerout", onMouseOut)
         .on("touchmove", onDragMove).line_index = this.out.length - 1;
       obj.output_lines = this.output_lines;
       obj.nodeID = this.nodeID;
@@ -1036,9 +1085,9 @@ $(document).ready(function () {
       this.parents = {};
     }
 
-    addChildActivity(activityTo) {
+    addChildActivity(activityTo, answerIndex) {
       if (activityTo) {
-        var positionFrom = this.out[this.answerIndex].getGlobalPosition();
+        var positionFrom = this.out[answerIndex].getGlobalPosition();
         var positionTo = activityTo.input[0].getGlobalPosition();
 
         var line = new Line(
@@ -1048,15 +1097,14 @@ $(document).ready(function () {
         );
         viewport.addChild(line);
 
-        this.output_lines[this.answerIndex] = line;
-        activityTo.input_lines.push(this.output_lines[this.answerIndex]);
+        this.output_lines[answerIndex] = line;
+        activityTo.input_lines.push(this.output_lines[answerIndex]);
         this.insertChild(
           this,
-          this.answerIndex,
+          answerIndex,
           activityTo.input_lines.length - 1,
           activityTo
         );
-        this.answerIndex++;
       }
     }
   }
@@ -1107,15 +1155,17 @@ $(document).ready(function () {
       // rebuild old connections
       data.adj.forEach(function (el, _) {
         var from = nodes.get(el.k);
-        el.v.forEach(function (val, _) {
-          var to = nodes.get(val);
-          // start parallel requests to speed up
-          to.ready();
-          from.ready(() => {
-            to.ready(() => {
-              from.addChildActivity(to);
+        el.v.forEach(function (val, answerIndex) {
+          if(val != 0) {
+            var to = nodes.get(val);
+            // start parallel requests to speed up
+            to.ready();
+            from.ready(() => {
+              to.ready(() => {
+                from.addChildActivity(to, answerIndex);
+              });
             });
-          });
+          }
         });
       });
       // add root entry point
@@ -1171,11 +1221,11 @@ $(document).ready(function () {
     $("#published").prop("checked", false);
 
     $('#color-picker-0').colorpicker({"color": "#C8C8C8FF"});
-    $("#confirm-modal .modal-body #color-form .color").val("");
+    $("#confirm-modal .modal-body #color-form .color").val("#C8C8C8FF");
     $('#bg-color-picker-0').colorpicker({"color": "#DADADAFF"});
-    $("#confirm-modal .modal-body #color-form .bgcolor").val("");
+    $("#confirm-modal .modal-body #color-form .bgcolor").val("#DADADAFF");
     $('#font-color-picker-0').colorpicker({"color": "#000000FF"});
-    $("#confirm-modal .modal-body #color-form .fontcolor").val("");
+    $("#confirm-modal .modal-body #color-form .fontcolor").val("#000000FF");
 
     $("#confirm-modal .modal-body #font-form .font").val("");
     $("#confirm-modal .modal-body #font-form .font-style").val("");
@@ -1213,6 +1263,22 @@ $(document).ready(function () {
       },
       error: function (data) {},
     });
+  }
+
+  function sendStory(body) {
+    const headers = { "Content-Type": "application/json" };
+    console.log(body);
+    fetch("/stories/registerstory", { method: "post", body, headers })
+      .then((resp) => {
+        // close modal
+        $("#confirm-modal").modal("hide");
+        if (resp.status < 200 || resp.status >= 300)
+          throw new Error(`request failed with status ${resp.status}`);
+        return;
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   }
 
   var invisible =
@@ -1336,9 +1402,9 @@ $(document).ready(function () {
     $("#main-modal").modal("hide");
     resetScene();
     // set default color
-    $('#color-picker-0').colorpicker({"color": "#C8C8C8FF"});
-    $('#bg-color-picker-0').colorpicker({"color": "#DADADAFF"});
-    $('#font-color-picker-0').colorpicker({"color": "#000000FF"});
+    $('#color-picker-0').colorpicker({"color": ""});
+    $('#bg-color-picker-0').colorpicker({"color": ""});
+    $('#font-color-picker-0').colorpicker({"color": ""});
     // add root back
     root = new Activity("root");
     root.ready();

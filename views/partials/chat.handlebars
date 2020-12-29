@@ -1,4 +1,10 @@
-<div class="chat_window">
+<style>
+@media only screen and (max-width: 760px) {
+   .chat_window { width: 100%; }
+}
+</style>
+
+<div class="chat_window" style="height: auto">
   <div class="top_menu">
     <div class="buttons">
       <div class="button minimize close" id="close"></div>
@@ -7,7 +13,7 @@
       Chat
     </div>
   </div>
-  <div id="slider">
+  <div id="slider" class="panel-collapsed">
     <ul class="messages"></ul>
     <div class="bottom_wrapper clearfix">
       <div class="message_input_wrapper">
