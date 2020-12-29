@@ -1,3 +1,6 @@
+#messages {
+  min-height: 800px;
+}
 .chat-online {
   color: #34ce57;
 }

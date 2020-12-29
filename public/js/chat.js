@@ -44,6 +44,26 @@
         300
       );
     };
+
+    var receiveMessage = function (text) {
+      var $messages, message;
+      if (text.trim() === "") {
+        return;
+      }
+
+      $(".message_input").val("");
+      $messages = $(".messages");
+      message_side = "left";
+      message = new Message({
+        text: text,
+        message_side: message_side,
+      });
+      message.draw();
+      return $messages.animate(
+        { scrollTop: $messages.prop("scrollHeight") },
+        300
+      );
+    };
     $(".send_message").click(function (e) {
       console.log(getMessageText());
       return sendMessage(getMessageText());
@@ -52,6 +72,11 @@
       if (e.which === 13) {
         return sendMessage(getMessageText());
       }
+    });
+
+    socket.on("deliver", (data) => {
+      console.log(data);
+      receiveMessage(data);
     });
     // sendMessage("Hello Philip! :)");
     // setTimeout(function () {
