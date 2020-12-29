@@ -144,7 +144,6 @@ function UNpackFormData(form, oldData, nodeID) {
   // opposite of packFormData, sets input values from the content object array
   var inputs = form.find("input, textarea", "select");
   var data = {};
-  try {
     if(oldData.answer) {
       var modalId = form.attr('id');
       oldData.answer.forEach((el, _) => {
@@ -156,39 +155,42 @@ function UNpackFormData(form, oldData, nodeID) {
         var classes = el.className.split(" ");
         var id = classes[classes.length - 1];
         if (id.includes("select")) {
-          $(el).children("option:selected").val(oldData[id]);
+          try {
+            $(el).children("option:selected").val(oldData[id]);
+          } catch(e) {}
         } else if (id.includes("bgcolor")) {
-          if(oldData[id]){
+          if(oldData[id] != ""){
             $('#bg-color-picker-' + nodeID).colorpicker({"color": oldData[id]});
             $(el).val(oldData[id]);
           } else {
             // defaults
-            $('#bg-color-picker-' + nodeID).colorpicker({"color": ""});
+            $('#bg-color-picker-' + nodeID).colorpicker({"color": "#FFFFFFFF"});
             $(el).val("");
           }
         } else if (id.includes("fontcolor")) {
-          if(oldData[id]){
+          if(oldData[id] != ""){
             $('#font-color-picker-' + nodeID).colorpicker({"color": oldData[id]});
             $(el).val(oldData[id]);
           } else {
             // defaults
-            $('#font-color-picker-' + nodeID).colorpicker({"color": ""});
+            $('#font-color-picker-' + nodeID).colorpicker({"color": "#FFFFFFFF"});
             $(el).val("");
           }
         } else if (id.includes("color")) {
-          if(oldData[id]){
+          if(oldData[id] != ""){
             $('#color-picker-' + nodeID).colorpicker({"color": oldData[id]});
             $(el).val(oldData[id]);
           } else {
             // defaults
-            $('#color-picker-' + nodeID).colorpicker({"color": ""});
+            $('#color-picker-' + nodeID).colorpicker({"color": "#FFFFFFFF"});
             $(el).val("");
           }
         } else if(!id.includes("answer")) {
-          $(el).val(oldData[id]);
+          try {
+            $(el).val(oldData[id]);
+          } catch(e) {}
         }
     });
-  } catch (e) {}
   return data;
 }
 
@@ -769,12 +771,7 @@ $(document).ready(function () {
                       this.draw_output(BUTTON_COLOR);
                     }
                   } catch (e) {}
-                } else {
-                  $('#color-picker-' + this.nodeID).colorpicker({"color": ""});
-                  $('#bg-color-picker-' + this.nodeID).colorpicker({"color": ""});
-                  $('#font-color-picker-' + this.nodeID).colorpicker({"color": ""});
                 }
-
                 // position has to be set after all children have been added
                 this.rect.position.set(this.oldNode.x, this.oldNode.y);
               } else {
@@ -783,6 +780,14 @@ $(document).ready(function () {
                   10,
                   $("#main-navbar").innerHeight() + 10
                 );
+              }
+              if(Object.keys(this.content).length === 0 && this.content.constructor === Object) {
+                $('#color-picker-' + this.nodeID).colorpicker({"color": "#FFFFFFFF"});
+                $("#activity-modal-container #" + idEdit + " .color").val("");
+                $('#bg-color-picker-' + this.nodeID).colorpicker({"color": "#FFFFFFFF"});
+                $("#activity-modal-container #" + idEdit + " .bgcolor").val("");
+                $('#font-color-picker-' + this.nodeID).colorpicker({"color": "#FFFFFFFF"});
+                $("#activity-modal-container #" + idEdit + " .fontcolor").val("");
               }
 
               // after adding to modal
