@@ -13,7 +13,8 @@ function adduser(name, activityID, time, sessionID, username) {
           <p class="ml-0 mb-0 mr-auto" style="font-weight: lighter; color:#666666;">
           In story <span style="font-weight: bold;""> ${name} </span> on activity ${activityID}
           </p>
-          <div class="ml-auto mr-1 mt-3 badge-container"></div>
+          <div class="ml-auto mr-1 mt-3 warning-container"></div>
+          <div class="ml-auto mr-3 mt-3 notify-container"></div>
         </div>
       </div>
   </a>`);
@@ -31,7 +32,8 @@ function updateUser(user, name, activityID, time, username) {
       <p class="ml-0 mb-0 mr-auto" style="font-weight: lighter; color:#666666;">
       In story <span style="font-weight: bold;""> ${name} </span> on activity ${activityID}
       </p>
-      <div class="ml-auto mr-1 mt-3 badge-container"></div>
+      <div class="ml-auto mr-1 mt-3 warning-container"></div>
+      <div class="ml-auto mr-3 mt-3 notify-container"></div>
     </div>
   </div>`);
 
@@ -125,10 +127,14 @@ socket.on("setMessages", (data) => {
       </div>`);
     }
   });
-  // console.log(data);
+  // scroll to bottom
+  $(".chat-messages").animate({scrollTop: $(".chat-messages").prop("scrollHeight")}, 700);
 });
 
 function show_messages(username, sessionID) {
+  // close toolbar on user click
+  $("#sidebar").removeClass("active");
+
   $("#send_message").prop("disabled", false);
   $("#message_input").prop("disabled", false);
   socket.emit("getMessages", { sessionID });
@@ -143,9 +149,9 @@ function show_messages(username, sessionID) {
 </div>`);
 
   var a = document.getElementById(sessionID);
-  var badge = a.getElementsByClassName("badge");
+  var badge = a.getElementsByClassName("notify-container");
   if (badge.length) {
-    $(badge[0]).remove();
+    $(badge).empty();
   }
   activeSession = sessionID;
   return false;
@@ -165,20 +171,22 @@ socket.on("deliver", (data) => {
   } else {
     var a = document.getElementById(data.session);
     if (a) {
-      var badge = a.getElementsByClassName("badge");
+      var badge = $(".notify-container .badge");
       if (badge.length) {
         var number = parseInt(badge[0].innerText);
         badge[0].innerText = number + 1;
       }
       //badge not present
       else {
-        var div = a.getElementsByClassName("d-flex")[0];
-        $(div).prepend(`<div class="badge bg-success float-right">
+        var div = a.getElementsByClassName("notify-container")[0];
+        $(div).prepend(`<div class="badge bg-success">
         1
       </div>`);
       }
     }
   }
+  // scroll to bottom
+  $(".chat-messages").animate({scrollTop: $(".chat-messages").prop("scrollHeight")}, 700);
 });
 
 function getMessageText() {
@@ -240,7 +248,8 @@ $(document).ready(function () {
       "height",
       $(window).height() -
         $(".sticky-footer").outerHeight() -
-        $(".sticky-top").outerHeight()
+        $(".sticky-top").outerHeight() -
+        $(".chat-messages").css("padding-bottom")
     );
     $("#users").css(
       "height",
@@ -268,16 +277,16 @@ $(document).ready(function () {
       // update time indicators
       var elapsed = now - user.time;
       var timer = $("#" + user.sessionID + " .timer").text(msToTime(elapsed));
-      if (elapsed > 1 * 60 * 1000 && !userdata.notified) {
+      if (elapsed > 4 * 60 * 1000 && !userdata.notified) {
         // stuck for long time, add badge
         userdata.notified = true;
-        $("#" + user.sessionID + " .badge-container").prepend(
+        $("#" + user.sessionID + " .warning-container").prepend(
           '<div class="badge bg-warning"> ! ! ! </div>'
         );
-      } else if (elapsed < 1 * 60 * 1000) {
+      } else if (elapsed < 4 * 60 * 1000) {
         // remove badge, proceeded to next activity
         userdata.notified = false;
-        $("#" + user.sessionID + " .badge").remove();
+        $("#" + user.sessionID + " .warning-container").empty();
       }
     }
   }, 1000);

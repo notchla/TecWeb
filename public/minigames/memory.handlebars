@@ -8,9 +8,9 @@ Global Styles
 }
 
 /* border box fix */
-*,
-*::before,
-*::after {
+.main-container,
+.main-container::before,
+.main-container::after {
 	box-sizing: inherit;
 }
 
@@ -20,10 +20,6 @@ Global Styles
 
 body {
 	/*one Em roughly ten pixels (16 x 62.5% = 10)*/
-	font-size: 62.5%;
-	letter-spacing: 1.5px;
-	margin: 0;
-	text-align: center;
   overflow:hidden;
   height:100vh;
 }
@@ -34,6 +30,7 @@ body {
 	align-items: center;
 	flex-direction: column;
 	margin-top: 0.5em;
+	font-size: 55%;
 }
 
 ul > li {

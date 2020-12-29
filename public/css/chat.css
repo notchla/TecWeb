@@ -51,7 +51,8 @@
   padding: 20px 10px 0 10px;
   margin: 0;
   height: 351px;
-  overflow: scroll;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 .messages .message {
   clear: both;
