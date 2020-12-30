@@ -92,24 +92,6 @@ async function loadTemplates(data) {
   });
 }
 
-$(document).ready(function () {
-  var name = window.location.href.split("/");
-  name = name[name.length - 1];
-  $.get(`/stories/json/${name}`).then(
-    async function (data) {
-      counter = CounterClass(data.pages);
-      story_data = data;
-      await loadTemplates(data);
-      // add story wide css
-      addBaseCSS(data)
-      updateContent(data.nodes[counter.get()]);
-    },
-    function () {
-      alert("error in loading data");
-    }
-  );
-});
-
 function addBaseCSS(data) {
   baseCSS = {
     color: "",
@@ -259,3 +241,30 @@ const socket = io("http://localhost:8000", {
 });
 
 socket.emit("registerUser", {});
+
+
+
+$(document).ready(function () {
+  var name = window.location.href.split("/");
+  name = name[name.length - 1];
+  // add qr code to canvas
+  writeQR(name);
+  // set download source
+  $("#qr-download-btn").click(() => {
+    $("#qr-download-btn").attr("href", $("#newqr img").attr("src"));
+  });
+
+  $.get(`/stories/json/${name}`).then(
+    async function (data) {
+      counter = CounterClass(data.pages);
+      story_data = data;
+      await loadTemplates(data);
+      // add story wide css
+      addBaseCSS(data)
+      updateContent(data.nodes[counter.get()]);
+    },
+    function () {
+      alert("error in loading data");
+    }
+  );
+});

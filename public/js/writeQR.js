@@ -1,11 +1,9 @@
-//immediatly create the qr code for the current story
-$(document).ready(function() {
-  var textcode = window.location.href.split("/")
-  textcode = textcode[textcode.length - 1];
-  document.getElementById("newqr").innerHTML = "";
-  var qrcode = new QRCode(document.getElementById("newqr"), {
+function writeQR(textcode) {
+  $("#newqr").append('<div id="' + textcode + '-qr-image"> </div>');
+  limit = Math.min($(document).width(), $(document).height());
+  var qrcode = new QRCode(document.getElementById(textcode + "-qr-image"), {
     text: textcode,
-    width: $(document).width()*0.80,
-    height: $(document).width()*0.80
+    width: limit*0.80,
+    height: limit*0.80
   });
-})
+}

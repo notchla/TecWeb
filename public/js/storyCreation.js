@@ -1312,6 +1312,7 @@ $(document).ready(function () {
         $("#list-stories").empty();
         data.stories.forEach(function (story) {
           if (story.title) {
+            writeQR(story.title);
             var storyEntry =
               '<div id="' +
               story.title +
@@ -1329,11 +1330,22 @@ $(document).ready(function () {
               storyEntry += invisible;
             }
             storyEntry += "</div>";
-
+            // delete button
             storyEntry +=
               "<button id=" +
               story.title +
-              '-delete" type="button" class="btn btn-danger float-right"> Delete </button>' +
+              '-delete" type="button" class="btn btn-danger float-right"> Delete </button>';
+            // download qr button
+            storyEntry +=
+              '<a id="' +
+              story.title +
+              '-qr" class="mr-2 btn btn-secondary float-right"' +
+              'download="' +
+              story.title +
+              '_qr" href="">' +
+              '<img id="' +
+              story.title +
+              '-qr1" src="/images/qr_logo.png" alt="Press to show QR code for this story" height="24" > </a>' +
               "</div>";
             $("#list-stories").append(storyEntry);
             //TODO delete button prompts to remove selected story
@@ -1399,6 +1411,10 @@ $(document).ready(function () {
         storyList();
         $("#main-modal").modal("show");
       });
+    } else if (e.target.id.includes("-qr")) {
+      var storyname = e.target.id.replace('"', "").split('-')[0];
+      console.log($("#newqr #" + storyname + "-qr-image img").attr("src"));
+      $("#" + storyname + "-qr").attr("href", $("#newqr #" + storyname + "-qr-image img").attr("src"));
     }
   });
 
