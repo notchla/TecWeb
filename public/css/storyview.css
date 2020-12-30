@@ -18,3 +18,9 @@
       align-items: center;
       justify-content: center;
 }
+
+#result-id {
+  margin: auto;
+  font-weight: bold;
+  display: inline-block;
+}
