@@ -107,7 +107,7 @@ socket.on("setMessages", (data) => {
   data.forEach((msg) => {
     if (msg.side === "left") {
       $("#messages").append(`<div class="chat-message-left pb-4">
-      <div class="flex-shrink-1 bg-light rounded py-2 px-3 ml-3">
+      <div class="flex-shrink-1 bg-messages rounded py-2 px-3 ml-3">
         <div class="font-weight-bold mb-1">
           ${msg.username || "anonymous"}
         </div>
@@ -120,7 +120,7 @@ socket.on("setMessages", (data) => {
           <img src="https://bootdey.com/img/Content/avatar/avatar1.png" class="rounded-circle mr-1" alt="Chris Wood" width="40" height="40">
           <div class="text-muted small text-nowrap mt-2">2:41 am</div>
         </div>
-        <div class="flex-shrink-1 bg-light rounded py-2 px-3 mr-3">
+        <div class="flex-shrink-1 bg-messages rounded py-2 px-3 mr-3">
           <div class="font-weight-bold mb-1">You</div>
           ${msg.text}.
         </div>
@@ -145,8 +145,8 @@ function show_messages(username, sessionID) {
   console.log(username);
   $("#messages").empty();
   $("#active").empty();
-  $("#active").append(`<div class="flex-grow-1 pl-3">
-  <strong>
+  $("#active").append(`<div class="flex-grow-1 pl-3 ml-3">
+  <strong class="text-white">
     ${username}
   </strong>
 </div>`);
@@ -164,7 +164,7 @@ socket.on("deliver", (data) => {
   console.log("delivered", data);
   if (data.session == activeSession) {
     $("#messages").append(`<div class="chat-message-left pb-4">
-    <div class="flex-shrink-1 bg-light rounded py-2 px-3 ml-3">
+    <div class="flex-shrink-1 bg-messages rounded py-2 px-3 ml-3">
       <div class="font-weight-bold mb-1">
         ${data.username || "anonymous"}
       </div>
@@ -215,7 +215,7 @@ function sendMessage(text) {
     <img src="https://bootdey.com/img/Content/avatar/avatar1.png" class="rounded-circle mr-1" alt="Chris Wood" width="40" height="40">
     <div class="text-muted small text-nowrap mt-2">2:41 am</div>
   </div>
-  <div class="flex-shrink-1 bg-light rounded py-2 px-3 mr-3">
+  <div class="flex-shrink-1 bg-messages rounded py-2 px-3 mr-3">
     <div class="font-weight-bold mb-1">You</div>
     ${text}.
   </div>
@@ -257,6 +257,7 @@ $(document).ready(function () {
         $(".sticky-top").outerHeight() -
         $(".chat-messages").css("padding-bottom")
     );
+
     $("#users").css(
       "height",
       $(window).height() - $(".sidenav-header").outerHeight()

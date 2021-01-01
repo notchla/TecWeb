@@ -37,7 +37,11 @@ function updateContent(data) {
     var js = `/minigames/${data.content.select}.js`;
     addGameScript(js);
   }
-  var html = template(context);
+  if(type != "end") {
+    var html = template(context);
+  } else {
+    var html = template({total: total_score});
+  }
   document.getElementById("entry-template").innerHTML = html;
   var js = `/js/helpers/${type}.js`;
 
@@ -62,11 +66,14 @@ function updateContent(data) {
 
   applyCSS(css);
 
-  var name = window.location.href.split("/");//storyname
+  var name = window.location.href.split("/"); //storyname
   name = name[name.length - 1];
   activityID = story_data.nodes[current_node].id;
   //socket
   socket.emit("transition", { name, activityID, time: new Date().getTime() });
+
+  // update score
+  $("#scorepoints").text(" " + total_score);
 }
 
 //load all the templates used in the story
@@ -253,6 +260,16 @@ $(document).ready(function () {
   $("#qr-download-btn").click(() => {
     $("#qr-download-btn").attr("href", $("#newqr img").attr("src"));
   });
+
+  $("#collapseQR-button").click(() => {
+    if($("#collapseQR").hasClass("show")) {
+      $("#score-show").css("display", "block");
+    } else {
+      $("#score-show").css("display", "none");
+    }
+  });
+
+
 
   $.get(`/stories/json/${name}`).then(
     async function (data) {

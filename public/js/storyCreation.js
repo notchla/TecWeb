@@ -127,12 +127,17 @@ function packFormData(data, formData) {
     var id = classes[classes.length - 1];
     if(id.includes("answer")) {
       if(el.value.length > 0) {
-        data[id].push(el.value);
+        var score = $(el).siblings()[0].value;
+        if(!score || score.lenght == 0) {
+          score = "0";
+        }
+        data["answer"].push(el.value);
+        data["answerscore"].push(score);
       }
     } else if (id.includes("select")) {
       // multiple option select
-      data[id] = $(el).children("option:selected").val();
-    } else if(!id.includes("image") && !id.includes("answer")){
+      data["select"] = $(el).children("option:selected").val();
+    } else if(!id.includes("image") && !id.includes("answer") && !id.includes("anscore")){
       // everything else
       data[id] = el.value;
     }
@@ -146,9 +151,12 @@ function UNpackFormData(form, oldData, nodeID) {
   var data = {};
     if(oldData.answer) {
       var modalId = form.attr('id');
-      oldData.answer.forEach((el, _) => {
-        $('#' +  modalId + ' .answer-group')
-        .append('<div class="input-group"><input type="text" value="' + el + '" class="mt-1 form-control answer"/></div>');
+      oldData.answer.forEach((el, i) => {
+        $('#' + modalId + ' .answer-group')
+        .append('<div class="mt-2 ml-1 row input-group">' +
+        '<input placeholder="Answer" type="text" value="' + el + '" class="col-14 form-control mr-1 answer"/>' +
+        '<input placeholder="Score" value="' + oldData.answerscore[i] + '" class="col-2 form-control anscore"></input>' +
+        '</div>');
       });
     }
     inputs.each(function (_, el) {
@@ -185,7 +193,7 @@ function UNpackFormData(form, oldData, nodeID) {
             $('#color-picker-' + nodeID).colorpicker({"color": "#FFFFFFFF"});
             $(el).val("");
           }
-        } else if(!id.includes("answer")) {
+        } else if(!id.includes("answer") && !id.includes("anscore")) {
           try {
             $(el).val(oldData[id]);
           } catch(e) {}
@@ -411,9 +419,10 @@ $(document).ready(function () {
   // activity that was clicked on for the context menu
   var contextActivity;
 
-  var FONT = "Arial";
-  var TITLE_COLOR = "red";
+  var FONT = "Helvetica";
+  var TITLE_COLOR = "white";
   var TEXT_COLOR = "white";
+  var ACTIVITY_COLOR = 0x069999;
   var BUTTON_COLOR = 0x5dbcd2;
   var BUTTON_COLOR_2 = 0xffbcd2;
   var BLOCK_WIDTH = 200;
@@ -435,7 +444,7 @@ $(document).ready(function () {
       var height = BLOCK_HEIGHT;
       this.graphics.interactive = true;
       this.graphics.lineStyle(2, 0x000000, 1);
-      this.graphics.beginFill(BUTTON_COLOR);
+      this.graphics.beginFill(ACTIVITY_COLOR);
       this.graphics.drawRect(0, 0, width, height, 15);
       this.graphics.endFill();
       var title = new PIXI.Text(type.toUpperCase(), {
@@ -629,7 +638,7 @@ $(document).ready(function () {
                   '<br>' +
                   '<div class="answer">' +
                     '<div class="m-0">' +
-                      '<label class="col-form-label"> Answers </label>' +
+                      '<label class="mb-3 col-form-label"> Answers </label>' +
                       '<button type="button" class="mt-1 float-right btn btn-secondary add-answer"> Add new answer </button>' +
                     '</div>' +
                     '<div class="answer-group m-0">' +
@@ -691,7 +700,10 @@ $(document).ready(function () {
               if(has_answers) {
                 // add answer only to the current activity
                 $('#' + idEdit + ' .add-answer').click(() => {
-                  $('#' + idEdit + ' .answer-group').append('<div class="input-group"><input type="text" class="mt-1 form-control answer"/></div>');
+                  $('#' + idEdit + ' .answer-group').append('<div class="mt-2 ml-1 row input-group">' +
+                  '<input placeholder="Answer" type="text" class="col-14 form-control mr-1 answer"/>' +
+                  '<input placeholder="Score" class="col-2 form-control anscore"></input>' +
+                  '</div>');
                 });
               }
 
@@ -799,6 +811,7 @@ $(document).ready(function () {
               $("#" + idEdit).on("hidden.bs.modal", () => {
                 if(has_answers) {
                   this.content["answer"] = [];
+                  this.content["answerscore"] = [];
                   $("#" + idEdit + " .answer-group").find("input").each((_, el) => {
                     if(el.value.length == 0) {
                       el.remove()

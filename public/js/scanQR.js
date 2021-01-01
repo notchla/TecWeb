@@ -1,7 +1,6 @@
 function startQRReader() {
-  var height = $("#scenner-location").css.height;
-  $("#scenner-location").empty();
-  $("#scenner-location").append('<video style="width: auto; height: ' + height + ';" id="preview"></video>');
+  var height = ($(window).height() - $(".navbar").outerHeight()) / 3.2;
+  $("#scenner-location").html('<video style="width: auto; height: ' + height + 'px;" id="preview"></video>');
 
   let scanner = new Instascan.Scanner({
     continuous: true,

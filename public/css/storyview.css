@@ -1,3 +1,8 @@
+body {
+  overflow: hidden;
+  font-family: 'Helvetica', 'Arial', sans-serif;
+}
+
 #myModal.modal {
       position: fixed; /* Stay in place */
       left: 0;

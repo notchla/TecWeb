@@ -4,6 +4,7 @@
     <script type='text/javascript' src="/js/includes/instascan.min.js"> //reader </script>
     <script type='text/javascript' src="/js/includes/qrcode.min.js"> //writer </script>
     <script type='text/javascript' src="/js/scanQR.js"> </script>
+    <script type='text/javascript' src="/js/home.js"> </script>
 
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
@@ -15,18 +16,36 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <div>
-  <nav class="navbar navbar-light bg-light">
-    <span class="navbar-brand mb-0 h1 mx-auto"> Home Page</span>
+  <nav class="navbar navbar-light bg-dark">
+    <span class="navbar-brand mb-0 h1 mx-auto text-white"> Home Page</span>
   </nav>
 
-  <div class="card card-body text-center mx-auto d-block">
-    <div id="scenner-location">
-      <div onclick="startQRReader()" type="button" class="btn btn-lg">
-        <img src="/images/scanner_logo.png" alt="Press to start QR code scanner." width="30%"> <br>
-        <span> Scan a story QR to access the experience. </span>
+  <div class="container-fluid" style="background-color:#001f3f;">
+    <div class="row text-center card" style="background-color:#2a8860;">
+      <div class="btn btn-lg p-0 m-0" type="button" class="d-flex flex-row mx-auto" id="scenner-location" onclick="startQRReader()">
+        <div>
+          <img class="mt-1" style="filter: invert(1);" src="/images/scanner_logo.png" alt="Press to start QR code scanner." > <br>
+          <span class="text-white ml-auto mr-auto" style="width: 100vw; position:absolute; bottom: 8px; left: 0px;"> Scan a QR to access a story </span>
+        </div>
       </div>
     </div>
-  </div>
+    <div class="row text-center card mt-2" style="background-color:#069999;">
+      <a class="btn btn-lg p-2" type="button" class="d-flex flex-row mx-auto" href="/createstory">
+        <div>
+          <img style="filter: invert(1);" class="mb-4" src="/images/edit_logo.png" alt="Press to start QR code scanner." > <br>
+          <span class="text-white ml-auto mr-auto" style="width: 100vw; position:absolute; bottom: 8px; left: 0px;"> Create a new story </span>
+        </div>
+      </a>
+    </div>
+    <div class="row text-center card mt-2" style="background-color:#888888;">
+      <a class="btn btn-lg p-2" type="button" class="d-flex flex-row mx-auto" href="/evaluator">
+        <div>
+          <img class="mt-1" style="filter: invert(1);" class="mb-4" src="/images/lens_logo.png" alt="Press to start QR code scanner." > <br>
+          <span class="text-white ml-auto mr-auto" style="width: 100vw; position:absolute; bottom: 8px; left: 0px;"> Supervise the current users </span>
+        </div>
+      </a>
+    </div>
+</div>
 
   <div class="card card-body">
     <div class="list-group" id="storiesList">

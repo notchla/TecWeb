@@ -4,3 +4,4 @@ access.log
 .credentials.*
 idea-pixi.txt
 .vscode
+results
