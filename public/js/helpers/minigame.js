@@ -6,9 +6,9 @@ function activity_checker() {
     if (points > parseInt(story_data.nodes[current_node].content.minscore, 10)) {
       // won
       index = 1;
-      total_score  += 5;
+      total_score  += story_data.nodes[current_node].content.wonscore;
     } else {
-      total_score += 1
+      total_score += story_data.nodes[current_node].content.lostscore;
     }
     const adjIndex = getAdjIndex();
     const adj = story_data.adj[adjIndex];

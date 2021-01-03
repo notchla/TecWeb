@@ -636,7 +636,7 @@ $(document).ready(function () {
               if(has_answers) {
                 modalBody +=
                   '<br>' +
-                  '<div class="answer">' +
+                  '<div>' +
                     '<div class="m-0">' +
                       '<label class="mb-3 col-form-label"> Answers </label>' +
                       '<button type="button" class="mt-1 float-right btn btn-secondary add-answer"> Add new answer </button>' +
@@ -813,8 +813,11 @@ $(document).ready(function () {
                   this.content["answer"] = [];
                   this.content["answerscore"] = [];
                   $("#" + idEdit + " .answer-group").find("input").each((_, el) => {
-                    if(el.value.length == 0) {
-                      el.remove()
+                    if($(el).hasClass("answer")) {
+                      if(el.value.length == 0) {
+                        // remove answer and score if answer is empty
+                        $(el).parent().remove();
+                      }
                     }
                   });
                 }
@@ -842,6 +845,16 @@ $(document).ready(function () {
                   for (
                     var i = this.output_lines.length - min_outputs;
                     i < this.content.answer.length;
+                    i++
+                  ) {
+                    this.draw_output(BUTTON_COLOR);
+                  }
+                } catch (e) {}
+                try {
+                  //add outputs to the activity node according to the answers
+                  for (
+                    var i = this.output_lines.length - min_outputs;
+                    i < this.content.groups;
                     i++
                   ) {
                     this.draw_output(BUTTON_COLOR);
