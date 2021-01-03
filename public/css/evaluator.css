@@ -47,6 +47,11 @@ html {
   color: #34ce57;
 }
 
+.disabled-message {
+  pointer-events: none;
+  opacity: 0.4;
+}
+
 .chat-offline {
   color: #e4606d;
 }

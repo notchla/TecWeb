@@ -63,6 +63,7 @@ const register = (socket) => {
     userSockets.push(socket);
     socket.type = "user";
     socket.messages = [];
+    socket.validation = {};
     // handlers.saveActiveUser(session.userName, session.sessionID, "", 0);
   });
 
@@ -142,7 +143,7 @@ const register = (socket) => {
       results[data.sessionID].transitions = []
       results[data.sessionID].transitions.push(data)
     }
-    
+
     // console.log(util.inspect(results, false, null, true /* enable colors */))
   });
 
@@ -183,6 +184,7 @@ const register = (socket) => {
       var evalIndex = indexEvaluatorSocket(socket.request.session.sessionID);
       if (evalIndex > -1) {
         evaluatorSockets[evalIndex].emit("setMessages", user.messages);
+        evaluatorSockets[evalIndex].emit("requestValidation", user.validation);
       }
       // evaluatorSockets.forEach((sock) =>
       //   sock.emit("setMessages", user.messages)
@@ -201,7 +203,7 @@ const register = (socket) => {
     data.totalTime = msToTime(totalTime);
     data.totalPoints = totalPoints;
     data.activities = {}
-    
+
     for (let index = 0; index < result.transitions.length - 1; index++) {
       const activity = result.transitions[index];
       data.activities[activity.activityID] = {"time" : msToTime(time[index]), "points" : points[0]}
@@ -223,7 +225,31 @@ const register = (socket) => {
       console.log(name, " saved")
       socket.emit("show-result-id", id)
     })
-  })
+  });
+
+  socket.on("requestValidation", (data) => {
+    var index = indexUserSocket(socket.request.session.sessionID);
+
+    if (index > -1) {
+      data.username = socket.request.session.userName;
+      data.session = socket.request.session.sessionID;
+      data.side = "left";
+      userSockets[index].validation = data;
+    }
+    console.log("validate", data);
+    evaluatorSockets.forEach((sock) => sock.emit("requestValidation", data));
+  });
+
+  socket.on("returnValidation", (data) => {
+    var index = indexUserSocket(data.session);
+
+    if (index > -1) {
+      // remove
+      userSockets[index].validation = {};
+      userSockets[index].emit("returnValidation", data);
+    }
+    console.log("validation", data);
+  });
 
 };
 

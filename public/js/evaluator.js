@@ -116,10 +116,6 @@ socket.on("setMessages", (data) => {
     </div>`);
     } else if (msg.side == "right") {
       $("#messages").append(`<div class="chat-message-right mb-4">
-        <div>
-          <img src="https://bootdey.com/img/Content/avatar/avatar1.png" class="rounded-circle mr-1" alt="Chris Wood" width="40" height="40">
-          <div class="text-muted small text-nowrap mt-2">2:41 am</div>
-        </div>
         <div class="flex-shrink-1 bg-messages rounded py-2 px-3 mr-3">
           <div class="font-weight-bold mb-1">You</div>
           ${msg.text}.
@@ -159,6 +155,71 @@ function show_messages(username, sessionID) {
   activeSession = sessionID;
   return false;
 }
+
+function validateAnswer(won, caller, session) {
+  var evaluation = {}
+
+  // message element is 3 levels over the button
+  var message = caller.parent().parent().parent();
+  message.addClass("disabled-message");
+
+  evaluation.session = session;
+
+  if(won) {
+    evaluation.index = 1;
+  } else {
+    evaluation.index = 0;
+  }
+  // the score is in the previous element with class score, relative to the caller (buttons)
+  evaluation.score = caller.prev('.score').val();
+
+  socket.emit("returnValidation", evaluation);
+}
+
+socket.on("requestValidation", (data) => {
+  console.log("validate", data);
+  if (data.session == activeSession) {
+    $("#messages").append(`<div class="chat-message-left pb-4">
+    <div class="flex-shrink-1 bg-messages rounded py-2 px-3 ml-3">
+      <div class="font-weight-bold mb-1">
+        ${data.username || "anonymous"}
+      </div>
+      <span>
+        The user is requesting evaluation for the activity ${data.activity}.
+        <br/>
+        The submitted answer is: ${data.answer[0]}
+      </span>
+      <br/>
+      <img class="ml-5 mr-auto mt-3 center-block img-fluid rounded" src= ${data.answer[1]}>
+      <div class="input-group mt-3 mb-1">
+        <input type="text" class="mr-2 form-control score" placeholder="Score"/>
+        <button type="button" class="form-control btn btn-success" onclick="return validateAnswer(true, $(this), '${data.session}')"> Good </button>
+        <button type="button" class="form-control btn btn-warning" onclick="return validateAnswer(false, $(this), '${data.session}')"> Bad </button>
+      </div>
+  </div>`);
+  } else {
+    var a = document.getElementById(data.session);
+    if (a) {
+      var badge = $(`#${data.session} .notify-container .badge`);
+      if (badge.length) {
+        var number = parseInt(badge[0].innerText);
+        badge[0].innerText = number + 1;
+      }
+      //badge not present
+      else {
+        var div = a.getElementsByClassName("notify-container")[0];
+        $(div).prepend(`<div class="badge bg-success">
+        1
+      </div>`);
+      }
+    }
+  }
+  // scroll to bottom
+  $(".chat-messages").animate(
+    { scrollTop: $(".chat-messages").prop("scrollHeight") },
+    700
+  );
+});
 
 socket.on("deliver", (data) => {
   console.log("delivered", data);
@@ -211,10 +272,6 @@ function sendMessage(text) {
   $("#message_input").val("");
 
   $("#messages").append(`<div class="chat-message-right mb-4">
-  <div>
-    <img src="https://bootdey.com/img/Content/avatar/avatar1.png" class="rounded-circle mr-1" alt="Chris Wood" width="40" height="40">
-    <div class="text-muted small text-nowrap mt-2">2:41 am</div>
-  </div>
   <div class="flex-shrink-1 bg-messages rounded py-2 px-3 mr-3">
     <div class="font-weight-bold mb-1">You</div>
     ${text}.
@@ -274,7 +331,7 @@ $(document).ready(function () {
     $("#sidebar").toggleClass("active");
   });
 
-  // execute timers every 5 seconds
+  // execute timers every second
   var d;
   var now = 0;
   var t = setInterval(() => {
@@ -298,5 +355,5 @@ $(document).ready(function () {
         $("#" + user.sessionID + " .warning-container").empty();
       }
     }
-  }, 5000);
+  }, 1000);
 });

@@ -1,29 +1,35 @@
 <div id="myModal" class="modal">
   <div class="modal-content">
-    <span id="content" aria-label="Question">
+    <span class="mb-3" id="content" aria-label="Question">
       {{question}}
     </span>
-    <form class="form-horizontal" role="form" id="response">
-      <div class="input-group mb-3">
+      <div class="form-group m-3 mt-2">
         <input
           type="text"
           class="form-control"
-          placeholder="Response :"
-          aria-label="Response"
+          placeholder="Response"
+          aria-label="Text response"
           aria-describedby="button-addon2"
           id="response-text"
         />
-        <div class="input-group-append">
-          <button
-            class="btn btn-outline-secondary"
-            type="submit"
-            aria-label="Submit answer"
-            id="button-addon2"
-          >
-            Submit
-          </button>
+        <input class="form-control mt-2 p-1" id="response-image" type="file" accept="image/*;capture=camera" aria-label="Image response (opens camera)">
+        <div class="mt-2">
+          <div class="float-right input-group-append">
+            <button
+              class="btn btn-outline-secondary"
+              aria-label="Submit answer"
+              id="response-button"
+            >
+              Submit
+            </button>
+          </div>
+          <div class="float-left mt-2">
+            <span
+            id="wait-here">
+          </span>
         </div>
-      </div>
-    </form>
+        </div>
+    </div>
+    <div id="preview-img"> </div>
   </div>
 </div>

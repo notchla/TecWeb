@@ -44,7 +44,7 @@ const fs = require("fs");
 
 const morgan = require("morgan");
 
-const socketHandler = require("./socketHanlder");
+const socketHandler = require("./socketHandler");
 
 require("./db");
 
