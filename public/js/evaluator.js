@@ -147,6 +147,12 @@ function show_messages(username, sessionID) {
   </strong>
 </div>`);
 
+  $("#results-button").remove()
+  if(userdata[sessionID].completed){
+    var info = userdata[sessionID].completed
+    $("#active-user-navbar").append(`<button id="results-button" type="button" class="btn btn-info" onclick="return downloads_results('${info.results_id}')">Results!</button>`);
+  }
+
   var a = document.getElementById(sessionID);
   var badge = a.getElementsByClassName("notify-container");
   if (badge.length) {
@@ -279,6 +285,38 @@ function sendMessage(text) {
 </div>`);
 }
 
+//trigger download in the browser
+function downloadObjectAsJson(exportObj, exportName){
+  var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
+  var downloadAnchorNode = document.createElement('a');
+  downloadAnchorNode.setAttribute("href",     dataStr);
+  downloadAnchorNode.setAttribute("download", exportName);
+  document.body.appendChild(downloadAnchorNode); // required for firefox
+  downloadAnchorNode.click();
+  downloadAnchorNode.remove();
+}
+
+function downloads_results(results_id){
+  $.get(`/results/${results_id}.json`).then((results) => {
+    console.log("results", results)
+    downloadObjectAsJson(results, results_id+".json")
+  }).catch(() => alert("error fetching results, try again"))
+}
+
+socket.on("create-results", (data) => {
+  userdata[data.userid].completed = data;
+  console.log("results created", data)
+  if(activeSession == data.userid){
+    console.log("active user has completed")
+    var info = userdata[data.userid].completed
+    $("#results-button").remove()
+    $("#active-user-navbar").append(`<button id="results-button" type="button" class="btn btn-info" onclick="return downloads_results('${info.results_id}')">Results!</button>`);
+
+  }
+
+
+})
+
 $(document).ready(function () {
   $("#send_message").prop("disabled", true);
   $("#message_input").prop("disabled", true);
@@ -338,10 +376,10 @@ $(document).ready(function () {
     d = new Date();
     now = d.getTime();
     for (const [_, user] of Object.entries(userdata)) {
-      console.log("user time", user.time);
+      // console.log("user time", user.time);
       // update time indicators
       var elapsed = now - user.time;
-      console.log("elapsed", elapsed);
+      // console.log("elapsed", elapsed);
       $("#" + user.sessionID + " .timer").text(msToTime(elapsed));
       if (elapsed > 3 * 60 * 1000 && !user.notified) {
         // stuck for long time, add badge

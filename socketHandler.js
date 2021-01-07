@@ -185,6 +185,9 @@ const register = (socket) => {
       if (evalIndex > -1) {
         evaluatorSockets[evalIndex].emit("setMessages", user.messages);
         evaluatorSockets[evalIndex].emit("requestValidation", user.validation);
+        if(user.completed){
+          evaluatorSockets[evalIndex].emit("create-results", user.completed)
+        }
       }
       // evaluatorSockets.forEach((sock) =>
       //   sock.emit("setMessages", user.messages)
@@ -198,7 +201,7 @@ const register = (socket) => {
     data = {}
     data.id = result.transitions[0].sessionID
     data.name = result.transitions[0].name
-    data.username = result.transitions[0].username;
+    data.username = result.transitions[0].username || "anonymous";
     var {time, totalTime, points, totalPoints} = getUserResults(result.transitions)
     data.totalTime = msToTime(totalTime);
     data.totalPoints = totalPoints;
@@ -225,6 +228,16 @@ const register = (socket) => {
       console.log(name, " saved")
       socket.emit("show-result-id", id)
     })
+
+    var user_results = {userid: socket.request.session.sessionID, results_id : id};
+
+    var index = indexUserSocket(socket.request.session.sessionID);
+
+    if(index > -1){
+      userSockets[index].completed = user_results;
+    }
+
+    evaluatorSockets.forEach((sock) => sock.emit("create-results", user_results))
   });
 
   socket.on("requestValidation", (data) => {
