@@ -21,11 +21,11 @@ var minigames = {};
 var current_adj = 0;
 var current_node = 0;
 // default story wide css
-var baseCSS = {}
+var baseCSS = {};
 
-function updateContent(data) {
+function updateContent(data, score = 0) {
   var type = data.type;
-  if(type == "root") {
+  if (type == "root") {
     // handle root as description
     type = "description";
   }
@@ -37,10 +37,10 @@ function updateContent(data) {
     var js = `/minigames/${data.content.select}.js`;
     addGameScript(js);
   }
-  if(type != "end") {
+  if (type != "end") {
     var html = template(context);
   } else {
-    var html = template({total: total_score});
+    var html = template({ total: total_score });
   }
   document.getElementById("entry-template").innerHTML = html;
   var js = `/js/helpers/${type}.js`;
@@ -52,8 +52,8 @@ function updateContent(data) {
     fontcolor: "",
     font: "",
     style: "",
-    size: ""
-  }
+    size: "",
+  };
   try {
     // add css
     css.color = context.color;
@@ -70,7 +70,12 @@ function updateContent(data) {
   name = name[name.length - 1];
   activityID = story_data.nodes[current_node].id;
   //socket
-  socket.emit("transition", { name, activityID, time: new Date().getTime() });
+  socket.emit("transition", {
+    name,
+    activityID,
+    time: new Date().getTime(),
+    score,
+  });
 
   // update score
   $("#scorepoints").text(" " + total_score);
@@ -83,7 +88,7 @@ async function loadTemplates(data) {
     var games = [];
     data.nodes.forEach((element) => {
       var type = element.type;
-      if(element.type == "root") {
+      if (element.type == "root") {
         // handle root as description
         type = "desctiption";
       }
@@ -106,28 +111,28 @@ function addBaseCSS(data) {
     fontcolor: "",
     font: "",
     style: "",
-    size: ""
-  }
-  if(data.css) {
+    size: "",
+  };
+  if (data.css) {
     baseCSS = data.css;
   }
   // rollback defaults
-  if(baseCSS.color === "" || !baseCSS.color) {
-    baseCSS.color =  '#C8C8C8FF';
+  if (baseCSS.color === "" || !baseCSS.color) {
+    baseCSS.color = "#C8C8C8FF";
   }
-  if(baseCSS.bgcolor === "" || !baseCSS.bgcolor) {
-    baseCSS.bgcolor =  '#DADADAFF';
+  if (baseCSS.bgcolor === "" || !baseCSS.bgcolor) {
+    baseCSS.bgcolor = "#DADADAFF";
   }
-  if(baseCSS.fontcolor === "" || !baseCSS.fontcolor) {
-    baseCSS.fontcolor =  '#000000FF';
+  if (baseCSS.fontcolor === "" || !baseCSS.fontcolor) {
+    baseCSS.fontcolor = "#000000FF";
   }
-  if(baseCSS.font === "" || !baseCSS.font) {
-    baseCSS.font =  '"Times New Roman", Times, serif';
+  if (baseCSS.font === "" || !baseCSS.font) {
+    baseCSS.font = '"Times New Roman", Times, serif';
   }
-  if(baseCSS.style === "" || !baseCSS.style) {
+  if (baseCSS.style === "" || !baseCSS.style) {
     baseCSS.style = "normal";
   }
-  if(baseCSS.size === "" || !baseCSS.size) {
+  if (baseCSS.size === "" || !baseCSS.size) {
     baseCSS.size = "26px";
   }
 }
@@ -190,22 +195,22 @@ function applyCSS(css) {
   $("#myModal").css("font-family", baseCSS.font);
   $("#myModal").css("font-style", baseCSS.style);
 
-  if(css.bgcolor !== "") {
+  if (css.bgcolor !== "") {
     $("#myModal").css("background-color", css.bgcolor);
   }
-  if(css.color !== "") {
+  if (css.color !== "") {
     $(".modal-content").css("background-color", css.color);
   }
-  if(css.fontcolor !== "") {
+  if (css.fontcolor !== "") {
     $("#myModal").css("color", css.fontcolor);
   }
-  if(css.font !== "") {
+  if (css.font !== "") {
     $("#myModal").css("font-family", css.font);
   }
-  if(css.style !== "") {
+  if (css.style !== "") {
     $("#myModal").css("font-style", css.style);
   }
-  if(css.size !== "") {
+  if (css.size !== "") {
     $("#myModal").css("font-size", css.size);
   }
 }
@@ -249,8 +254,6 @@ const socket = io("http://localhost:8000", {
 
 socket.emit("registerUser", {});
 
-
-
 $(document).ready(function () {
   var name = window.location.href.split("/");
   name = name[name.length - 1];
@@ -262,14 +265,12 @@ $(document).ready(function () {
   });
 
   $("#collapseQR-button").click(() => {
-    if($("#collapseQR").hasClass("show")) {
+    if ($("#collapseQR").hasClass("show")) {
       $("#score-show").css("display", "block");
     } else {
       $("#score-show").css("display", "none");
     }
   });
-
-
 
   $.get(`/stories/json/${name}`).then(
     async function (data) {
@@ -277,7 +278,7 @@ $(document).ready(function () {
       story_data = data;
       await loadTemplates(data);
       // add story wide css
-      addBaseCSS(data)
+      addBaseCSS(data);
       updateContent(data.nodes[counter.get()]);
     },
     function () {

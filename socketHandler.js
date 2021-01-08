@@ -1,14 +1,14 @@
-const util = require("util") //for deep console.log
+const util = require("util"); //for deep console.log
 const fs = require("fs");
 
-const resultsPath = "./public/results/"
+const resultsPath = "./public/results/";
 
-var {nanoid} = require("nanoid")
+var { nanoid } = require("nanoid");
 
 const userSockets = [];
 const evaluatorSockets = [];
 
-const results = {}
+const results = {};
 
 function indexUserSocket(id) {
   var index = userSockets.findIndex(
@@ -26,12 +26,13 @@ function indexEvaluatorSocket(id) {
   return index;
 }
 
-function deleteResults(id){
+function deleteResults(id) {
   delete results[id];
 }
 
-function getUserResults(result){
-  const time = []
+function getUserResults(result) {
+  console.log("result", result);
+  const time = [];
   const points = [];
   var totalTime = 0;
   var totalPoints = 0;
@@ -42,10 +43,11 @@ function getUserResults(result){
     var diff = next.time - current.time;
     time.push(diff);
     totalTime += diff;
-    points.push(0)
+    totalPoints += current.score;
+    points.push(current.score);
   }
 
-  return {time, totalTime, points, totalPoints};
+  return { time, totalTime, points, totalPoints };
 }
 
 function msToTime(s) {
@@ -97,7 +99,7 @@ const register = (socket) => {
         evaluatorSockets.forEach((evaluator) => {
           evaluator.emit("delete", socket.request.session.sessionID);
         });
-        deleteResults(socket.request.session.sessionID)
+        deleteResults(socket.request.session.sessionID);
         return;
       }
     }
@@ -135,13 +137,12 @@ const register = (socket) => {
     dataArray.push(data);
     evaluatorSockets.forEach((socket) => socket.emit("populate", dataArray));
 
-    if(results[data.sessionID]){
-      results[data.sessionID].transitions.push(data)
-    }
-    else{
+    if (results[data.sessionID]) {
+      results[data.sessionID].transitions.push(data);
+    } else {
       results[data.sessionID] = {};
-      results[data.sessionID].transitions = []
-      results[data.sessionID].transitions.push(data)
+      results[data.sessionID].transitions = [];
+      results[data.sessionID].transitions.push(data);
     }
 
     // console.log(util.inspect(results, false, null, true /* enable colors */))
@@ -185,8 +186,8 @@ const register = (socket) => {
       if (evalIndex > -1) {
         evaluatorSockets[evalIndex].emit("setMessages", user.messages);
         evaluatorSockets[evalIndex].emit("requestValidation", user.validation);
-        if(user.completed){
-          evaluatorSockets[evalIndex].emit("create-results", user.completed)
+        if (user.completed) {
+          evaluatorSockets[evalIndex].emit("create-results", user.completed);
         }
       }
       // evaluatorSockets.forEach((sock) =>
@@ -195,49 +196,66 @@ const register = (socket) => {
     }
   });
 
-  socket.on("end", data => {
-    data = {}
+  socket.on("end", (data) => {
+    data = {};
     const result = results[socket.request.session.sessionID];
-    data = {}
-    data.id = result.transitions[0].sessionID
-    data.name = result.transitions[0].name
+    data = {};
+    data.id = result.transitions[0].sessionID;
+    data.name = result.transitions[0].name;
     data.username = result.transitions[0].username || "anonymous";
-    var {time, totalTime, points, totalPoints} = getUserResults(result.transitions)
+    var { time, totalTime, points, totalPoints } = getUserResults(
+      result.transitions
+    );
     data.totalTime = msToTime(totalTime);
     data.totalPoints = totalPoints;
-    data.activities = {}
+    data.activities = {};
 
     for (let index = 0; index < result.transitions.length - 1; index++) {
       const activity = result.transitions[index];
-      data.activities[activity.activityID] = {"time" : msToTime(time[index]), "points" : points[0]}
+      data.activities[activity.activityID] = {
+        time: msToTime(time[index]),
+        points: points[index],
+      };
     }
 
-    console.log(util.inspect(results[socket.request.session.sessionID], false, null, true /* enable colors */))
-    console.log(data)
+    console.log(
+      util.inspect(
+        results[socket.request.session.sessionID],
+        false,
+        null,
+        true /* enable colors */
+      )
+    );
+    console.log(data);
 
     var id = nanoid(10);
     var name = resultsPath + id + ".json";
 
-    const json = JSON.stringify(data)
+    const json = JSON.stringify(data);
 
     // if the server is started with nodemon this reload the server !!!
     fs.writeFile(name, json, (err) => {
-      if(err) {
+      if (err) {
         console.log(err);
       }
-      console.log(name, " saved")
-      socket.emit("show-result-id", id)
-    })
+      console.log(name, " saved");
+      socket.emit("show-result-id", id);
+    });
 
-    var user_results = {userid: socket.request.session.sessionID, results_id : id};
+    var user_results = {
+      userid: socket.request.session.sessionID,
+      results_id: id,
+    };
 
     var index = indexUserSocket(socket.request.session.sessionID);
 
-    if(index > -1){
+    if (index > -1) {
       userSockets[index].completed = user_results;
     }
 
-    evaluatorSockets.forEach((sock) => sock.emit("create-results", user_results))
+    evaluatorSockets.forEach((sock) =>
+      sock.emit("create-results", user_results)
+    );
   });
 
   socket.on("requestValidation", (data) => {
@@ -263,7 +281,6 @@ const register = (socket) => {
     }
     console.log("validation", data);
   });
-
 };
 
 module.exports = register;

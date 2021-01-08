@@ -10,6 +10,6 @@ function activity_checker() {
     // add score before calling the update
     total_score += 1;
 
-    updateContent(story_data.nodes[nodeIndex]);
+    updateContent(story_data.nodes[nodeIndex], 1);
   });
 }
