@@ -311,7 +311,6 @@ const register = (socket) => {
       // notify all users that group is full
       groups[data.name].forEach((sessionID, _) => {
         var index = indexUserSocket(sessionID);
-        console.log(index)
         userSockets[index].emit("lobbyFull", {});
       });
       delete groups[data.name];
