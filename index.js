@@ -136,6 +136,8 @@ app.get("/minigames/get/:gamename", handlers.loadGame);
 
 app.get("/evaluator", handlers.evaluator);
 
+app.get("/evaluator/players", handlers.players);
+
 app.use(handlers.notFound); // need to be after all others routing handlers
 
 app.use(handlers.serverError); //called when a function throws a new Error() and nothing intercept it

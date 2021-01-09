@@ -14,7 +14,7 @@ function adduser(name, activityID, time, sessionID, username) {
           In story <span style="font-weight: bold;""> ${name} </span> on activity ${activityID}
           </p>
           <div class="ml-auto mr-1 mt-3 warning-container"></div>
-          <div class="ml-auto mr-3 mt-3 notify-container"></div>
+          <div class="ml-auto mr-4 mt-3 notify-container"></div>
         </div>
       </div>
   </a>`);
@@ -33,7 +33,7 @@ function updateUser(user, name, activityID, time, username) {
       In story <span style="font-weight: bold;""> ${name} </span> on activity ${activityID}
       </p>
       <div class="ml-auto mr-1 mt-3 warning-container"></div>
-      <div class="ml-auto mr-3 mt-3 notify-container"></div>
+      <div class="ml-auto mr-4 mt-3 notify-container"></div>
     </div>
   </div>`);
 
@@ -214,7 +214,7 @@ socket.on("requestValidation", (data) => {
       //badge not present
       else {
         var div = a.getElementsByClassName("notify-container")[0];
-        $(div).prepend(`<div class="badge bg-success">
+        $(div).prepend(`<div class="badge bg-info">
         1
       </div>`);
       }
@@ -249,7 +249,7 @@ socket.on("deliver", (data) => {
       //badge not present
       else {
         var div = a.getElementsByClassName("notify-container")[0];
-        $(div).prepend(`<div class="badge bg-success">
+        $(div).prepend(`<div class="badge bg-info">
         1
       </div>`);
       }
@@ -313,7 +313,14 @@ socket.on("create-results", (data) => {
     $("#active-user-navbar").append(`<button id="results-button" type="button" class="btn btn-info" onclick="return downloads_results('${info.results_id}')">Results!</button>`);
 
   }
-
+  // badges
+  $("#" + data.userid + " .warning-container").remove();
+  var a = document.getElementById(data.userid);
+  var div = a.getElementsByClassName("notify-container")[0];
+  $(div).after(`<div class="badge bg-success mr-3 ml-auto">
+    Done!
+  </div>`);
+  $("#" + data.userid + " .notify-container").remove();
 
 })
 
