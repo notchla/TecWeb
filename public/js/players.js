@@ -12,8 +12,6 @@ function drawChart(context, filename) {
   var ctx = document.getElementById("chart-" + filename).getContext('2d');
   ctx.canvas.width  = $("#" + filename + " .data").outerWidth();
   ctx.canvas.height = $("#" + filename + " .data").outerWidth() * 0.6;
-
-  console.log(dataPoints)
   var chart = new Chart(ctx, {
     type: 'line',
     data: {
@@ -38,4 +36,5 @@ function drawChart(context, filename) {
 $(document).ready(function () {
   $(".description").css("width", $(window).innerWidth() * 0.3);
   $(".data").css("width", $(window).innerWidth() * 0.6);
+  $("#accordion").css("margin-top", $("nav").outerHeight());
 });
