@@ -10,6 +10,8 @@ const evaluatorSockets = [];
 
 const results = {};
 
+const groups = {};
+
 function indexUserSocket(id) {
   var index = userSockets.findIndex(
     (sock) => sock.request.session.sessionID === id
@@ -196,6 +198,18 @@ const register = (socket) => {
     }
   });
 
+  socket.on("changeName", (data) => {
+    // change both the name on the user socket and on the result array
+    const index = userSockets.findIndex(
+      (sock) =>
+        sock.request.session.sessionID === data.sessionID
+    );
+    if (index > -1) {
+      userSockets[index].request.session.userName = data.newName;
+    }
+    results[data.sessionID].transitions[0].username = data.newName;
+  });
+
   socket.on("end", (data) => {
     data = {};
     const result = results[socket.request.session.sessionID];
@@ -280,6 +294,28 @@ const register = (socket) => {
       userSockets[index].emit("returnValidation", data);
     }
     console.log("validation", data);
+  });
+
+  socket.on("joinGroup", (data) => {
+    var index = indexUserSocket(socket.request.session.sessionID);
+    if(!groups[data.name]) {
+      groups[data.name] = [];
+    }
+    groups[data.name].push(socket.request.session.sessionID);
+    // send lobbyFull only to the dest user
+    userSockets[index].emit("inGroup", {
+      index: groups[data.name].length - 1
+    });
+
+    if(groups[data.name].length == data.groupsize) {
+      // notify all users that group is full
+      groups[data.name].forEach((sessionID, _) => {
+        var index = indexUserSocket(sessionID);
+        console.log(index)
+        userSockets[index].emit("lobbyFull", {});
+      });
+      delete groups[data.name];
+    }
   });
 };
 

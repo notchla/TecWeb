@@ -3,10 +3,10 @@ var activeSession;
 function adduser(name, activityID, time, sessionID, username) {
   console.log($("users"));
   $("#users")
-    .append(`<a href="#" onclick="return show_messages('${username}', '${sessionID}')" style="height:100px;" class="my-1 px-2 list-group-item list-group-item-action border-0" id ="${sessionID}">
+    .append(`<a href="#" onclick="return show_messages('${sessionID}')" style="height:100px;" class="my-1 px-2 list-group-item list-group-item-action border-0" id ="${sessionID}">
       <div class="ml-3 userInfo">
         <div class="d-flex justify-content-between">
-          <h4> ${username} </h4>
+          <h4>${username}</h4>
           <small class="timer mr-1 mt-1"> ${time} </small>
         </div>
         <div class="ml-2 row">
@@ -21,11 +21,10 @@ function adduser(name, activityID, time, sessionID, username) {
 }
 
 function updateUser(user, name, activityID, time, username) {
-  // console.log(user.)
   var info = user.getElementsByClassName("userInfo");
   $(info).after(`<div class="ml-3 userInfo">
     <div class="d-flex w-100 justify-content-between">
-      <h4> ${username} </h4>
+      <h4>${username}</h4>
       <small class="timer mt-1"> ${time} </small>
     </div>
     <div class="ml-2 row">
@@ -130,26 +129,39 @@ socket.on("setMessages", (data) => {
   );
 });
 
-function show_messages(username, sessionID) {
+function change_name(caller, sessionID) {
+  var newName = caller.prev('.form-control').val();
+  $("#" + sessionID + " h4").text(newName);
+  console.log(newName)
+  socket.emit('changeName', {
+    sessionID: sessionID,
+    newName: newName
+  });
+}
+
+function show_messages(sessionID) {
   // close toolbar on user click
   $("#sidebar").removeClass("active");
-
   $("#send_message").prop("disabled", false);
   $("#message_input").prop("disabled", false);
+
+  var username = $("#" + sessionID + " h4").text();
+
   socket.emit("getMessages", { sessionID });
   console.log(sessionID);
   console.log(username);
   $("#messages").empty();
   $("#active").empty();
   $("#active").append(`<div class="flex-grow-1 pl-3 ml-3">
-  <strong class="text-white">
-    ${username}
-  </strong>
-</div>`);
+    <div class="row input-group">
+      <input type="text" class="col-6 form-control bg-dark text-white" value="${username}"></input>
+      <button type="button" class="col-4 form-control btn btn-secondary text-white" onclick="change_name($(this), '${sessionID}')"> Change </button>
+    </div>
+  </div>`);
 
   $("#results-button").remove()
   if(userdata[sessionID].completed){
-    var info = userdata[sessionID].completed
+    var info = userdata[sessionID].completed;
     $("#active-user-navbar").append(`<button id="results-button" type="button" class="btn btn-info" onclick="return downloads_results('${info.results_id}')">Results!</button>`);
   }
 

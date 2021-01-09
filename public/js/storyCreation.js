@@ -155,7 +155,7 @@ function UNpackFormData(form, oldData, nodeID) {
         $('#' + modalId + ' .answer-group')
         .append('<div class="mt-2 ml-1 row input-group">' +
         '<input placeholder="Answer" type="text" value="' + el + '" class="col-14 form-control mr-1 answer"/>' +
-        '<input placeholder="Score" value="' + oldData.answerscore[i] + '" class="col-2 form-control anscore"></input>' +
+        '<input type="number" placeholder="Score" value="' + oldData.answerscore[i] + '" class="col-2 form-control anscore"></input>' +
         '</div>');
       });
     }
@@ -661,11 +661,11 @@ $(document).ready(function () {
                 modalBody += '<div class="form-row">' +
                     '<div class="form-group col-md-6">' +
                       '<label class="col-form-label"> Enter activity won score </label> ' +
-                      '<input class="form-control wonscore"></input>' +
+                      '<input type="number" class="form-control wonscore"></input>' +
                     '</div>' +
                     '<div class="form-group col-md-6">' +
                       '<label class="col-form-label"> Enter activity lost score </label>' +
-                      '<input class="form-control lostscore"></input>' +
+                      '<input type="number" class="form-control lostscore"></input>' +
                     '</div>' +
                   '</div>';
               }
@@ -702,7 +702,7 @@ $(document).ready(function () {
                 $('#' + idEdit + ' .add-answer').click(() => {
                   $('#' + idEdit + ' .answer-group').append('<div class="mt-2 ml-1 row input-group">' +
                   '<input placeholder="Answer" type="text" class="col-14 form-control mr-1 answer"/>' +
-                  '<input placeholder="Score" class="col-2 form-control anscore"></input>' +
+                  '<input type="number" placeholder="Score" class="col-2 form-control anscore"></input>' +
                   '</div>');
                 });
               }
@@ -776,8 +776,18 @@ $(document).ready(function () {
                   // refill form with old data
                   try {
                     for (
-                      var i = 0;
+                      var i = this.output_lines.length;
                       i < this.content.answer.length;
+                      i++
+                    ) {
+                      this.draw_output(BUTTON_COLOR);
+                    }
+                  } catch (e) {}
+
+                  try {
+                    for (
+                      var i = this.output_lines.length;
+                      i < this.content.groupsize;
                       i++
                     ) {
                       this.draw_output(BUTTON_COLOR);
@@ -851,10 +861,9 @@ $(document).ready(function () {
                   }
                 } catch (e) {}
                 try {
-                  //add outputs to the activity node according to the answers
                   for (
-                    var i = this.output_lines.length - min_outputs;
-                    i < this.content.groups;
+                    var i = this.output_lines.length;
+                    i < this.content.groupsize;
                     i++
                   ) {
                     this.draw_output(BUTTON_COLOR);
