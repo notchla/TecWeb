@@ -1,6 +1,5 @@
 function activity_checker() {
   function handle_response(response) {
-    console.log(response);
     var score = 0;
     var index = story_data.nodes[current_node].content.answer.findIndex(
       (el) => el === response
@@ -39,10 +38,6 @@ function activity_checker() {
       updateContent(story_data.nodes[nodeIndex], score);
     }
   }
-  // $("#response button").click(function (event) {
-  //   console.log($(this).text());
-  //   handle_response($(this).text());
-  // });
 
   document.getElementById("response").addEventListener("submit", (evt) => {
     evt.preventDefault();

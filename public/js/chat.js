@@ -65,7 +65,6 @@
       );
     };
     $(".send_message").click(function (e) {
-      console.log(getMessageText());
       return sendMessage(getMessageText());
     });
     $(".message_input").keyup(function (e) {
@@ -75,7 +74,6 @@
     });
 
     socket.on("deliver", (data) => {
-      console.log(data);
       receiveMessage(data);
     });
     // sendMessage("Hello Philip! :)");

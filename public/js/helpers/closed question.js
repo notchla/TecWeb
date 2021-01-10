@@ -25,7 +25,6 @@ function activity_checker() {
     }
   }
   $("#response button").click(function (event) {
-    console.log($(this).text());
     handle_response($(this).text());
   });
 }

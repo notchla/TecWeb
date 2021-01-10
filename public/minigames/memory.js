@@ -193,10 +193,8 @@ function compareTwo() {
 	if (opened.length === 2 && opened[0].src === opened[1].src) {
 		// If matched call match()
 		match();
-		// console.log("It's a Match!");
 	} else if (opened.length === 2 && opened[0].src != opened[1].src) {
 		noMatch();
-		// console.log("NO Match!");
 	}
 }
 
@@ -264,7 +262,6 @@ function game_checker(){
 		$('.deck').on("click", function(evt) {
 			if (evt.target.nodeName === "LI") {
 				// To console if I was clicking the correct element
-				console.log(evt.target.nodeName + " Was clicked");
 				// Start the timer after the first click of one card
 				// Executes the timer() function
 				if (timeStart === false) {

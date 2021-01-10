@@ -144,9 +144,6 @@ app.use(handlers.serverError); //called when a function throws a new Error() and
 
 function startServer(port) {
   const server = app.listen(port, () => {
-    console.log(
-      `Express started in ${app.get("env")} mode at http://site192009.tw.cs.unibo.it:${port}`
-    );
   });
   const io = require("socket.io")(server, {
     path: "/socket",
@@ -156,18 +153,9 @@ function startServer(port) {
   });
 
   io.on("connection", (socket) => {
-    console.log("a user connected");
     socketHandler(socket);
   });
 }
-
-// io.on("connection", (socket) => {
-//   console.log("a user connected");
-// });
-
-// http.listen(8001, () => {
-//   console.log("socket started");
-// });
 
 if (require.main === module) {
   const server = startServer(process.env.PORT || 8000);

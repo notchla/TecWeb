@@ -1307,7 +1307,6 @@ $(document).ready(function () {
 
   function sendStory(body) {
     const headers = { "Content-Type": "application/json" };
-    console.log(body);
     fetch("/stories/registerstory", { method: "post", body, headers })
       .then((resp) => {
         // close modal
@@ -1448,7 +1447,6 @@ $(document).ready(function () {
       });
     } else if (e.target.id.includes("-qr")) {
       var storyname = e.target.id.replace('"', "").split('-')[0];
-      console.log($("#newqr #" + storyname + "-qr-image img").attr("src"));
       $("#" + storyname + "-qr").attr("href", $("#newqr #" + storyname + "-qr-image img").attr("src"));
     }
   });

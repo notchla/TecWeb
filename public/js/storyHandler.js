@@ -245,9 +245,8 @@ function getNodeIndex(id) {
   return story_data.nodes.findIndex((node) => node.id == id);
 }
 
-console.log("socket");
 //socket handling
-const socket = io("http://site192009.tw.cs.unibo.it:8000", {
+const socket = io("http://site192009.tw.cs.unibo.it", {
   transports: ["websocket"],
   path: "/socket", // needed for cors in dev
 });

@@ -1,4 +1,3 @@
-const util = require("util"); //for deep console.log
 const fs = require("fs");
 
 const resultsPath = "./public/results/";
@@ -33,7 +32,6 @@ function deleteResults(id) {
 }
 
 function getUserResults(result) {
-  console.log("result", result);
   const time = [];
   const points = [];
   var totalTime = 0;
@@ -72,13 +70,11 @@ const register = (socket) => {
   });
 
   socket.on("registerEvaluator", () => {
-    console.log("Evaluator");
     evaluatorSockets.push(socket);
     socket.type = "evaluator";
   });
 
   socket.on("populateEvaluator", () => {
-    console.log("populate");
     var data = [];
     userSockets.forEach((socket) => {
       data.push(socket.userProgress);
@@ -87,7 +83,6 @@ const register = (socket) => {
   });
 
   socket.on("disconnect", () => {
-    console.log("disconnected", socket.type);
     if (socket.type === "user") {
       var index = userSockets.findIndex(
         (sock) =>
@@ -95,9 +90,7 @@ const register = (socket) => {
       );
 
       if (index > -1) {
-        console.log(index, " user");
         userSockets.splice(index, 1);
-        console.log(userSockets);
         evaluatorSockets.forEach((evaluator) => {
           evaluator.emit("delete", socket.request.session.sessionID);
         });
@@ -113,7 +106,6 @@ const register = (socket) => {
       );
 
       if (index > -1) {
-        console.log(index);
         evaluatorSockets.splice(index, 1);
         return;
       }
@@ -125,7 +117,6 @@ const register = (socket) => {
   socket.on("transition", (data) => {
     data.sessionID = socket.request.session.sessionID;
     data.username = socket.request.session.userName;
-    // console.log(data);
     const index = userSockets.findIndex(
       (sock) =>
         sock.request.session.sessionID === socket.request.session.sessionID
@@ -147,11 +138,9 @@ const register = (socket) => {
       results[data.sessionID].transitions.push(data);
     }
 
-    // console.log(util.inspect(results, false, null, true /* enable colors */))
   });
 
   socket.on("message", (data) => {
-    console.log(data);
     if (socket.type == "user") {
       var index = indexUserSocket(socket.request.session.sessionID);
 
@@ -160,7 +149,6 @@ const register = (socket) => {
         data.session = socket.request.session.sessionID;
         data.side = "left";
         userSockets[index].messages.push(data);
-        console.log(userSockets[index].messages);
       }
       evaluatorSockets.forEach((sock) => sock.emit("deliver", data));
     }
@@ -173,7 +161,6 @@ const register = (socket) => {
         userSockets[index].messages.push(send);
         userSockets[index].emit("deliver", data.text);
       }
-      console.log("message from evaluator", data);
     }
 
     // evaluatorSockets.forEach((socket) => socket.emit("", dataArray));
@@ -232,15 +219,12 @@ const register = (socket) => {
       };
     }
 
-    console.log(
       util.inspect(
         results[socket.request.session.sessionID],
         false,
         null,
         true /* enable colors */
       )
-    );
-    console.log(data);
 
     var id = nanoid(10);
     var name = resultsPath + id + ".json";
@@ -250,9 +234,7 @@ const register = (socket) => {
     // if the server is started with nodemon this reload the server !!!
     fs.writeFile(name, json, (err) => {
       if (err) {
-        console.log(err);
       }
-      console.log(name, " saved");
       socket.emit("show-result-id", id);
     });
 
@@ -281,7 +263,6 @@ const register = (socket) => {
       data.side = "left";
       userSockets[index].validation = data;
     }
-    console.log("validate", data);
     evaluatorSockets.forEach((sock) => sock.emit("requestValidation", data));
   });
 
@@ -293,7 +274,6 @@ const register = (socket) => {
       userSockets[index].validation = {};
       userSockets[index].emit("returnValidation", data);
     }
-    console.log("validation", data);
   });
 
   socket.on("joinGroup", (data) => {
@@ -311,7 +291,6 @@ const register = (socket) => {
       // notify all users that group is full
       groups[data.name].forEach((sessionID, _) => {
         var index = indexUserSocket(sessionID);
-        console.log(index)
         userSockets[index].emit("lobbyFull", {});
       });
       delete groups[data.name];

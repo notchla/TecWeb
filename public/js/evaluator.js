@@ -1,7 +1,6 @@
 var activeSession;
 
 function adduser(name, activityID, time, sessionID, username) {
-  console.log($("users"));
   $("#users")
     .append(`<a href="#" onclick="return show_messages('${sessionID}')" style="height:100px;" class="my-1 px-2 list-group-item list-group-item-action border-0" id ="${sessionID}">
       <div class="ml-3 userInfo">
@@ -51,9 +50,8 @@ function msToTime(s) {
 
 const userdata = {};
 
-console.log("socket");
 //socket handling
-const socket = io("http://site192009.tw.cs.unibo.it:8000", {
+const socket = io("http://site192009.tw.cs.unibo.it", {
   transports: ["websocket"],
   path: "/socket", // needed for cors in dev
 });
@@ -65,12 +63,9 @@ socket.on("populate", (data) => {
   var now = d.getTime();
   data.forEach((user) => {
     if (user) {
-      console.log("user", user);
       var a = document.getElementById(user.sessionID);
 
       if (a) {
-        console.log("already exists");
-        console.log(a.getElementsByClassName("userInfo"));
         updateUser(
           a,
           user.name,
@@ -90,19 +85,15 @@ socket.on("populate", (data) => {
       userdata[user.sessionID] = user;
     }
   });
-  console.log("userdata", userdata);
 });
 
 socket.on("delete", (data) => {
   delete userdata[data];
   const id = "#" + data;
   $(id).remove();
-  console.log("after delete ", userdata);
 });
 
 socket.on("setMessages", (data) => {
-  console.log("set messages");
-  console.log(data);
   data.forEach((msg) => {
     if (msg.side === "left") {
       $("#messages").append(`<div class="chat-message-left pb-4">
@@ -132,7 +123,6 @@ socket.on("setMessages", (data) => {
 function change_name(caller, sessionID) {
   var newName = caller.prev('.form-control').val();
   $("#" + sessionID + " h4").text(newName);
-  console.log(newName)
   socket.emit('changeName', {
     sessionID: sessionID,
     newName: newName
@@ -148,8 +138,7 @@ function show_messages(sessionID) {
   var username = $("#" + sessionID + " h4").text();
 
   socket.emit("getMessages", { sessionID });
-  console.log(sessionID);
-  console.log(username);
+
   $("#messages").empty();
   $("#active").empty();
   $("#active").append(`<div class="flex-grow-1 pl-3 ml-3">
@@ -195,7 +184,7 @@ function validateAnswer(won, caller, session) {
 }
 
 socket.on("requestValidation", (data) => {
-  console.log("validate", data);
+
   if (data.session == activeSession) {
     $("#messages").append(`<div class="chat-message-left pb-4">
     <div class="flex-shrink-1 bg-messages rounded py-2 px-3 ml-3">
@@ -240,7 +229,7 @@ socket.on("requestValidation", (data) => {
 });
 
 socket.on("deliver", (data) => {
-  console.log("delivered", data);
+
   if (data.session == activeSession) {
     $("#messages").append(`<div class="chat-message-left pb-4">
     <div class="flex-shrink-1 bg-messages rounded py-2 px-3 ml-3">
@@ -310,16 +299,14 @@ function downloadObjectAsJson(exportObj, exportName){
 
 function downloads_results(results_id){
   $.get(`/results/${results_id}.json`).then((results) => {
-    console.log("results", results)
     downloadObjectAsJson(results, results_id+".json")
   }).catch(() => alert("error fetching results, try again"))
 }
 
 socket.on("create-results", (data) => {
   userdata[data.userid].completed = data;
-  console.log("results created", data)
   if(activeSession == data.userid){
-    console.log("active user has completed")
+
     var info = userdata[data.userid].completed
     $("#results-button").remove()
     $("#active-user-navbar").append(`<button id="results-button" type="button" class="btn btn-info" onclick="return downloads_results('${info.results_id}')">Results!</button>`);
@@ -341,7 +328,6 @@ $(document).ready(function () {
   $("#message_input").prop("disabled", true);
   $("#message_input").keyup(function (e) {
     if (e.which === 13) {
-      console.log("invio");
       return sendMessage(getMessageText());
     }
   });
@@ -395,10 +381,8 @@ $(document).ready(function () {
     d = new Date();
     now = d.getTime();
     for (const [_, user] of Object.entries(userdata)) {
-      // console.log("user time", user.time);
       // update time indicators
       var elapsed = now - user.time;
-      // console.log("elapsed", elapsed);
       $("#" + user.sessionID + " .timer").text(msToTime(elapsed));
       if (elapsed > 3 * 60 * 1000 && !user.notified) {
         // stuck for long time, add badge
