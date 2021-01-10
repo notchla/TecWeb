@@ -111,7 +111,7 @@ app.use(usernameSession); //check for username in session
 
 app.use(sessionIDMiddleware);
 
-app.use(cors({ origin: "http://localhost:8000" })); //DEVELOPMENT !!
+app.use(cors({ origin: "*" })); //DEVELOPMENT !!
 
 //load home with qr code
 app.get("/", handlers.home);
@@ -154,7 +154,7 @@ app.use(handlers.serverError); //called when a function throws a new Error() and
 function startServer(port) {
   const server = app.listen(port, () => {
     console.log(
-      `Express started in ${app.get("env")} mode at http://localhost:${port}`
+      `Express started in ${app.get("env")} mode at http://site192009.tw.cs.unibo.it:${port}`
     );
   });
   const io = require("socket.io")(server, {

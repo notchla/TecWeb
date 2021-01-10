@@ -20,7 +20,7 @@
     <span class="navbar-brand mb-0 h1 mx-auto text-white"> Home Page</span>
   </nav>
 
-  <div class="container-fluid" style="background-color:#001f3f;">
+  <div class="container-fluid" style="overflow: hidden; background-color:#001f3f;">
     <div class="row text-center card" style="background-color:#2a8860;">
       <div class="btn btn-lg p-0 m-0" type="button" class="d-flex flex-row mx-auto" id="scenner-location" onclick="startQRReader()">
         <div>
@@ -44,16 +44,6 @@
           <span class="text-white ml-auto mr-auto" style="width: 100vw; position:absolute; bottom: 8px; left: 0px;"> Supervise the current users </span>
         </div>
       </a>
-    </div>
-</div>
-
-  <div class="card card-body">
-    <div class="list-group" id="storiesList">
-      {{#each stories}}
-      <a class="list-group-item list-group-item-action" href="/stories/get/{{this.name}}">
-        {{this.name}}
-      </a>
-      {{/each}}
     </div>
   </div>
 </div>
