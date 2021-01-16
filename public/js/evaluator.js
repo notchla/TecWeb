@@ -67,7 +67,7 @@ const userdata = {};
 
 console.log("socket");
 //socket handling
-const socket = io("http://localhost:8000", {
+const socket = io("http://site192009.tw.cs.unibo.it", {
   transports: ["websocket"],
   path: "/socket", // needed for cors in dev
 });
