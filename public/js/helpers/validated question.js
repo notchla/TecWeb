@@ -67,13 +67,13 @@ function activity_checker() {
     const adj = story_data.adj[adjIndex];
     setAdjIndex(adj.v[data.index]);
     const nodeIndex = getNodeIndex(adj.v[data.index]);
-
+    var score = 0;
     if (data.score) {
-      total_score += parseInt(data.score);
+      score = parseInt(data.score);
     }
 
     current_node = nodeIndex;
 
-    updateContent(story_data.nodes[nodeIndex], parseInt(data.score));
+    updateContent(story_data.nodes[nodeIndex], score);
   });
 }

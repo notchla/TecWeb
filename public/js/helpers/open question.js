@@ -12,10 +12,6 @@ function activity_checker() {
       setAdjIndex(adj.v[index]);
       const nodeIndex = getNodeIndex(adj.v[index]);
       if (story_data.nodes[current_node].content.answerscore) {
-        total_score += parseInt(
-          story_data.nodes[current_node].content.answerscore[index]
-        );
-
         score = parseInt(
           story_data.nodes[current_node].content.answerscore[index]
         );
@@ -29,9 +25,6 @@ function activity_checker() {
       setAdjIndex(adj.v[0]);
       const nodeIndex = getNodeIndex(adj.v[0]);
       if (story_data.nodes[current_node].content.answerscore) {
-        total_score += parseInt(
-          story_data.nodes[current_node].content.answerscore[0]
-        );
         score = parseInt(story_data.nodes[current_node].content.answerscore[0]);
       }
       current_node = nodeIndex;

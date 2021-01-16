@@ -24,6 +24,7 @@ var current_node = 0;
 var baseCSS = {};
 
 function updateContent(data, score = 0) {
+  total_score += score;
   var type = data.type;
   if (type == "root") {
     // handle root as description

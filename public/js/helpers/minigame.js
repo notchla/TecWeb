@@ -9,10 +9,8 @@ function activity_checker() {
     ) {
       // won
       index = 1;
-      total_score += story_data.nodes[current_node].content.wonscore;
       score = story_data.nodes[current_node].content.wonscore;
     } else {
-      total_score += story_data.nodes[current_node].content.lostscore;
       score = story_data.nodes[current_node].content.lostscore;
     }
     const adjIndex = getAdjIndex();
