@@ -137,7 +137,6 @@ const register = (socket) => {
       results[data.sessionID].transitions = [];
       results[data.sessionID].transitions.push(data);
     }
-
   });
 
   socket.on("message", (data) => {
@@ -188,8 +187,7 @@ const register = (socket) => {
   socket.on("changeName", (data) => {
     // change both the name on the user socket and on the result array
     const index = userSockets.findIndex(
-      (sock) =>
-        sock.request.session.sessionID === data.sessionID
+      (sock) => sock.request.session.sessionID === data.sessionID
     );
     if (index > -1) {
       userSockets[index].request.session.userName = data.newName;
@@ -218,13 +216,6 @@ const register = (socket) => {
         points: points[index],
       };
     }
-
-      util.inspect(
-        results[socket.request.session.sessionID],
-        false,
-        null,
-        true /* enable colors */
-      )
 
     var id = nanoid(10);
     var name = resultsPath + id + ".json";
@@ -278,16 +269,16 @@ const register = (socket) => {
 
   socket.on("joinGroup", (data) => {
     var index = indexUserSocket(socket.request.session.sessionID);
-    if(!groups[data.name]) {
+    if (!groups[data.name]) {
       groups[data.name] = [];
     }
     groups[data.name].push(socket.request.session.sessionID);
     // send lobbyFull only to the dest user
     userSockets[index].emit("inGroup", {
-      index: groups[data.name].length - 1
+      index: groups[data.name].length - 1,
     });
 
-    if(groups[data.name].length == data.groupsize) {
+    if (groups[data.name].length == data.groupsize) {
       // notify all users that group is full
       groups[data.name].forEach((sessionID, _) => {
         var index = indexUserSocket(sessionID);
