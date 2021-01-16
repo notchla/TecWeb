@@ -629,7 +629,7 @@ $(document).ready(function () {
               // modal creation
 
               var cssCustomForm = '<label> Activity specific custom css </label>' + cssForm(this.nodeID);
-              if(this.type == "root" || this.type == "end") {
+              if(this.type == "root" || this.type == "end" || this.type == "minigame") {
                 cssCustomForm = "";
               }
 
@@ -772,11 +772,11 @@ $(document).ready(function () {
                     );
                     this.graphics.addChild(this.text);
                   } catch (e) {}
-                  UNpackFormData($("#" + idEdit), this.content, this.nodeID);
                   // refill form with old data
+                  UNpackFormData($("#" + idEdit), this.content, this.nodeID);
                   try {
                     for (
-                      var i = this.output_lines.length;
+                      var i = this.out.length - min_outputs;
                       i < this.content.answer.length;
                       i++
                     ) {
@@ -786,7 +786,7 @@ $(document).ready(function () {
 
                   try {
                     for (
-                      var i = this.output_lines.length;
+                      var i = this.out.length;
                       i < this.content.groupsize;
                       i++
                     ) {
@@ -853,7 +853,7 @@ $(document).ready(function () {
                 try {
                   //add outputs to the activity node according to the answers
                   for (
-                    var i = this.output_lines.length - min_outputs;
+                    var i = this.out.length - min_outputs;
                     i < this.content.answer.length;
                     i++
                   ) {
@@ -862,7 +862,7 @@ $(document).ready(function () {
                 } catch (e) {}
                 try {
                   for (
-                    var i = this.output_lines.length;
+                    var i = this.out.length;
                     i < this.content.groupsize;
                     i++
                   ) {
