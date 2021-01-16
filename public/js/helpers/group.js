@@ -1,4 +1,5 @@
 function activity_checker() {
+  $("#indicator-overlay").modal("show");
   var name = window.location.href.split("/");
   name = name[name.length - 1];
   var groupIndex = 0;
@@ -14,6 +15,12 @@ function activity_checker() {
   });
 
   socket.on("lobbyFull", () => {
+    $("#indicator-overlay").fadeOut(300, function () {
+      $("#indicator-overlay").removeClass("in");
+      $(".modal-backdrop").remove();
+      $("#indicator-overlay").modal("hide");
+    });
+
     const adjIndex = getAdjIndex();
     const adj = story_data.adj[adjIndex];
     setAdjIndex(adj.v[groupIndex]);
