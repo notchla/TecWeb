@@ -1,6 +1,11 @@
 var activeSession;
 
 function adduser(name, activityID, time, sessionID, username) {
+  console.log($("users"));
+  name = decodeURI(name);
+  name = name.substring(0,12) + "...";
+  username = decodeURI(username);
+  username = username.substring(0,10);
   $("#users")
     .append(`<a href="#" onclick="return show_messages('${sessionID}')" style="height:100px;" class="my-1 px-2 list-group-item list-group-item-action border-0" id ="${sessionID}">
       <div class="ml-3 userInfo">
@@ -12,8 +17,11 @@ function adduser(name, activityID, time, sessionID, username) {
           <p class="ml-0 mb-0 mr-auto" style="font-weight: lighter; color:#666666;">
           In story <span style="font-weight: bold;""> ${name} </span> on activity ${activityID}
           </p>
-          <div class="ml-auto mr-1 mt-3 warning-container"></div>
-          <div class="ml-auto mr-4 mt-3 notify-container"></div>
+        </div>
+        <div class="d-flex flex-row-reverse">
+          <div class="ml-1 done-container"></div>
+          <div class="ml-1 notify-container"></div>
+          <div class="ml-1 warning-container"></div>
         </div>
       </div>
   </a>`);
@@ -21,6 +29,10 @@ function adduser(name, activityID, time, sessionID, username) {
 
 function updateUser(user, name, activityID, time, username) {
   var info = user.getElementsByClassName("userInfo");
+  name = decodeURI(name);
+  name = name.substring(0,12) + "...";
+  username = decodeURI(username);
+  username = username.substring(0,10);
   $(info).after(`<div class="ml-3 userInfo">
     <div class="d-flex w-100 justify-content-between">
       <h4>${username}</h4>
@@ -30,8 +42,11 @@ function updateUser(user, name, activityID, time, username) {
       <p class="ml-0 mb-0 mr-auto" style="font-weight: lighter; color:#666666;">
       In story <span style="font-weight: bold;""> ${name} </span> on activity ${activityID}
       </p>
-      <div class="ml-auto mr-1 mt-3 warning-container"></div>
-      <div class="ml-auto mr-4 mt-3 notify-container"></div>
+    </div>
+    <div class="d-flex flex-row-reverse">
+      <div class="ml-1 done-container"></div>
+      <div class="ml-1 notify-container"></div>
+      <div class="ml-1 warning-container"></div>
     </div>
   </div>`);
 
@@ -50,8 +65,9 @@ function msToTime(s) {
 
 const userdata = {};
 
+console.log("socket");
 //socket handling
-const socket = io("http://site192009.tw.cs.unibo.it", {
+const socket = io("http://localhost:8000", {
   transports: ["websocket"],
   path: "/socket", // needed for cors in dev
 });
@@ -63,9 +79,12 @@ socket.on("populate", (data) => {
   var now = d.getTime();
   data.forEach((user) => {
     if (user) {
+      console.log("user", user);
       var a = document.getElementById(user.sessionID);
 
       if (a) {
+        console.log("already exists");
+        console.log(a.getElementsByClassName("userInfo"));
         updateUser(
           a,
           user.name,
@@ -85,15 +104,19 @@ socket.on("populate", (data) => {
       userdata[user.sessionID] = user;
     }
   });
+  console.log("userdata", userdata);
 });
 
 socket.on("delete", (data) => {
   delete userdata[data];
   const id = "#" + data;
   $(id).remove();
+  console.log("after delete ", userdata);
 });
 
 socket.on("setMessages", (data) => {
+  console.log("set messages");
+  console.log(data);
   data.forEach((msg) => {
     if (msg.side === "left") {
       $("#messages").append(`<div class="chat-message-left pb-4">
@@ -121,11 +144,12 @@ socket.on("setMessages", (data) => {
 });
 
 function change_name(caller, sessionID) {
-  var newName = caller.prev(".form-control").val();
+  var newName = caller.prev('.form-control').val();
   $("#" + sessionID + " h4").text(newName);
+  console.log(newName)
   socket.emit('changeName', {
     sessionID: sessionID,
-    newName: newName,
+    newName: newName
   });
 }
 
@@ -138,7 +162,8 @@ function show_messages(sessionID) {
   var username = $("#" + sessionID + " h4").text();
 
   socket.emit("getMessages", { sessionID });
-
+  console.log(sessionID);
+  console.log(username);
   $("#messages").empty();
   $("#active").empty();
   $("#active").append(`<div class="flex-grow-1 pl-3 ml-3">
@@ -148,12 +173,10 @@ function show_messages(sessionID) {
     </div>
   </div>`);
 
-  $("#results-button").remove();
-  if (userdata[sessionID].completed) {
+  $("#results-button").remove()
+  if(userdata[sessionID].completed){
     var info = userdata[sessionID].completed;
-    $("#active-user-navbar").append(
-      `<button id="results-button" type="button" class="btn btn-info" onclick="return downloads_results('${info.results_id}')">Results!</button>`
-    );
+    $("#active-user-navbar").append(`<button id="results-button" type="button" class="btn btn-info" onclick="return downloads_results('${info.results_id}')">Results!</button>`);
   }
 
   var a = document.getElementById(sessionID);
@@ -166,7 +189,7 @@ function show_messages(sessionID) {
 }
 
 function validateAnswer(won, caller, session) {
-  var evaluation = {};
+  var evaluation = {}
 
   // message element is 3 levels over the button
   var message = caller.parent().parent().parent();
@@ -174,19 +197,19 @@ function validateAnswer(won, caller, session) {
 
   evaluation.session = session;
 
-  if (won) {
+  if(won) {
     evaluation.index = 1;
   } else {
     evaluation.index = 0;
   }
   // the score is in the previous element with class score, relative to the caller (buttons)
-  evaluation.score = caller.prev(".score").val();
+  evaluation.score = caller.prev('.score').val();
 
   socket.emit("returnValidation", evaluation);
 }
 
 socket.on("requestValidation", (data) => {
-
+  console.log("validate", data);
   if (data.session == activeSession) {
     $("#messages").append(`<div class="chat-message-left pb-4">
     <div class="flex-shrink-1 bg-messages rounded py-2 px-3 ml-3">
@@ -199,17 +222,11 @@ socket.on("requestValidation", (data) => {
         The submitted answer is: ${data.answer[0]}
       </span>
       <br/>
-      <img class="ml-5 mr-auto mt-3 center-block img-fluid rounded" src= ${
-        data.answer[1]
-      }>
+      <img class="ml-5 mr-auto mt-3 center-block img-fluid rounded" src= ${data.answer[1]}>
       <div class="input-group mt-3 mb-1">
         <input type="text" class="mr-2 form-control score" placeholder="Score"/>
-        <button type="button" class="form-control btn btn-success" onclick="return validateAnswer(true, $(this), '${
-          data.session
-        }')"> Good </button>
-        <button type="button" class="form-control btn btn-warning" onclick="return validateAnswer(false, $(this), '${
-          data.session
-        }')"> Bad </button>
+        <button type="button" class="form-control btn btn-success" onclick="return validateAnswer(true, $(this), '${data.session}')"> Good </button>
+        <button type="button" class="form-control btn btn-warning" onclick="return validateAnswer(false, $(this), '${data.session}')"> Bad </button>
       </div>
   </div>`);
   } else {
@@ -237,7 +254,7 @@ socket.on("requestValidation", (data) => {
 });
 
 socket.on("deliver", (data) => {
-
+  console.log("delivered", data);
   if (data.session == activeSession) {
     $("#messages").append(`<div class="chat-message-left pb-4">
     <div class="flex-shrink-1 bg-messages rounded py-2 px-3 ml-3">
@@ -295,12 +312,10 @@ function sendMessage(text) {
 }
 
 //trigger download in the browser
-function downloadObjectAsJson(exportObj, exportName) {
-  var dataStr =
-    "data:text/json;charset=utf-8," +
-    encodeURIComponent(JSON.stringify(exportObj));
-  var downloadAnchorNode = document.createElement("a");
-  downloadAnchorNode.setAttribute("href", dataStr);
+function downloadObjectAsJson(exportObj, exportName){
+  var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
+  var downloadAnchorNode = document.createElement('a');
+  downloadAnchorNode.setAttribute("href",     dataStr);
   downloadAnchorNode.setAttribute("download", exportName);
   document.body.appendChild(downloadAnchorNode); // required for firefox
   downloadAnchorNode.click();
@@ -309,14 +324,16 @@ function downloadObjectAsJson(exportObj, exportName) {
 
 function downloads_results(results_id){
   $.get(`/results/${results_id}.json`).then((results) => {
+    console.log("results", results)
     downloadObjectAsJson(results, results_id+".json")
   }).catch(() => alert("error fetching results, try again"))
 }
 
 socket.on("create-results", (data) => {
   userdata[data.userid].completed = data;
+  console.log("results created", data)
   if(activeSession == data.userid){
-
+    console.log("active user has completed")
     var info = userdata[data.userid].completed
     $("#results-button").remove()
     $("#active-user-navbar").append(`<button id="results-button" type="button" class="btn btn-info" onclick="return downloads_results('${info.results_id}')">Results!</button>`);
@@ -324,19 +341,20 @@ socket.on("create-results", (data) => {
   }
   // badges
   $("#" + data.userid + " .warning-container").remove();
-  var a = document.getElementById(data.userid);
-  var div = a.getElementsByClassName("notify-container")[0];
-  $(div).after(`<div class="badge bg-success mr-3 ml-auto">
+  $("#" + data.userid + " .notify-container").remove();
+  console.log($("#" + data.userid + " .done-container"))
+  $("#" + data.userid + " .done-container").prepend(`<div class="badge bg-success">
     Done!
   </div>`);
-  $("#" + data.userid + " .notify-container").remove();
-});
+
+})
 
 $(document).ready(function () {
   $("#send_message").prop("disabled", true);
   $("#message_input").prop("disabled", true);
   $("#message_input").keyup(function (e) {
     if (e.which === 13) {
+      console.log("invio");
       return sendMessage(getMessageText());
     }
   });
@@ -390,16 +408,18 @@ $(document).ready(function () {
     d = new Date();
     now = d.getTime();
     for (const [_, user] of Object.entries(userdata)) {
+      // console.log("user time", user.time);
       // update time indicators
       var elapsed = now - user.time;
+      // console.log("elapsed", elapsed);
       $("#" + user.sessionID + " .timer").text(msToTime(elapsed));
-      if (elapsed > 3 * 60 * 1000 && !user.notified) {
+      if (elapsed > 1 * 60 * 1000 && !user.notified) {
         // stuck for long time, add badge
         user.notified = true;
         $("#" + user.sessionID + " .warning-container").prepend(
           '<div class="badge bg-warning"> ! ! ! </div>'
         );
-      } else if (elapsed < 3 * 60 * 1000) {
+      } else if (elapsed < 1 * 60 * 1000) {
         // remove badge, proceeded to next activity
         user.notified = false;
         $("#" + user.sessionID + " .warning-container").empty();
