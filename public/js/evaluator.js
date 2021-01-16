@@ -2,6 +2,10 @@ var activeSession;
 
 function adduser(name, activityID, time, sessionID, username) {
   console.log($("users"));
+  name = decodeURI(name);
+  name = name.substring(0,12) + "...";
+  username = decodeURI(username);
+  username = username.substring(0,10);
   $("#users")
     .append(`<a href="#" onclick="return show_messages('${sessionID}')" style="height:100px;" class="my-1 px-2 list-group-item list-group-item-action border-0" id ="${sessionID}">
       <div class="ml-3 userInfo">
@@ -13,8 +17,11 @@ function adduser(name, activityID, time, sessionID, username) {
           <p class="ml-0 mb-0 mr-auto" style="font-weight: lighter; color:#666666;">
           In story <span style="font-weight: bold;""> ${name} </span> on activity ${activityID}
           </p>
-          <div class="ml-auto mr-1 mt-3 warning-container"></div>
-          <div class="ml-auto mr-4 mt-3 notify-container"></div>
+        </div>
+        <div class="d-flex flex-row-reverse">
+          <div class="ml-1 done-container"></div>
+          <div class="ml-1 notify-container"></div>
+          <div class="ml-1 warning-container"></div>
         </div>
       </div>
   </a>`);
@@ -22,6 +29,10 @@ function adduser(name, activityID, time, sessionID, username) {
 
 function updateUser(user, name, activityID, time, username) {
   var info = user.getElementsByClassName("userInfo");
+  name = decodeURI(name);
+  name = name.substring(0,12) + "...";
+  username = decodeURI(username);
+  username = username.substring(0,10);
   $(info).after(`<div class="ml-3 userInfo">
     <div class="d-flex w-100 justify-content-between">
       <h4>${username}</h4>
@@ -31,8 +42,11 @@ function updateUser(user, name, activityID, time, username) {
       <p class="ml-0 mb-0 mr-auto" style="font-weight: lighter; color:#666666;">
       In story <span style="font-weight: bold;""> ${name} </span> on activity ${activityID}
       </p>
-      <div class="ml-auto mr-1 mt-3 warning-container"></div>
-      <div class="ml-auto mr-4 mt-3 notify-container"></div>
+    </div>
+    <div class="d-flex flex-row-reverse">
+      <div class="ml-1 done-container"></div>
+      <div class="ml-1 notify-container"></div>
+      <div class="ml-1 warning-container"></div>
     </div>
   </div>`);
 
@@ -327,12 +341,11 @@ socket.on("create-results", (data) => {
   }
   // badges
   $("#" + data.userid + " .warning-container").remove();
-  var a = document.getElementById(data.userid);
-  var div = a.getElementsByClassName("notify-container")[0];
-  $(div).after(`<div class="badge bg-success mr-3 ml-auto">
+  $("#" + data.userid + " .notify-container").remove();
+  console.log($("#" + data.userid + " .done-container"))
+  $("#" + data.userid + " .done-container").prepend(`<div class="badge bg-success">
     Done!
   </div>`);
-  $("#" + data.userid + " .notify-container").remove();
 
 })
 
@@ -400,13 +413,13 @@ $(document).ready(function () {
       var elapsed = now - user.time;
       // console.log("elapsed", elapsed);
       $("#" + user.sessionID + " .timer").text(msToTime(elapsed));
-      if (elapsed > 3 * 60 * 1000 && !user.notified) {
+      if (elapsed > 1 * 60 * 1000 && !user.notified) {
         // stuck for long time, add badge
         user.notified = true;
         $("#" + user.sessionID + " .warning-container").prepend(
           '<div class="badge bg-warning"> ! ! ! </div>'
         );
-      } else if (elapsed < 3 * 60 * 1000) {
+      } else if (elapsed < 1 * 60 * 1000) {
         // remove badge, proceeded to next activity
         user.notified = false;
         $("#" + user.sessionID + " .warning-container").empty();

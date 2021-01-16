@@ -802,6 +802,7 @@ $(document).ready(function () {
                   10,
                   $("#main-navbar").innerHeight() + 10
                 );
+                this.content = packFormData(this.content, $("#" + idEdit));
               }
               if(Object.keys(this.content).length === 0 && this.content.constructor === Object) {
                 $('#color-picker-' + this.nodeID).colorpicker({"color": "#FFFFFFFF"});
