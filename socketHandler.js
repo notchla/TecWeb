@@ -1,6 +1,6 @@
 const fs = require("fs");
 
-const resultsPath = "./public/results/";
+const resultsPath = __dirname + "/public/results/";
 
 var { nanoid } = require("nanoid");
 
