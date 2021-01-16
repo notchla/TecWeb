@@ -172,6 +172,13 @@ function show_messages(sessionID) {
   if (badge.length) {
     $(badge).empty();
   }
+
+  var a = document.getElementById(sessionID);
+  var badge = a.getElementsByClassName("done-container");
+  if (badge.length) {
+    $(badge).empty();
+  }
+
   activeSession = sessionID;
   return false;
 }
@@ -320,7 +327,6 @@ socket.on("create-results", (data) => {
     var info = userdata[data.userid].completed
     $("#results-button").remove()
     $("#active-user-navbar").append(`<button id="results-button" type="button" class="btn btn-info" onclick="return downloads_results('${info.results_id}')">Results!</button>`);
-
   }
   // badges
   $("#" + data.userid + " .warning-container").remove();
@@ -328,8 +334,7 @@ socket.on("create-results", (data) => {
   $("#" + data.userid + " .done-container").prepend(`<div class="badge bg-success">
     Done!
   </div>`);
-
-})
+});
 
 $(document).ready(function () {
   $("#send_message").prop("disabled", true);
