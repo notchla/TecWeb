@@ -4,6 +4,8 @@ const resultsPath = __dirname + "/public/results/";
 
 var { nanoid } = require("nanoid");
 
+const db = require("./db");
+
 const userSockets = [];
 const evaluatorSockets = [];
 
@@ -223,6 +225,17 @@ const register = (socket) => {
     const json = JSON.stringify(data);
 
     // if the server is started with nodemon this reload the server !!!
+
+    db.saveResults(
+      id,
+      data.id,
+      data.name,
+      data.username,
+      data.totalTime,
+      data.totalPoints,
+      data.activities
+    );
+
     fs.writeFile(name, json, (err) => {
       if (err) {
       }
