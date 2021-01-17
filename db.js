@@ -94,4 +94,7 @@ module.exports = {
       { upsert: true }
     );
   },
+  getResults: async (options = {}) => {
+    Results.find(options);
+  },
 };
