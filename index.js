@@ -147,13 +147,14 @@ app.get("/evaluator", handlers.evaluator);
 
 app.get("/evaluator/players", handlers.players);
 
+app.get("/results/:resultId", handlers.getResult);
+
 app.use(handlers.notFound); // need to be after all others routing handlers
 
 app.use(handlers.serverError); //called when a function throws a new Error() and nothing intercept it
 
 function startServer(port) {
-  const server = app.listen(port, () => {
-  });
+  const server = app.listen(port, () => {});
   const io = require("socket.io")(server, {
     path: "/socket",
   });
