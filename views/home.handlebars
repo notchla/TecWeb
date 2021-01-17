@@ -1,8 +1,8 @@
 {{#section "scripts"}}
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
-    <script type='text/javascript' src="/js/includes/instascan.min.js"> //reader </script>
-    <script type='text/javascript' src="/js/includes/qrcode.min.js"> //writer </script>
+    <script src="https://rawgit.com/cirocosta/qcode-decoder/master/build/qcode-decoder.min.js"> // decoder </script>
+    <script type='text/javascript' src="/js/includes/qrcode.min.js"> // encoder </script>
     <script type='text/javascript' src="/js/scanQR.js"> </script>
     <script type='text/javascript' src="/js/home.js"> </script>
 
@@ -22,10 +22,11 @@
 
   <div class="container-fluid" style="overflow: hidden; background-color:#001f3f;">
     <div class="row text-center card" style="background-color:#2a8860;">
-      <div class="btn btn-lg p-0 m-0" type="button" class="d-flex flex-row mx-auto" id="scenner-location" onclick="startQRReader()">
+      <div class="btn btn-lg p-0 m-0" id="open-upload" type="button" class="d-flex flex-row mx-auto">
         <div>
           <img class="mt-1" style="filter: invert(1);" src="/images/scanner_logo.png" alt="Press to start QR code scanner." > <br>
           <span class="text-white ml-auto mr-auto" style="width: 100vw; position:absolute; bottom: 8px; left: 0px;"> Scan a QR to access a story </span>
+          <input style="position:absolute; top:-100px; " id="scenner-location" type="file" accept="image/*;capture=camera">
         </div>
       </div>
     </div>

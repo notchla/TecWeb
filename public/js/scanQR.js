@@ -1,43 +1,39 @@
-function startQRReader() {
-  var height = ($(window).height() - $(".navbar").outerHeight()) / 3.2;
-  $("#scenner-location").html('<video style="width: auto; height: ' + height + 'px;" id="preview"></video>');
+var qr = new QCodeDecoder();
 
-  let scanner = new Instascan.Scanner({
-    continuous: true,
-    video: document.getElementById('preview'),
-    mirror: false,
-    captureImage: false,
-    backgroundScan: true,
-    refractoryPeriod: 5000,
-    scanPeriod: 12 // capture at 10 fps
+$(document).ready(function() {
+  // open file uploader on click
+  $("#open-upload").click(function() {
+    document.getElementById("scenner-location").click()
   });
 
-  scanner.addListener('scan', function (content) {
-    $.ajax({
-      type: "get",
-      url: "/stories/exists/" + content,
-      crossDomain: true,
-      success: function(data) {
-        if(data.exists == "true") {
-          scanner.stop();
-          window.location = window.location + "stories/get/" + content;
-        } else {
-          alert("story does not exist. Try again.");
-        }
-      },
-      error: function(data) {
-        scanner.stop();
+  $("#scenner-location").on("change", () => {
+    var file = $("#scenner-location")[0].files[0];
+    if (file) {
+      var reader = new FileReader();
+      reader.onloadend = function () {
+        qr.decodeFromImage(reader.result, function (err, result) {
+          if (err) {
+            alert("No QR was found in that image!")
+          } else {
+            $.ajax({
+              type: "get",
+              url: "/stories/exists/" + result,
+              crossDomain: true,
+              success: function(data) {
+                if(data.exists == "true") {
+                  window.location = window.location + "stories/get/" + result;
+                } else {
+                  alert("story does not exist. Try again...");
+                }
+              },
+              error: function(data) {}
+            });
+          }
+        });
       }
-    });
-  });
-
-  Instascan.Camera.getCameras().then(function (cameras) {
-    if (cameras.length > 0) {
-      scanner.start(cameras[0]);
+      reader.readAsDataURL(file);
     } else {
-      console.error('No cameras found.');
+      alert("not an image!")
     }
-  }).catch(function (e) {
-    console.error(e);
   });
-}
+})
