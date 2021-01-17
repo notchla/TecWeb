@@ -95,6 +95,6 @@ module.exports = {
     );
   },
   getResults: async (options = {}) => {
-    Results.find(options);
+    return Results.find(options);
   },
 };
