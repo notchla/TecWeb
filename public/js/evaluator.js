@@ -2,15 +2,11 @@ var activeSession;
 
 function adduser(name, activityID, time, sessionID, username) {
   name = decodeURI(name);
-<<<<<<< HEAD
-  name = name.substring(0, 12) + "...";
-=======
   var suffix = "";
-  if(name.length > 12) {
-    suffix =  "...";
+  if (name.length > 12) {
+    suffix = "...";
   }
-  name = name.substring(0,12) + suffix;
->>>>>>> 0b99da68245f83935fa13b4b9a616c0be33f5cd7
+  name = name.substring(0, 12) + suffix;
   username = decodeURI(username);
   username = username.substring(0, 10);
   $("#users")
@@ -37,15 +33,11 @@ function adduser(name, activityID, time, sessionID, username) {
 function updateUser(user, name, activityID, time, username) {
   var info = user.getElementsByClassName("userInfo");
   name = decodeURI(name);
-<<<<<<< HEAD
-  name = name.substring(0, 12) + "...";
-=======
   var suffix = "";
-  if(name.length > 12) {
-    suffix =  "...";
+  if (name.length > 12) {
+    suffix = "...";
   }
-  name = name.substring(0,12) + suffix;
->>>>>>> 0b99da68245f83935fa13b4b9a616c0be33f5cd7
+  name = name.substring(0, 12) + suffix;
   username = decodeURI(username);
   username = username.substring(0, 10);
   $(info).after(`<div class="ml-3 userInfo">
@@ -354,12 +346,8 @@ socket.on("create-results", (data) => {
   // badges
   $("#" + data.userid + " .warning-container").remove();
   $("#" + data.userid + " .notify-container").remove();
-<<<<<<< HEAD
   $("#" + data.userid + " .done-container")
-    .prepend(`<div class="badge bg-success">
-=======
-  $("#" + data.userid + " .done-container").prepend(`<div class="badge ml-1 bg-success">
->>>>>>> 0b99da68245f83935fa13b4b9a616c0be33f5cd7
+    .prepend(`<div class="badge ml-1 bg-success">
     Done!
   </div>`);
 });
