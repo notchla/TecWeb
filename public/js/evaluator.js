@@ -2,9 +2,9 @@ var activeSession;
 
 function adduser(name, activityID, time, sessionID, username) {
   name = decodeURI(name);
-  name = name.substring(0,12) + "...";
+  name = name.substring(0, 12) + "...";
   username = decodeURI(username);
-  username = username.substring(0,10);
+  username = username.substring(0, 10);
   $("#users")
     .append(`<a href="#" onclick="return show_messages('${sessionID}')" style="height:100px;" class="my-1 px-2 list-group-item list-group-item-action border-0" id ="${sessionID}">
       <div class="ml-3 userInfo">
@@ -29,9 +29,9 @@ function adduser(name, activityID, time, sessionID, username) {
 function updateUser(user, name, activityID, time, username) {
   var info = user.getElementsByClassName("userInfo");
   name = decodeURI(name);
-  name = name.substring(0,12) + "...";
+  name = name.substring(0, 12) + "...";
   username = decodeURI(username);
-  username = username.substring(0,10);
+  username = username.substring(0, 10);
   $(info).after(`<div class="ml-3 userInfo">
     <div class="d-flex w-100 justify-content-between">
       <h4>${username}</h4>
@@ -135,11 +135,11 @@ socket.on("setMessages", (data) => {
 });
 
 function change_name(caller, sessionID) {
-  var newName = caller.prev('.form-control').val();
+  var newName = caller.prev(".form-control").val();
   $("#" + sessionID + " h4").text(newName);
-  socket.emit('changeName', {
+  socket.emit("changeName", {
     sessionID: sessionID,
-    newName: newName
+    newName: newName,
   });
 }
 
@@ -161,10 +161,12 @@ function show_messages(sessionID) {
     </div>
   </div>`);
 
-  $("#results-button").remove()
-  if(userdata[sessionID].completed){
+  $("#results-button").remove();
+  if (userdata[sessionID].completed) {
     var info = userdata[sessionID].completed;
-    $("#active-user-navbar").append(`<button id="results-button" type="button" class="btn btn-info" onclick="return downloads_results('${info.results_id}')">Results!</button>`);
+    $("#active-user-navbar").append(
+      `<button id="results-button" type="button" class="btn btn-info" onclick="return downloads_results('${info.results_id}')">Results!</button>`
+    );
   }
 
   var a = document.getElementById(sessionID);
@@ -172,19 +174,12 @@ function show_messages(sessionID) {
   if (badge.length) {
     $(badge).empty();
   }
-
-  var a = document.getElementById(sessionID);
-  var badge = a.getElementsByClassName("done-container");
-  if (badge.length) {
-    $(badge).empty();
-  }
-
   activeSession = sessionID;
   return false;
 }
 
 function validateAnswer(won, caller, session) {
-  var evaluation = {}
+  var evaluation = {};
 
   // message element is 3 levels over the button
   var message = caller.parent().parent().parent();
@@ -192,13 +187,13 @@ function validateAnswer(won, caller, session) {
 
   evaluation.session = session;
 
-  if(won) {
+  if (won) {
     evaluation.index = 1;
   } else {
     evaluation.index = 0;
   }
   // the score is in the previous element with class score, relative to the caller (buttons)
-  evaluation.score = caller.prev('.score').val();
+  evaluation.score = caller.prev(".score").val();
 
   socket.emit("returnValidation", evaluation);
 }
@@ -216,11 +211,17 @@ socket.on("requestValidation", (data) => {
         The submitted answer is: ${data.answer[0]}
       </span>
       <br/>
-      <img class="ml-5 mr-auto mt-3 center-block img-fluid rounded" src= ${data.answer[1]}>
+      <img class="ml-5 mr-auto mt-3 center-block img-fluid rounded" src= ${
+        data.answer[1]
+      }>
       <div class="input-group mt-3 mb-1">
         <input type="text" class="mr-2 form-control score" placeholder="Score"/>
-        <button type="button" class="form-control btn btn-success" onclick="return validateAnswer(true, $(this), '${data.session}')"> Good </button>
-        <button type="button" class="form-control btn btn-warning" onclick="return validateAnswer(false, $(this), '${data.session}')"> Bad </button>
+        <button type="button" class="form-control btn btn-success" onclick="return validateAnswer(true, $(this), '${
+          data.session
+        }')"> Good </button>
+        <button type="button" class="form-control btn btn-warning" onclick="return validateAnswer(false, $(this), '${
+          data.session
+        }')"> Bad </button>
       </div>
   </div>`);
   } else {
@@ -305,33 +306,40 @@ function sendMessage(text) {
 }
 
 //trigger download in the browser
-function downloadObjectAsJson(exportObj, exportName){
-  var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
-  var downloadAnchorNode = document.createElement('a');
-  downloadAnchorNode.setAttribute("href",     dataStr);
+function downloadObjectAsJson(exportObj, exportName) {
+  var dataStr =
+    "data:text/json;charset=utf-8," +
+    encodeURIComponent(JSON.stringify(exportObj));
+  var downloadAnchorNode = document.createElement("a");
+  downloadAnchorNode.setAttribute("href", dataStr);
   downloadAnchorNode.setAttribute("download", exportName);
   document.body.appendChild(downloadAnchorNode); // required for firefox
   downloadAnchorNode.click();
   downloadAnchorNode.remove();
 }
 
-function downloads_results(results_id){
-  $.get(`/results/${results_id}.json`).then((results) => {
-    downloadObjectAsJson(results, results_id+".json")
-  }).catch(() => alert("error fetching results, try again"))
+function downloads_results(results_id) {
+  $.get(`/results/${results_id}`)
+    .then((results) => {
+      downloadObjectAsJson(results, results_id + ".json");
+    })
+    .catch(() => alert("error fetching results, try again"));
 }
 
 socket.on("create-results", (data) => {
   userdata[data.userid].completed = data;
-  if(activeSession == data.userid){
-    var info = userdata[data.userid].completed
-    $("#results-button").remove()
-    $("#active-user-navbar").append(`<button id="results-button" type="button" class="btn btn-info" onclick="return downloads_results('${info.results_id}')">Results!</button>`);
+  if (activeSession == data.userid) {
+    var info = userdata[data.userid].completed;
+    $("#results-button").remove();
+    $("#active-user-navbar").append(
+      `<button id="results-button" type="button" class="btn btn-info" onclick="return downloads_results('${info.results_id}')">Results!</button>`
+    );
   }
   // badges
   $("#" + data.userid + " .warning-container").remove();
   $("#" + data.userid + " .notify-container").remove();
-  $("#" + data.userid + " .done-container").prepend(`<div class="badge bg-success">
+  $("#" + data.userid + " .done-container")
+    .prepend(`<div class="badge bg-success">
     Done!
   </div>`);
 });
