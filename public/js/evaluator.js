@@ -182,6 +182,13 @@ function show_messages(sessionID) {
   if (badge.length) {
     $(badge).empty();
   }
+
+  var a = document.getElementById(sessionID);
+  var badge = a.getElementsByClassName("done-container");
+  if (badge.length) {
+    $(badge).empty();
+  }
+
   activeSession = sessionID;
   return false;
 }
