@@ -2,7 +2,11 @@ var activeSession;
 
 function adduser(name, activityID, time, sessionID, username) {
   name = decodeURI(name);
-  name = name.substring(0,12) + "...";
+  var suffix = "";
+  if(name.length > 12) {
+    suffix =  "...";
+  }
+  name = name.substring(0,12) + suffix;
   username = decodeURI(username);
   username = username.substring(0,10);
   $("#users")
@@ -18,9 +22,9 @@ function adduser(name, activityID, time, sessionID, username) {
           </p>
         </div>
         <div class="d-flex flex-row-reverse">
-          <div class="ml-1 done-container"></div>
-          <div class="ml-1 notify-container"></div>
-          <div class="ml-1 warning-container"></div>
+          <div class="done-container"></div>
+          <div class="notify-container"></div>
+          <div class="warning-container"></div>
         </div>
       </div>
   </a>`);
@@ -29,7 +33,11 @@ function adduser(name, activityID, time, sessionID, username) {
 function updateUser(user, name, activityID, time, username) {
   var info = user.getElementsByClassName("userInfo");
   name = decodeURI(name);
-  name = name.substring(0,12) + "...";
+  var suffix = "";
+  if(name.length > 12) {
+    suffix =  "...";
+  }
+  name = name.substring(0,12) + suffix;
   username = decodeURI(username);
   username = username.substring(0,10);
   $(info).after(`<div class="ml-3 userInfo">
@@ -43,9 +51,9 @@ function updateUser(user, name, activityID, time, username) {
       </p>
     </div>
     <div class="d-flex flex-row-reverse">
-      <div class="ml-1 done-container"></div>
-      <div class="ml-1 notify-container"></div>
-      <div class="ml-1 warning-container"></div>
+      <div class="done-container"></div>
+      <div class="notify-container"></div>
+      <div class="warning-container"></div>
     </div>
   </div>`);
 
@@ -234,7 +242,7 @@ socket.on("requestValidation", (data) => {
       //badge not present
       else {
         var div = a.getElementsByClassName("notify-container")[0];
-        $(div).prepend(`<div class="badge bg-info">
+        $(div).prepend(`<div class="badge ml-1 bg-info">
         1
       </div>`);
       }
@@ -268,7 +276,7 @@ socket.on("deliver", (data) => {
       //badge not present
       else {
         var div = a.getElementsByClassName("notify-container")[0];
-        $(div).prepend(`<div class="badge bg-info">
+        $(div).prepend(`<div class="badge ml-1 bg-info">
         1
       </div>`);
       }
@@ -331,7 +339,7 @@ socket.on("create-results", (data) => {
   // badges
   $("#" + data.userid + " .warning-container").remove();
   $("#" + data.userid + " .notify-container").remove();
-  $("#" + data.userid + " .done-container").prepend(`<div class="badge bg-success">
+  $("#" + data.userid + " .done-container").prepend(`<div class="badge ml-1 bg-success">
     Done!
   </div>`);
 });
@@ -401,7 +409,7 @@ $(document).ready(function () {
         // stuck for long time, add badge
         user.notified = true;
         $("#" + user.sessionID + " .warning-container").prepend(
-          '<div class="badge bg-warning"> ! ! ! </div>'
+          '<div class="badge ml-1 bg-warning"> ! ! ! </div>'
         );
       } else if (elapsed < 1 * 60 * 1000) {
         // remove badge, proceeded to next activity
