@@ -17,32 +17,33 @@
 
 <div>
   <nav class="navbar navbar-light bg-dark">
-    <span class="navbar-brand mb-0 h1 mx-auto text-white"> Home Page</span>
+    <h1 class="navbar-brand mb-0 h1 mx-auto text-white"> Home Page</h1>
   </nav>
 
   <div class="container-fluid" style="overflow: hidden; background-color:#001f3f;">
     <div class="row text-center card" style="background-color:#2a8860;">
       <div class="btn btn-lg p-0 m-0" id="open-upload" type="button" class="d-flex flex-row mx-auto">
         <div>
-          <img class="mt-1" style="filter: invert(1);" src="/images/scanner_logo.png" alt="Press to start QR code scanner." > <br>
-          <span class="text-white ml-auto mr-auto" style="width: 100vw; position:absolute; bottom: 8px; left: 0px;"> Scan a QR to access a story </span>
-          <input style="position:absolute; top:-100px; " id="scenner-location" type="file" accept="image/*;capture=camera">
+          <img class="mt-1" style="filter: invert(1);" src="/images/scanner_logo.png" alt="Press to snap a picture of the QR." > <br>
+          <h3 class="text-white ml-auto mr-auto" style="width: 100vw; position:absolute; bottom: 8px; left: 0px;"> Scan a QR to access a story </h3>
+          <label style="position:absolute; top:-100px;" for="scenner-location"> Scan a QR to access a story </label>
+          <input style="position:absolute; top:-100px;" name="scenner-location" id="scenner-location" type="file" accept="image/*;capture=camera">
         </div>
       </div>
     </div>
     <div class="row text-center card mt-2" style="background-color:#069999;">
       <a class="btn btn-lg p-2" type="button" class="d-flex flex-row mx-auto" href="/createstory">
         <div>
-          <img style="filter: invert(1);" class="mb-4" src="/images/edit_logo.png" alt="Press to start QR code scanner." > <br>
-          <span class="text-white ml-auto mr-auto" style="width: 100vw; position:absolute; bottom: 8px; left: 0px;"> Create a new story </span>
+          <img style="filter: invert(1);" class="mb-4" src="/images/edit_logo.png" alt="Press to access the story creator" > <br>
+          <h3 class="text-white ml-auto mr-auto" style="width: 100vw; position:absolute; bottom: 8px; left: 0px;"> Create a new story </h3>
         </div>
       </a>
     </div>
     <div class="row text-center card mt-2" style="background-color:#888888;">
       <a class="btn btn-lg p-2" type="button" class="d-flex flex-row mx-auto" href="/evaluator">
         <div>
-          <img class="mt-1" style="filter: invert(1);" class="mb-4" src="/images/lens_logo.png" alt="Press to start QR code scanner." > <br>
-          <span class="text-white ml-auto mr-auto" style="width: 100vw; position:absolute; bottom: 8px; left: 0px;"> Supervise the current users </span>
+          <img class="mt-1" style="filter: invert(1);" class="mb-4" src="/images/lens_logo.png" alt="Press start evaluating the active players" > <br>
+          <h3 class="text-white ml-auto mr-auto" style="width: 100vw; position:absolute; bottom: 8px; left: 0px;"> Manage the current users </h3>
         </div>
       </a>
     </div>

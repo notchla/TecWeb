@@ -6,4 +6,6 @@ function writeQR(textcode) {
     width: limit*0.80,
     height: limit*0.80
   });
+
+  $("#newqr img").attr('alt', 'QR code of this story');
 }
