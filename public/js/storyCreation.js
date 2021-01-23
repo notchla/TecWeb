@@ -394,11 +394,14 @@ $(document).ready(function () {
   });
 
   viewport
+    .on("click", function() {
+      $("#activity-context-menu").hide(100);
+    })
     .on("drag-start", function () {
-      $("#activity-context-menu").finish().hide(100);
+      $("#activity-context-menu").hide(100);
     })
     .on("wheel", function () {
-      $("#activity-context-menu").finish().hide(100);
+      $("#activity-context-menu").hide(100);
     });
 
   // save the initial viewed area
@@ -581,9 +584,10 @@ $(document).ready(function () {
       // show context menu (edit and delete)
       function onRightClick(event) {
         var position = event.currentTarget.getGlobalPosition();
+        $("#activity-context-menu").finish().hide(100);
         $("#activity-context-menu")
           .finish()
-          .toggle(100)
+          .show(100)
           .css({
             top: position.y + "px",
             left: position.x + "px",
