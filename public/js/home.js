@@ -10,5 +10,5 @@ $(document).ready(function () {
     $(this).css("width", $(window).width());
   });
 
-  $(".container-fluid .row img").css("height", $(".container-fluid .row").height() * 0.8 - $(".container-fluid .row span").outerHeight());
+  $(".container-fluid .row img").css("height", $(".container-fluid .row").height() * 0.9 - $(".container-fluid .row h3").outerHeight());
 });
