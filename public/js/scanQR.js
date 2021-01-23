@@ -15,6 +15,8 @@ $(document).ready(function() {
           if (err) {
             alert("No QR was found in that image!")
           } else {
+            var results = result.split("/");
+            result = results[results.length - 1];
             $.ajax({
               type: "get",
               url: "/stories/exists/" + result,
