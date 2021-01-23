@@ -8,6 +8,7 @@ const ResultsSchema = mongoose.Schema({
   totalTime: String,
   totalPoints: Number,
   activities: {},
+  time: { type: Date, default: Date.now },
 });
 
 const Results = mongoose.model("results", ResultsSchema);
