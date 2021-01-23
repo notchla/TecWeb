@@ -34,7 +34,13 @@ function drawChart(context, filename) {
 }
 
 $(document).ready(function () {
-  $(".description").css("width", $(window).innerWidth() * 0.3);
-  $(".data").css("width", $(window).innerWidth() * 0.6);
+  if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+    $(".container .row").removeClass("row");
+    $(".description").css("width", $(window).innerWidth() * 0.8);
+    $(".data").css("width", $(window).innerWidth() * 0.8);
+  } else {
+    $(".description").css("width", $(window).innerWidth() * 0.3);
+    $(".data").css("width", $(window).innerWidth() * 0.6);
+  }
   $("#accordion").css("margin-top", $("nav").outerHeight());
 });
