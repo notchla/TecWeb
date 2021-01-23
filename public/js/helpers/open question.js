@@ -24,10 +24,9 @@ function activity_checker() {
       const adj = story_data.adj[adjIndex];
       setAdjIndex(adj.v[0]);
       const nodeIndex = getNodeIndex(adj.v[0]);
-      if (story_data.nodes[current_node].content.answerscore) {
-        score = parseInt(story_data.nodes[current_node].content.answerscore[0]);
-      }
+      score = 0;
       current_node = nodeIndex;
+      console.log(score)
       updateContent(story_data.nodes[nodeIndex], score);
     }
   }
