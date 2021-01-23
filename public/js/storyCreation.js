@@ -137,7 +137,7 @@ function packFormData(data, formData) {
     } else if (id.includes("select")) {
       // multiple option select
       data["select"] = $(el).children("option:selected").val();
-    } else if(!id.includes("image") && !id.includes("answer") && !id.includes("anscore")){
+    } else if(!id.includes("audio") && !id.includes("image") && !id.includes("answer") && !id.includes("anscore")){
       // everything else
       data[id] = el.value;
     }
@@ -625,6 +625,7 @@ $(document).ready(function () {
               var has_answers = data.data.has_answers;
               var has_file = data.data.has_file;
               var has_score = data.data.has_score;
+              var has_music = data.data.has_music;
 
               // modal creation
 
@@ -655,6 +656,13 @@ $(document).ready(function () {
                   '</div>' +
                   '<label class="col-form-label"> Enter alternative image text </label> ' +
                   '<input class="form-control alttext"></input>';
+              }
+
+              if(has_music) {
+                  modalBody += '<br/><label class="col-form-label"> Enter sound file (will be reproduced on activity open) </label> ' +
+                  '<div class="d-flex flex-row">' +
+                    '<input type="file" class="p-1 form-control audio"></input>' +
+                  '</div>';
               }
 
               if(has_score) {
@@ -732,6 +740,24 @@ $(document).ready(function () {
                         $("#activity-modal-container #" + idEdit + " .img-container").append(img);
                       }
                     } catch(e) {}
+                  });
+                });
+              }
+
+              // add audio to content
+              if(has_music) {
+                $("#activity-modal-container #" + idEdit + " .audio").on("change", () => {
+                  (new Promise((resolve, reject) => {
+                    var file = $("#activity-modal-container #" + idEdit + " .audio")[0].files[0];
+                    if(file) {
+                      var reader = new FileReader();
+                      reader.onloadend = function() {
+                        resolve(reader.result);
+                      }
+                      reader.readAsDataURL(file);
+                    }
+                  })).then((result) => {
+                    this.content["audio"] = result;
                   });
                 });
               }

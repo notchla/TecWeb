@@ -1,6 +1,6 @@
 <div id="myModal" class="modal">
   <div class="modal-content">
-    <span id="content">
+    <span id="content" aria-label="The question">
       {{question}}
     </span>
     <div
@@ -10,7 +10,7 @@
       aria-label="Basic example"
     >
       {{#each answer}}
-        <button type="button" class="btn btn-secondary">
+        <button type="button" class="btn btn-secondary" aria-label="Answer {{this}}">
           {{this}}
         </button>
       {{/each}}

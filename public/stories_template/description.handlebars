@@ -1,8 +1,21 @@
 <div id="myModal" class="modal">
-  <div class="modal-content">
+  <div class="modal-content" aria-label="Click to advance to next story">
     <span style="overflow-y: auto;" class="m-1" id="content">
       {{question}}
     </span>
-    <img class="pb-2 img-fluid rounded" src="{{image}}" style="max-height: 256px;" alt="{{alttext}}">
+    <img class="pb-2 img-fluid rounded" src="{{image}}" style="min-height:256px; max-height: 256px;" alt="{{alttext}}">
+    <div>
+      <button type="button" id="button_play" class="btn" >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-play" viewBox="0 0 16 16">
+        <path d="M10.804 8L5 4.633v6.734L10.804 8zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.233-.696l6.363 3.692z"/>
+      </svg>
+      </button>
+
+      <button type="button" id="button_stop" class="btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pause-fill" viewBox="0 0 16 16">
+          <path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z"/>
+        </svg>
+      </button>
+    </div>
   </div>
 </div>
