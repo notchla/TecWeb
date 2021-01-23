@@ -5,7 +5,7 @@ function activity_checker() {
       (el) => el === response
     );
     index = index + 1; //translated by 1, 0 is the error
-    if (index != -1) {
+    if (index != 0) {
       //todo handle error for wrong response, needs support in creator
       const adjIndex = getAdjIndex();
       const adj = story_data.adj[adjIndex];
@@ -13,7 +13,7 @@ function activity_checker() {
       const nodeIndex = getNodeIndex(adj.v[index]);
       if (story_data.nodes[current_node].content.answerscore) {
         score = parseInt(
-          story_data.nodes[current_node].content.answerscore[index]
+          story_data.nodes[current_node].content.answerscore[index - 1]
         );
       }
       current_node = nodeIndex;
@@ -24,9 +24,7 @@ function activity_checker() {
       const adj = story_data.adj[adjIndex];
       setAdjIndex(adj.v[0]);
       const nodeIndex = getNodeIndex(adj.v[0]);
-      score = 0;
       current_node = nodeIndex;
-      console.log(score)
       updateContent(story_data.nodes[nodeIndex], score);
     }
   }
