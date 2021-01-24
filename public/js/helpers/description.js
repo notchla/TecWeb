@@ -1,6 +1,5 @@
 function activity_checker() {
   var sound = null;
-  console.log(story_data.nodes[current_node])
   if (story_data.nodes[current_node].content.audio) {
     var source = story_data.nodes[current_node].content.audio;
     sound = new Howl({

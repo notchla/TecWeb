@@ -727,7 +727,7 @@ $(document).ready(function () {
                     if(file) {
                       var reader = new FileReader();
                       reader.onloadend = function () {
-                        resizeImage(reader.result, 128).then((result) => {
+                        resizeImage(reader.result, 256).then((result) => {
                           resolve(result);
                         });
                       };
