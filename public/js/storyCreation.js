@@ -773,6 +773,7 @@ $(document).ready(function () {
               for (var i = 0; i < outputs - min_outputs; i++) {
                 this.draw_output(BUTTON_COLOR);
               }
+
               // rebuild old node
               if (this.oldNode !== undefined) {
                 if (this.oldNode.content !== undefined) {
@@ -834,8 +835,7 @@ $(document).ready(function () {
                 );
                 // set base empty content
                 this.content = packFormData(this.content, $("#" + idEdit));
-              }
-              if(Object.keys(this.content).length === 0 && this.content.constructor === Object) {
+
                 $('#color-picker-' + this.nodeID).colorpicker({"color": "#FFFFFFFF"});
                 $("#activity-modal-container #" + idEdit + " .color").val("");
                 $('#bg-color-picker-' + this.nodeID).colorpicker({"color": "#FFFFFFFF"});
