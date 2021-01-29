@@ -72,6 +72,7 @@ function activity_checker() {
       score = parseInt(data.score);
     }
 
+    socket.off("returnValidation");
     current_node = nodeIndex;
 
     updateContent(story_data.nodes[nodeIndex], score);
